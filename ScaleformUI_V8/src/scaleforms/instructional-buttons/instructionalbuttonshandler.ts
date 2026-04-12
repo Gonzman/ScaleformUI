@@ -12,9 +12,9 @@ export enum LoadingSpinnerType {
 }
 
 export class InstructionalButtonsHandler {
-    _sc: Scaleform;
-    public UseMouseButtons: boolean;
-    _isUsingKeyboard: boolean;
+    _sc!: Scaleform;
+    public UseMouseButtons: boolean = false;
+    _isUsingKeyboard: boolean = false;
     _changed: boolean = true;
     savingTimer: number = 0;
     private _isSaving: boolean = false;
@@ -49,15 +49,15 @@ export class InstructionalButtonsHandler {
         this._changed = true;
     }
 
-    public RemoveInstructionalButton(button: InstructionalButton) {
-        if (this.ControlButtons.includes(button)) {
-            this.ControlButtons.splice(this.ControlButtons.indexOf(button), 1);
-        }
-        this._changed = true;
-    }
-    public RemoveInstructionalButton(idx: number) {
-        if (this.ControlButtons.length >= idx) {
-            this.RemoveInstructionalButton(this.ControlButtons[idx]);
+    public RemoveInstructionalButton(button: InstructionalButton): void;
+    public RemoveInstructionalButton(idx: number): void;
+    public RemoveInstructionalButton(buttonOrIdx: InstructionalButton | number) {
+        if (typeof buttonOrIdx === "number") {
+            if (buttonOrIdx >= 0 && buttonOrIdx < this.ControlButtons.length) {
+                this.ControlButtons.splice(buttonOrIdx, 1);
+            }
+        } else if (this.ControlButtons.includes(buttonOrIdx)) {
+            this.ControlButtons.splice(this.ControlButtons.indexOf(buttonOrIdx), 1);
         }
         this._changed = true;
     }

@@ -1,69 +1,64 @@
 import { BreadcrumbsHandler } from "./breadcrumbs-handler";
 import { BaseMenu } from "./menu.base";
+import { UIMenu } from "./UIMenu/uimenu";
 
 export class MenuHandler {
     static _currentMenu: BaseMenu | null = null;
     static _currentPauseMenu: BaseMenu | null = null;
     static ableToDraw = false;
 
-    static SwitchTo(currentMenu: BaseMenu, newMenu: BaseMenu, newMenuCurrentSelection?: number, inheritOldMenuParams?: boolean, data?: any) {
-        if (currentMenu == null)
-            throw ("The menu you're switching from cannot be null");
-        if (currentMenu != this._currentMenu)
-            throw ("The menu you're switching from must be opened");
-        if (newMenu == null)
-            throw ("The menu you're switching to cannot be null");
-        if (newMenu == currentMenu)
-            throw ("You cannot switch a menu to itself");
-        if (newMenu instanceof UIMenu && newMenu.Items.length === 0)
-            throw ("You cannot switch to an empty menu");
-        if (newMenu.Visible)
-            throw ("The menu you're switching to is already open");
+    static SwitchTo(
+        currentMenu: BaseMenu,
+        newMenu: BaseMenu,
+        newMenuCurrentSelection?: number,
+        inheritOldMenuParams?: boolean,
+        data?: any
+    ) {
+        if (currentMenu == null) throw "The menu you're switching from cannot be null";
+        if (currentMenu != this._currentMenu) throw "The menu you're switching from must be opened";
+        if (newMenu == null) throw "The menu you're switching to cannot be null";
+        if (newMenu == currentMenu) throw "You cannot switch a menu to itself";
+        if (newMenu instanceof UIMenu && newMenu.Items.length === 0) throw "You cannot switch to an empty menu";
+        if (newMenu.Visible) throw "The menu you're switching to is already open";
 
-        if (BreadcrumbsHandler.SwitchInProgress)
-            return;
+        if (BreadcrumbsHandler.SwitchInProgress) return;
         BreadcrumbsHandler.SwitchInProgress = true;
 
-        if (newMenuCurrentSelection === null)
-            newMenuCurrentSelection = 0;
+        if (newMenuCurrentSelection == null) newMenuCurrentSelection = 0;
         if (currentMenu instanceof UIMenu && newMenu instanceof UIMenu) {
-            let new: UIMenu = newMenu as UIMenu;
+            let newUIMenu: UIMenu = newMenu as UIMenu;
             let old: UIMenu = currentMenu as UIMenu;
             if (inheritOldMenuParams == null) {
-                inheritOldMenuParams = false
+                inheritOldMenuParams = false;
             }
             if (inheritOldMenuParams) {
-                if (old.TxtDictionary != null && old.TxtDictionary != "" && old.TxtName != null && old.TxtName != "") {
-                    new.TxtDictionary = old.TxtDictionary;
-                    new.TxtName = old.TxtName;
-                }
-                new.Position = old.Position;
-                if (old.Logo != null)
-                    new.Logo = old.Logo;
-                else {
-                    new.Logo = null
-                    new.Banner = old.Banner;
-                }
-
-                new.Glare = old.Glare;
-                new.MaxItemsOnScreen = old.MaxItemsOnScreen;
-                new.AnimationEnabled = old.AnimationEnabled;
-                new.AnimationType = old.AnimationType;
-                new.BuildingAnimation = old.BuildingAnimation;
-                new.ScrollingType = old.ScrollingType;
-                new.MouseSettings(old.MouseControlsEnabled, old.MouseEdgeEnabled, old.MouseWheelControlEnabled, old.ResetCursorOnOpen, old.leftClickEnabled)
-                new.enabled3DAnimations = old.enabled3DAnimations
-                new.fadingTime = old.fadingTime
+                newUIMenu._customTexture = [...old._customTexture] as [string, string];
+                newUIMenu.Offset = old.Offset;
+                newUIMenu.Glare = old.Glare;
+                newUIMenu.MaxItemsOnScreen = old.MaxItemsOnScreen;
+                newUIMenu.EnableAnimation = old.EnableAnimation;
+                newUIMenu.AnimationType = old.AnimationType;
+                newUIMenu.BuildingAnimation = old.BuildingAnimation;
+                newUIMenu.ScrollingType = old.ScrollingType;
+                newUIMenu.SetMouse(
+                    old.MouseControlsEnabled,
+                    old.MouseEdgeEnabled,
+                    old.MouseWheelControlEnabled,
+                    old.ResetCursorOnOpen,
+                    old.leftClickEnabled
+                );
+                newUIMenu.Enabled3DAnimations = old.Enabled3DAnimations;
+                newUIMenu.fadingTime = old.fadingTime;
             }
+            newUIMenu.CurrentSelection = newMenuCurrentSelection;
         }
-        newMenu.CurrentSelection = newMenuCurrentSelection
         if (currentMenu instanceof UIMenu) {
-            currentMenu.FadeOutMenu()
+            currentMenu.fadeOutMenu();
         }
         currentMenu.Visible = false;
         newMenu.Visible = true;
         if (newMenu instanceof UIMenu) {
-            newMenu.FadeInItems();
+            newMenu.fadeInItems();
         }
         BreadcrumbsHandler.Forward(newMenu, data);
         BreadcrumbsHandler.SwitchInProgress = false;
@@ -98,17 +93,17 @@ export class MenuHandler {
     static CloseAndClearHistory() {
         this.ableToDraw = false;
         if (this._currentMenu !== null && this._currentMenu.Visible) {
-            this._currentMenu.Visible = false
+            this._currentMenu.Visible = false;
         }
         if (this._currentPauseMenu !== null && this._currentPauseMenu.Visible) {
-            this._currentPauseMenu.Visible = false
+            this._currentPauseMenu.Visible = false;
         }
-        BreadcrumbsHandler.Clear()
+        BreadcrumbsHandler.Clear();
         //ScaleformUI.Scaleforms.InstructionalButtons:ClearButtonList() to be handled 🤔🤔
     }
 
     static get IsAnyMenuOpen(): boolean {
-        return this._currentMenu != null && this._currentMenu.Visible || BreadcrumbsHandler.Count() > 0;
+        return (this._currentMenu != null && this._currentMenu.Visible) || BreadcrumbsHandler.Count > 0;
     }
 
     static IsAnyPauseMenuOpen(): boolean {

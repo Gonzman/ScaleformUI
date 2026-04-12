@@ -2,10 +2,11 @@ import { SColor } from "elements/scolor";
 import { UIMenuItem } from "./uimenuitem";
 import { ItemStatCallback, StatsItemCallbackBuilder } from "../emitters/emitters";
 import { BadgeStyle } from "elements/badge";
+import { ScaleformUI } from "scaleforms/scaleformui/main";
 
 export class UIMenuStatsItem extends UIMenuItem {
     _value: number;
-    public _type: number;
+    public _type: number = 0;
     sliderColor: SColor;
     _statChanged = new StatsItemCallbackBuilder();
 
@@ -19,23 +20,35 @@ export class UIMenuStatsItem extends UIMenuItem {
 
     public set Value(value: number) {
         this._value = value;
-        this.SetValue(this._value)
+        this.SetValue(this._value);
     }
     public get Value(): number {
         return this._value;
     }
 
-    set Type(_t) {
+    set Type(_t: number) {
         this._type = _t;
     }
     public get Type(): number {
-        return this.Type;
+        return this._type;
     }
 
     public set SliderColor(value: SColor) {
         this.sliderColor = value;
-        if (this.Parent !== null && this.Parent.Visible && this.Parent.Pagination.IsItemVisible(this.Parent.Items.indexOf(this))) {
-            ScaleformUI.Scaleforms._ui.callFunction("UPDATE_COLORS", this.Parent.Pagination.GetScaleformIndex(this.Parent.Items.indexOf(this)), this.MainColor.toArgb(), this.HighlightColor.toArgb(), this.TextColor, this.HighlightedTextColor, value);
+        if (
+            this.Parent !== null &&
+            this.Parent.Visible &&
+            this.Parent.Pagination.IsItemVisible(this.Parent.Items.indexOf(this))
+        ) {
+            ScaleformUI.Scaleforms._ui.callFunction(
+                "UPDATE_COLORS",
+                this.Parent.Pagination.GetScaleformIndex(this.Parent.Items.indexOf(this)),
+                this.MainColor.toArgb(),
+                this.HighlightColor.toArgb(),
+                this.TextColor,
+                this.HighlightedTextColor,
+                value
+            );
         }
     }
     public get SliderColor(): SColor {
@@ -43,7 +56,13 @@ export class UIMenuStatsItem extends UIMenuItem {
     }
 
     public SetValue(value: number) {
-        ScaleformUI.Scaleforms._ui.callFunction("SET_ITEM_VALUE", this.Parent.Pagination.GetScaleformIndex(this.Parent.Items.indexOf(this)), value);
+        if (this.Parent !== null) {
+            ScaleformUI.Scaleforms._ui.callFunction(
+                "SET_ITEM_VALUE",
+                this.Parent.Pagination.GetScaleformIndex(this.Parent.Items.indexOf(this)),
+                value
+            );
+        }
         this._statChanged.toDelegate()(value);
     }
 

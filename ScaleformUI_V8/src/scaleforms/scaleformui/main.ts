@@ -4,6 +4,8 @@ import { MinimapOverlays } from "scaleforms/minimap/minimap";
 import { PauseMenuHandler } from "scaleforms/pausemenu/pausemenu-handler";
 import { Scaleform } from "scaleforms/scaleform";
 
+class Notifications { }
+
 class Main {
     public Scaleforms: Scaleforms;
     public Notifications: Notifications; // Replace with actual type

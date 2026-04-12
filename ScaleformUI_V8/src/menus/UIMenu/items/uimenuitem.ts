@@ -7,14 +7,27 @@ import { replaceRstarColorsWith } from '../../../elements/color';
 import { BadgeStyle } from "elements/badge";
 import { ItemChangeCallbackBuilder, UIMenuItemChangeCallback } from "../emitters/emitters";
 import { UIMenu } from "../uimenu";
+import { UIMenuPanel } from "../panels/uimenupanel";
+import { UIMenuSidePanel } from "../sidepanels/uimenusidepanel";
+import { UIMissionDetailsPanel } from "../sidepanels/DetailsPanel/uimissiondetailspanel";
+
+type SettingsListColumn = {
+    Parent: { Visible: boolean };
+    ParentTab: number;
+    Pagination: { GetScaleformIndex(index: number): number };
+    Items: any[];
+};
+
+class MainView { }
+class TabView { }
 
 export class UIMenuItem {
-    public Parent: UIMenu = null;
-    public ParentColumn: SettingsListColumn = null;
+    public Parent: UIMenu | null = null;
+    public ParentColumn: SettingsListColumn | null = null;
     public Panels: UIMenuPanel[] = [];
-    public SidePanel: UIMenuSidePanel = null;
+    public SidePanel: UIMenuSidePanel | UIMissionDetailsPanel | null = null;
     public ItemData: any;
-    public Hovered: boolean;
+    public Hovered: boolean = false;
     private _selected: boolean = false;
     private _label: string = "";
     private _rightLabel: string = "";
@@ -191,7 +204,7 @@ export class UIMenuItem {
         }
     }
     public get LabelFont(): ItemFont {
-        return this.LabelFont
+        return this.labelFont
     }
 
     public set RightLabelFont(value: ItemFont) {
@@ -245,7 +258,7 @@ export class UIMenuItem {
                 this._formatRightLabel = this._formatRightLabel.replace("~w~", "~l~");
                 this._formatRightLabel = this._formatRightLabel.replace("~s~", "~l~");
             }
-            this.emitHighlighted(this.Parent);
+            this.highlighedEmit();
         }
         else {
             this._formatLeftLabel = this._formatLeftLabel.replace("~l~", "~s~");
@@ -277,28 +290,34 @@ export class UIMenuItem {
         if (this.Parent !== null && this.Parent.Visible && this.Parent.Pagination.IsItemVisible(this.Parent.Items.indexOf(this))) {
             AddTextEntry(`menu_${BreadcrumbsHandler.CurrentDepth}_desc_${this.Parent.Items.indexOf(this)}`, this.description);
             BeginScaleformMovieMethod(ScaleformUI.Scaleforms._ui.handle, "UPDATE_ITEM_DESCRIPTION");
-            ScaleformMovieMethodAddParamInt(this.Parent.Pagination.GetScaleformIndex(this.Parent.MenuItems.indexOf(this)));
-            BeginTextCommandScaleformString(`menu_${BreadcrumbsHandler.CurrentDepth}_desc_${this.Parent.MenuItems.indexOf(this)}`);
+            ScaleformMovieMethodAddParamInt(this.Parent.Pagination.GetScaleformIndex(this.Parent.Items.indexOf(this)));
+            BeginTextCommandScaleformString(`menu_${BreadcrumbsHandler.CurrentDepth}_desc_${this.Parent.Items.indexOf(this)}`);
             EndTextCommandScaleformString_2();
             EndScaleformMovieMethod();
         }
         if (this.ParentColumn != null && this.ParentColumn.Parent.Visible) {
             if (this.ParentColumn.Parent instanceof MainView) {
                 AddTextEntry(`lobbymenu_desc_${this.ParentColumn.Pagination.GetScaleformIndex(this.ParentColumn.Items.indexOf(this))}`, this.description);
-                BeginScaleformMovieMethod(ScaleformUI.Scaleforms._pauseMenu._lobby.handle, "UPDATE_SETTINGS_ITEM_DESCRIPTION");
-                ScaleformMovieMethodAddParamInt(this.ParentColumn.Pagination.GetScaleformIndex(this.ParentColumn.Items.indexOf(this)));
-                BeginTextCommandScaleformString(`lobbymenu_desc_{ParentColumn.Pagination.GetScaleformIndex(ParentColumn.Items.indexOf(this))}`);
-                EndTextCommandScaleformString_2();
-                EndScaleformMovieMethod();
+                const lobby = ScaleformUI.Scaleforms._pauseMenu._lobby;
+                if (lobby) {
+                    BeginScaleformMovieMethod(lobby.handle, "UPDATE_SETTINGS_ITEM_DESCRIPTION");
+                    ScaleformMovieMethodAddParamInt(this.ParentColumn.Pagination.GetScaleformIndex(this.ParentColumn.Items.indexOf(this)));
+                    BeginTextCommandScaleformString(`lobbymenu_desc_${this.ParentColumn.Pagination.GetScaleformIndex(this.ParentColumn.Items.indexOf(this))}`);
+                    EndTextCommandScaleformString_2();
+                    EndScaleformMovieMethod();
+                }
             }
             else if (this.ParentColumn.Parent instanceof TabView) {
                 AddTextEntry(`pausemenu_${this.ParentColumn.ParentTab}_desc_${this.ParentColumn.Pagination.GetScaleformIndex(this.ParentColumn.Items.indexOf(this))}`, this.description);
-                BeginScaleformMovieMethod(ScaleformUI.Scaleforms._pauseMenu._pause.handle, "UPDATE_PLAYERS_TAB_SETTINGS_ITEM_DESCRIPTION");
-                ScaleformMovieMethodAddParamInt(this.ParentColumn.ParentTab);
-                ScaleformMovieMethodAddParamInt(this.ParentColumn.Pagination.GetScaleformIndex(this.ParentColumn.Items.indexOf(this)));
-                BeginTextCommandScaleformString(`pausemenu_${this.ParentColumn.ParentTab}_desc_${this.ParentColumn.Pagination.GetScaleformIndex(this.ParentColumn.Items.indexOf(this))}`);
-                EndTextCommandScaleformString_2();
-                EndScaleformMovieMethod();
+                const pause = ScaleformUI.Scaleforms._pauseMenu._pause;
+                if (pause) {
+                    BeginScaleformMovieMethod(pause.handle, "UPDATE_PLAYERS_TAB_SETTINGS_ITEM_DESCRIPTION");
+                    ScaleformMovieMethodAddParamInt(this.ParentColumn.ParentTab);
+                    ScaleformMovieMethodAddParamInt(this.ParentColumn.Pagination.GetScaleformIndex(this.ParentColumn.Items.indexOf(this)));
+                    BeginTextCommandScaleformString(`pausemenu_${this.ParentColumn.ParentTab}_desc_${this.ParentColumn.Pagination.GetScaleformIndex(this.ParentColumn.Items.indexOf(this))}`);
+                    EndTextCommandScaleformString_2();
+                    EndScaleformMovieMethod();
+                }
             }
         }
     }
@@ -318,16 +337,16 @@ export class UIMenuItem {
         }
         if (this.ParentColumn != null && this.ParentColumn.Parent.Visible) {
             if (this.ParentColumn.Parent instanceof MainView) {
-                ScaleformUI.Scaleforms._pauseMenu._lobby.callFunction("UPDATE_SETTINGS_ITEM_LABELS", this.ParentColumn.Pagination.GetScaleformIndex(this.ParentColumn.Items.indexOf(this)),
+                ScaleformUI.Scaleforms._pauseMenu._lobby?.callFunction("UPDATE_SETTINGS_ITEM_LABELS", this.ParentColumn.Pagination.GetScaleformIndex(this.ParentColumn.Items.indexOf(this)),
                     this._formatLeftLabel, this._formatRightLabel);
-                ScaleformUI.Scaleforms._pauseMenu._lobby.callFunction("ENABLE_SETTINGS_ITEM", this.ParentColumn.Pagination.GetScaleformIndex(this.ParentColumn.Items.indexOf(this)),
+                ScaleformUI.Scaleforms._pauseMenu._lobby?.callFunction("ENABLE_SETTINGS_ITEM", this.ParentColumn.Pagination.GetScaleformIndex(this.ParentColumn.Items.indexOf(this)),
                     this._enabled);
             }
             else if (this.ParentColumn.Parent instanceof TabView) {
-                ScaleformUI.Scaleforms._pauseMenu._pause.callFunction("UPDATE_PLAYERS_TAB_SETTINGS_ITEM_LABELS", this.ParentColumn.ParentTab,
+                ScaleformUI.Scaleforms._pauseMenu._pause?.callFunction("UPDATE_PLAYERS_TAB_SETTINGS_ITEM_LABELS", this.ParentColumn.ParentTab,
                     this.ParentColumn.Pagination.GetScaleformIndex(this.ParentColumn.Items.indexOf(this)),
                     this._formatLeftLabel, this._formatRightLabel);
-                ScaleformUI.Scaleforms._pauseMenu._pause.callFunction("ENABLE_PLAYERS_TAB_SETTINGS_ITEM", this.ParentColumn.ParentTab,
+                ScaleformUI.Scaleforms._pauseMenu._pause?.callFunction("ENABLE_PLAYERS_TAB_SETTINGS_ITEM", this.ParentColumn.ParentTab,
                     this.ParentColumn.Pagination.GetScaleformIndex(this.ParentColumn.Items.indexOf(this)),
                     this._enabled);
             }
@@ -341,11 +360,11 @@ export class UIMenuItem {
         }
         if (this.ParentColumn != null && this.ParentColumn.Parent.Visible) {
             if (this.ParentColumn.Parent instanceof MainView) {
-                ScaleformUI.Scaleforms._pauseMenu._lobby.callFunction("SET_SETTINGS_ITEM_LEFT_BADGE", this.ParentColumn.Pagination.GetScaleformIndex(this.ParentColumn.Items.indexOf(this)),
+                ScaleformUI.Scaleforms._pauseMenu._lobby?.callFunction("SET_SETTINGS_ITEM_LEFT_BADGE", this.ParentColumn.Pagination.GetScaleformIndex(this.ParentColumn.Items.indexOf(this)),
                     icon);
             }
             else if (this.ParentColumn.Parent instanceof TabView) {
-                ScaleformUI.Scaleforms._pauseMenu._pause.callFunction("SET_PLAYERS_TAB_SETTINGS_ITEM_LEFT_BADGE", this.ParentColumn.ParentTab,
+                ScaleformUI.Scaleforms._pauseMenu._pause?.callFunction("SET_PLAYERS_TAB_SETTINGS_ITEM_LEFT_BADGE", this.ParentColumn.ParentTab,
                     this.ParentColumn.Pagination.GetScaleformIndex(this.ParentColumn.Items.indexOf(this)),
                     icon);
             }
@@ -359,11 +378,11 @@ export class UIMenuItem {
         }
         if (this.ParentColumn != null && this.ParentColumn.Parent.Visible) {
             if (this.ParentColumn.Parent instanceof MainView) {
-                ScaleformUI.Scaleforms._pauseMenu._lobby.callFunction("SET_SETTINGS_ITEM_RIGHT_BADGE", this.ParentColumn.Pagination.GetScaleformIndex(this.ParentColumn.Items.indexOf(this)),
+                ScaleformUI.Scaleforms._pauseMenu._lobby?.callFunction("SET_SETTINGS_ITEM_RIGHT_BADGE", this.ParentColumn.Pagination.GetScaleformIndex(this.ParentColumn.Items.indexOf(this)),
                     icon);
             }
             else if (this.ParentColumn.Parent instanceof TabView) {
-                ScaleformUI.Scaleforms._pauseMenu._pause.callFunction("SET_PLAYERS_TAB_SETTINGS_ITEM_RIGHT_BADGE", this.ParentColumn.ParentTab,
+                ScaleformUI.Scaleforms._pauseMenu._pause?.callFunction("SET_PLAYERS_TAB_SETTINGS_ITEM_RIGHT_BADGE", this.ParentColumn.ParentTab,
                     this.ParentColumn.Pagination.GetScaleformIndex(this.ParentColumn.Items.indexOf(this)),
                     icon);
             }
@@ -375,7 +394,7 @@ export class UIMenuItem {
     }
 
     public AddPanel(panel: UIMenuPanel){
-        panel.setParentItem(this)
+        panel.SetParentItem(this)
         this.Panels.push(panel)
     }
 
@@ -386,18 +405,30 @@ export class UIMenuItem {
         }
     }
 
-    public AddSidePanel(panel:UIMenuSidePanel){
-        panel.setParentItem(this)
+    public AddSidePanel(panel: UIMenuSidePanel | UIMissionDetailsPanel){
+        panel.SetParentItem(this)
         this.SidePanel = panel;
         if (this.Parent !== null && this.Parent.Visible && this.Parent.Pagination.IsItemVisible(this.Parent.Items.indexOf(this))) {
-            switch(panel){
-                case UIMissionDetailsPanel:
-                    let mis = panel as UIMissionDetailsPanel;
-                    ScaleformUI.Scaleforms._ui.callFunction("ADD_SIDE_PANEL_TO_ITEM", this.Parent.Pagination.GetScaleformIndex(this.Parent.Items.indexOf(this)), 0, mis.panelSide, mis.titleType, mis.title, mis.titleColor, mis.textureDict, mis.textureName);
-                    for (let _it of mis.items) {
-                        ScaleformUI.Scaleforms._ui.callFunction("ADD_MISSION_DETAILS_DESC_ITEM", this.Parent.Pagination.getScaleformIndex(this.Parent.Items.indexOf(this)), _it.type, _it.textLeft, _it.textRight, _it.icon, _it.iconColor, _it.tick);
-                    }
-                    break;
+            if (panel instanceof UIMissionDetailsPanel) {
+                const mis = panel;
+                const itemIndex = this.Parent.Pagination.GetScaleformIndex(this.Parent.Items.indexOf(this));
+                ScaleformUI.Scaleforms._ui.callFunction("ADD_SIDE_PANEL_TO_ITEM", itemIndex, 0, mis.PanelSide, mis.TitleType, mis.Title, mis.TitleColor, mis.TextureDict, mis.TextureName);
+                for (const _it of mis.Items) {
+                    ScaleformUI.Scaleforms._ui.callFunction(
+                        "ADD_MISSION_DETAILS_DESC_ITEM",
+                        itemIndex,
+                        _it.Type,
+                        _it.TextLeft,
+                        _it.TextRight,
+                        _it.Icon,
+                        _it.IconColor,
+                        _it.Tick,
+                        _it._labelFont.fontName,
+                        _it._labelFont.fontId,
+                        _it._rightLabelFont.fontName,
+                        _it._rightLabelFont.fontId
+                    );
+                }
             }
         }
     }

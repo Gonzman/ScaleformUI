@@ -92,31 +92,30 @@ export class UIMenuDetailsWindow extends UIMenuWindow {
         }
     }
 
-    public UpdateStatsToWheel() {
-        this.UpdateStatsToWheel(this.DetailStats);
-    }
-    public UpdateStatsToWheel(stats: UIDetailStat[]) {
+    public UpdateStatsToWheel(): void;
+    public UpdateStatsToWheel(stats: UIDetailStat[]): void;
+    public UpdateStatsToWheel(stats?: UIDetailStat[]) {
+        const statsToApply = stats ?? this.DetailStats;
         if (this.StatWheelEnabled) {
-            if (this.DetailStats.length != stats.length) {
+            if (this.DetailStats.length != statsToApply.length) {
                 throw new Error("You cannot add items using this function");
             }
-            this.DetailStats = stats;
+            this.DetailStats = statsToApply;
             if (this.ParentMenu != undefined && this.ParentMenu.Visible) {
                 let wid = this.ParentMenu.Windows.indexOf(this);
-                stats.forEach((value: UIDetailStat) => {
+                statsToApply.forEach((value: UIDetailStat) => {
                     ScaleformUI.Scaleforms._ui?.callFunction("UPDATE_STATS_DETAILS_WINDOW_STATWHEEL", wid, this.DetailStats.indexOf(value), value.Percentage, value.HudColor);
                 });
             }
         }
     }
 
-    public RemoveStatToWheel(stat: UIDetailStat) {
-        let index = this.DetailStats.findIndex(s => s.Percentage === stat.Percentage && s.HudColor === stat.HudColor);
-        if (index !== -1) {
-            this.DetailStats.splice(index, 1);
-        }
-    }
-    public RemoveStatToWheel(idx: number) {
+    public RemoveStatToWheel(stat: UIDetailStat): void;
+    public RemoveStatToWheel(idx: number): void;
+    public RemoveStatToWheel(statOrIdx: UIDetailStat | number) {
+        const idx = typeof statOrIdx === "number"
+            ? statOrIdx
+            : this.DetailStats.findIndex(s => s.Percentage === statOrIdx.Percentage && s.HudColor === statOrIdx.HudColor);
         if (idx < 0 || idx >= this.DetailStats.length) return;
         this.DetailStats.splice(idx, 1);
         if (this.ParentMenu != undefined && this.ParentMenu.Visible) {

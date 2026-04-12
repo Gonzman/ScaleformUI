@@ -1,4 +1,4 @@
-import { HudColor } from './color';
+import { HudColor } from "./color";
 
 export class SColor {
     private a: number;
@@ -29,15 +29,15 @@ export class SColor {
         return this.r;
     }
 
-    public static FromHex(hexColor: string): SColor{
-        if (typeof hexColor === 'string') {
+    public static FromHex(hexColor: string): SColor {
+        if (typeof hexColor === "string") {
             if (hexColor.startsWith("#")) {
-                let hex = hexColor.replace('#', '') // Remove "#" symbol if present
+                let hex = hexColor.replace("#", ""); // Remove "#" symbol if present
                 let a = GetRandomIntInRange(1, 255);
-                let r = parseInt(hex.slice(2, 4), 16) // Convert next two characters to decimal (red channel)
-                let g = parseInt(hex.slice(4, 6), 16) // Convert next two characters to decimal (green channel)
-                let b = parseInt(hex.slice(6, 8), 16) // Convert last two characters to decimal (blue channel)
-                return new SColor(a,r,g,b);
+                let r = parseInt(hex.slice(2, 4), 16); // Convert next two characters to decimal (red channel)
+                let g = parseInt(hex.slice(4, 6), 16); // Convert next two characters to decimal (green channel)
+                let b = parseInt(hex.slice(6, 8), 16); // Convert last two characters to decimal (blue channel)
+                return new SColor(a, r, g, b);
             } else {
                 throw new Error("Invalid Hex value");
             }
@@ -45,21 +45,21 @@ export class SColor {
         return new SColor(0, 0, 0, 0);
     }
 
-    public static FromHudColor(color: HudColor): SColor{
+    public static FromHudColor(color: HudColor): SColor {
         if (Object.values(HudColor).includes(color)) {
             const [r, g, b, a]: [number, number, number, number] = GetHudColour(color);
-            return new SColor(a,r,g,b);
+            return new SColor(a, r, g, b);
         } else {
             throw new Error("Invalid argument type");
         }
     }
 
-    public static FromRandomValues(): SColor{
+    public static FromRandomValues(): SColor {
         let a = 255;
         let r = GetRandomIntInRange(1, 255);
         let g = GetRandomIntInRange(1, 255);
         let b = GetRandomIntInRange(1, 255);
-        return new SColor(a,r,g,b);
+        return new SColor(a, r, g, b);
     }
 
     public static FromArgbInt(argb: number): SColor {
@@ -68,23 +68,23 @@ export class SColor {
             isNegative = true;
             argb = Math.abs(argb); // Convert negative value to positive
         }
-        
+
         let a = (argb >> 24) & 255;
         let r = (argb >> 16) & 255;
         let g = (argb >> 8) & 255;
         let b = argb & 255;
-        
+
         if (isNegative) {
             a = 255 - a;
             r = 255 - r;
             g = 255 - g;
             b = 255 - b;
         }
-        return new SColor(a,r,g,b);
+        return new SColor(a, r, g, b);
     }
 
     public static FromArgb(alpha: number, red: number, green: number, blue: number): SColor {
-        return new SColor(alpha,red,green,blue);
+        return new SColor(alpha, red, green, blue);
     }
 
     public static FromRgb(red: number, green: number, blue: number): SColor {
@@ -97,54 +97,53 @@ export class SColor {
     }
 
     public getHue(): number {
-        if(this.R === this.G && this.G === this.B){
+        if (this.R === this.G && this.G === this.B) {
             return 0.0;
         }
         let [min, max] = this.minMaxRGB(this.R, this.G, this.B);
         let delta = max - min;
-        let hue = 0
-        if (this.R === max){
+        let hue = 0;
+        if (this.R === max) {
             hue = (this.G - this.B) / delta;
-        } else if(this.G === max){
+        } else if (this.G === max) {
             hue = (this.B - this.R) / delta + 2.0;
         } else {
             hue = (this.R - this.G) / delta + 4.0;
         }
 
         hue = hue * 60.0;
-        if(hue < 0){
+        if (hue < 0) {
             hue = hue + 360.0;
         }
         return hue;
     }
 
     public getSaturation(): number {
-        if(this.R === this.G && this.G === this.B){
+        if (this.R === this.G && this.G === this.B) {
             return 0.0;
         }
         let [min, max] = this.minMaxRGB(this.R, this.G, this.B);
         let div = max + min;
-        if(div > 255){
+        if (div > 255) {
             div = 255 * 2 - max - min;
         }
         return (max - min) / div;
     }
 
-    private minMaxRGB(r: number,g: number,b: number): [number, number]{
-        let min,max = 0;
-        if(r>g){
+    private minMaxRGB(r: number, g: number, b: number): [number, number] {
+        let min,
+            max = 0;
+        if (r > g) {
             max = r;
             min = g;
-        }
-        else{
+        } else {
             max = g;
             min = r;
         }
-        if(b>max){
+        if (b > max) {
             max = b;
-        }
-        else if(b < min){
-            min = b
+        } else if (b < min) {
+            min = b;
         }
         return [min, max];
     }
@@ -166,11 +165,24 @@ export class SColor {
     }
 
     public toHex(): string {
-        return `#${this.A.toString(16).padStart(2, '0')}${this.R.toString(16).padStart(2, '0')}${this.G.toString(16).padStart(2, '0')}${this.B.toString(16).padStart(2, '0')}`;
+        return `#${this.A.toString(16).padStart(2, "0")}${this.R.toString(16).padStart(2, "0")}${this.G.toString(16).padStart(2, "0")}${this.B.toString(16).padStart(2, "0")}`;
     }
 
     public toString(): string {
-        return "Color [A=" + this.A + ", R=:" + this.R + ", G=" + this.G + ", B=" + this.B + "] - INT=" + this.toArgb() + " - HEX=" + this.toHex();
+        return (
+            "Color [A=" +
+            this.A +
+            ", R=:" +
+            this.R +
+            ", G=" +
+            this.G +
+            ", B=" +
+            this.B +
+            "] - INT=" +
+            this.toArgb() +
+            " - HEX=" +
+            this.toHex()
+        );
     }
 
     equals(other: SColor): boolean {
@@ -178,148 +190,148 @@ export class SColor {
     }
 
     //[[ WINDOWS SYSTEM COLORS ]]
-    public static Transparent = SColor.FromArgb(16777215);
-    public static AliceBlue = SColor.FromArgb(-984833);
-    public static AntiqueWhite = SColor.FromArgb(-332841);
-    public static Aqua = SColor.FromArgb(-16711681);
-    public static Aquamarine = SColor.FromArgb(-8388652);
-    public static Azure = SColor.FromArgb(-983041);
-    public static Beige = SColor.FromArgb(-657956);
-    public static Bisque = SColor.FromArgb(-6972);
-    public static Black = SColor.FromArgb(-16777216);
-    public static BlanchedAlmond = SColor.FromArgb(-5171);
-    public static Blue = SColor.FromArgb(-16776961);
-    public static BlueViolet = SColor.FromArgb(-7722014);
-    public static Brown = SColor.FromArgb(-5952982);
-    public static BurlyWood = SColor.FromArgb(-2180985);
-    public static CadetBlue = SColor.FromArgb(-10510688);
-    public static Chartreuse = SColor.FromArgb(-8388864);
-    public static Chocolate = SColor.FromArgb(-2987746);
-    public static Coral = SColor.FromArgb(-32944);
-    public static CornflowerBlue = SColor.FromArgb(-10185235);
-    public static Cornsilk = SColor.FromArgb(-1828);
-    public static Crimson = SColor.FromArgb(-2354116);
-    public static Cyan = SColor.FromArgb(-16711681);
-    public static DarkBlue = SColor.FromArgb(-16777077);
-    public static DarkCyan = SColor.FromArgb(-16741493);
-    public static DarkGoldenrod = SColor.FromArgb(-4684277);
-    public static DarkGray = SColor.FromArgb(-5658199);
-    public static DarkGreen = SColor.FromArgb(-16751616);
-    public static DarkKhaki = SColor.FromArgb(-4343957);
-    public static DarkMagenta = SColor.FromArgb(-7667573);
-    public static DarkOliveGreen = SColor.FromArgb(-11179217);
-    public static DarkOrange = SColor.FromArgb(-29696);
-    public static DarkOrchid = SColor.FromArgb(-6737204);
-    public static DarkRed = SColor.FromArgb(-7667712);
-    public static DarkSalmon = SColor.FromArgb(-1468806);
-    public static DarkSeaGreen = SColor.FromArgb(-7357301);
-    public static DarkSlateBlue = SColor.FromArgb(-12042869);
-    public static DarkSlateGray = SColor.FromArgb(-13676721);
-    public static DarkTurquoise = SColor.FromArgb(-16724271);
-    public static DarkViolet = SColor.FromArgb(-7077677);
-    public static DeepPink = SColor.FromArgb(-60269);
-    public static DeepSkyBlue = SColor.FromArgb(-16728065);
-    public static DimGray = SColor.FromArgb(-9868951);
-    public static DodgerBlue = SColor.FromArgb(-14774017);
-    public static Firebrick = SColor.FromArgb(-5103070);
-    public static FloralWhite = SColor.FromArgb(-1296);
-    public static ForestGreen = SColor.FromArgb(-14513374);
-    public static Fuchsia = SColor.FromArgb(-65281);
-    public static Gainsboro = SColor.FromArgb(-2302756);
-    public static GhostWhite = SColor.FromArgb(-460545);
-    public static Gold = SColor.FromArgb(-10496);
-    public static Goldenrod = SColor.FromArgb(-2448096);
-    public static Gray = SColor.FromArgb(-8355712);
-    public static Green = SColor.FromArgb(-16744448);
-    public static GreenYellow = SColor.FromArgb(-5374161);
-    public static Honeydew = SColor.FromArgb(-983056);
-    public static HotPink = SColor.FromArgb(-38476);
-    public static IndianRed = SColor.FromArgb(-3318692);
-    public static Indigo = SColor.FromArgb(-11861886);
-    public static Ivory = SColor.FromArgb(-16);
-    public static Khaki = SColor.FromArgb(-989556);
-    public static Lavender = SColor.FromArgb(-1644806);
-    public static LavenderBlush = SColor.FromArgb(-3851);
-    public static LawnGreen = SColor.FromArgb(-8586240);
-    public static LemonChiffon = SColor.FromArgb(-1331);
-    public static LightBlue = SColor.FromArgb(-5383962);
-    public static LightCoral = SColor.FromArgb(-1015680);
-    public static LightCyan = SColor.FromArgb(-2031617);
-    public static LightGoldenrodYellow = SColor.FromArgb(-329006);
-    public static LightGreen = SColor.FromArgb(-7278960);
-    public static LightGray = SColor.FromArgb(-2894893);
-    public static LightPink = SColor.FromArgb(-18751);
-    public static LightSalmon = SColor.FromArgb(-24454);
-    public static LightSeaGreen = SColor.FromArgb(-14634326);
-    public static LightSkyBlue = SColor.FromArgb(-7876870);
-    public static LightSlateGray = SColor.FromArgb(-8943463);
-    public static LightSteelBlue = SColor.FromArgb(-5192482);
-    public static LightYellow = SColor.FromArgb(-32);
-    public static Lime = SColor.FromArgb(-16711936);
-    public static LimeGreen = SColor.FromArgb(-13447886);
-    public static Linen = SColor.FromArgb(-331546);
-    public static Magenta = SColor.FromArgb(-65281);
-    public static Maroon = SColor.FromArgb(-8388608);
-    public static MediumAquamarine = SColor.FromArgb(-10039894);
-    public static MediumBlue = SColor.FromArgb(-16777011);
-    public static MediumOrchid = SColor.FromArgb(-4565549);
-    public static MediumPurple = SColor.FromArgb(-7114533);
-    public static MediumSeaGreen = SColor.FromArgb(-12799119);
-    public static MediumSlateBlue = SColor.FromArgb(-8689426);
-    public static MediumSpringGreen = SColor.FromArgb(-16713062);
-    public static MediumTurquoise = SColor.FromArgb(-12004916);
-    public static MediumVioletRed = SColor.FromArgb(-3730043);
-    public static MidnightBlue = SColor.FromArgb(-15132304);
-    public static MintCream = SColor.FromArgb(-655366);
-    public static MistyRose = SColor.FromArgb(-6943);
-    public static Moccasin = SColor.FromArgb(-6987);
-    public static NavajoWhite = SColor.FromArgb(-8531);
-    public static Navy = SColor.FromArgb(-16777088);
-    public static OldLace = SColor.FromArgb(-133658);
-    public static Olive = SColor.FromArgb(-8355840);
-    public static OliveDrab = SColor.FromArgb(-9728477);
-    public static Orange = SColor.FromArgb(-23296);
-    public static OrangeRed = SColor.FromArgb(-47872);
-    public static Orchid = SColor.FromArgb(-2461482);
-    public static PaleGoldenrod = SColor.FromArgb(-1120086);
-    public static PaleGreen = SColor.FromArgb(-6751336);
-    public static PaleTurquoise = SColor.FromArgb(-5247250);
-    public static PaleVioletRed = SColor.FromArgb(-2396013);
-    public static PapayaWhip = SColor.FromArgb(-4139);
-    public static PeachPuff = SColor.FromArgb(-9543);
-    public static Peru = SColor.FromArgb(-3308225);
-    public static Pink = SColor.FromArgb(-16181);
-    public static Plum = SColor.FromArgb(-2252579);
-    public static PowderBlue = SColor.FromArgb(-5185306);
-    public static Purple = SColor.FromArgb(-8388480);
-    public static Red = SColor.FromArgb(-65536);
-    public static RosyBrown = SColor.FromArgb(-4419697);
-    public static RoyalBlue = SColor.FromArgb(-12490271);
-    public static SaddleBrown = SColor.FromArgb(-7650029);
-    public static Salmon = SColor.FromArgb(-360334);
-    public static SandyBrown = SColor.FromArgb(-744352);
-    public static SeaGreen = SColor.FromArgb(-13726889);
-    public static SeaShell = SColor.FromArgb(-2578);
-    public static Sienna = SColor.FromArgb(-6270419);
-    public static Silver = SColor.FromArgb(-4144960);
-    public static SkyBlue = SColor.FromArgb(-7876885);
-    public static SlateBlue = SColor.FromArgb(-9807155);
-    public static SlateGray = SColor.FromArgb(-9404272);
-    public static Snow = SColor.FromArgb(-1286);
-    public static SpringGreen = SColor.FromArgb(-16711809);
-    public static SteelBlue = SColor.FromArgb(-12156236);
-    public static Tan = SColor.FromArgb(-2968436);
-    public static Teal = SColor.FromArgb(-16744320);
-    public static Thistle = SColor.FromArgb(-2572328);
-    public static Tomato = SColor.FromArgb(-40121);
-    public static Turquoise = SColor.FromArgb(-12525360);
-    public static Violet = SColor.FromArgb(-1146130);
-    public static Wheat = SColor.FromArgb(-663885);
-    public static White = SColor.FromArgb(-1);
-    public static WhiteSmoke = SColor.FromArgb(-657931);
-    public static Yellow = SColor.FromArgb(-256);
-    public static YellowGreen = SColor.FromArgb(-6632142);
-    
+    public static Transparent = SColor.FromArgbInt(16777215);
+    public static AliceBlue = SColor.FromArgbInt(-984833);
+    public static AntiqueWhite = SColor.FromArgbInt(-332841);
+    public static Aqua = SColor.FromArgbInt(-16711681);
+    public static Aquamarine = SColor.FromArgbInt(-8388652);
+    public static Azure = SColor.FromArgbInt(-983041);
+    public static Beige = SColor.FromArgbInt(-657956);
+    public static Bisque = SColor.FromArgbInt(-6972);
+    public static Black = SColor.FromArgbInt(-16777216);
+    public static BlanchedAlmond = SColor.FromArgbInt(-5171);
+    public static Blue = SColor.FromArgbInt(-16776961);
+    public static BlueViolet = SColor.FromArgbInt(-7722014);
+    public static Brown = SColor.FromArgbInt(-5952982);
+    public static BurlyWood = SColor.FromArgbInt(-2180985);
+    public static CadetBlue = SColor.FromArgbInt(-10510688);
+    public static Chartreuse = SColor.FromArgbInt(-8388864);
+    public static Chocolate = SColor.FromArgbInt(-2987746);
+    public static Coral = SColor.FromArgbInt(-32944);
+    public static CornflowerBlue = SColor.FromArgbInt(-10185235);
+    public static Cornsilk = SColor.FromArgbInt(-1828);
+    public static Crimson = SColor.FromArgbInt(-2354116);
+    public static Cyan = SColor.FromArgbInt(-16711681);
+    public static DarkBlue = SColor.FromArgbInt(-16777077);
+    public static DarkCyan = SColor.FromArgbInt(-16741493);
+    public static DarkGoldenrod = SColor.FromArgbInt(-4684277);
+    public static DarkGray = SColor.FromArgbInt(-5658199);
+    public static DarkGreen = SColor.FromArgbInt(-16751616);
+    public static DarkKhaki = SColor.FromArgbInt(-4343957);
+    public static DarkMagenta = SColor.FromArgbInt(-7667573);
+    public static DarkOliveGreen = SColor.FromArgbInt(-11179217);
+    public static DarkOrange = SColor.FromArgbInt(-29696);
+    public static DarkOrchid = SColor.FromArgbInt(-6737204);
+    public static DarkRed = SColor.FromArgbInt(-7667712);
+    public static DarkSalmon = SColor.FromArgbInt(-1468806);
+    public static DarkSeaGreen = SColor.FromArgbInt(-7357301);
+    public static DarkSlateBlue = SColor.FromArgbInt(-12042869);
+    public static DarkSlateGray = SColor.FromArgbInt(-13676721);
+    public static DarkTurquoise = SColor.FromArgbInt(-16724271);
+    public static DarkViolet = SColor.FromArgbInt(-7077677);
+    public static DeepPink = SColor.FromArgbInt(-60269);
+    public static DeepSkyBlue = SColor.FromArgbInt(-16728065);
+    public static DimGray = SColor.FromArgbInt(-9868951);
+    public static DodgerBlue = SColor.FromArgbInt(-14774017);
+    public static Firebrick = SColor.FromArgbInt(-5103070);
+    public static FloralWhite = SColor.FromArgbInt(-1296);
+    public static ForestGreen = SColor.FromArgbInt(-14513374);
+    public static Fuchsia = SColor.FromArgbInt(-65281);
+    public static Gainsboro = SColor.FromArgbInt(-2302756);
+    public static GhostWhite = SColor.FromArgbInt(-460545);
+    public static Gold = SColor.FromArgbInt(-10496);
+    public static Goldenrod = SColor.FromArgbInt(-2448096);
+    public static Gray = SColor.FromArgbInt(-8355712);
+    public static Green = SColor.FromArgbInt(-16744448);
+    public static GreenYellow = SColor.FromArgbInt(-5374161);
+    public static Honeydew = SColor.FromArgbInt(-983056);
+    public static HotPink = SColor.FromArgbInt(-38476);
+    public static IndianRed = SColor.FromArgbInt(-3318692);
+    public static Indigo = SColor.FromArgbInt(-11861886);
+    public static Ivory = SColor.FromArgbInt(-16);
+    public static Khaki = SColor.FromArgbInt(-989556);
+    public static Lavender = SColor.FromArgbInt(-1644806);
+    public static LavenderBlush = SColor.FromArgbInt(-3851);
+    public static LawnGreen = SColor.FromArgbInt(-8586240);
+    public static LemonChiffon = SColor.FromArgbInt(-1331);
+    public static LightBlue = SColor.FromArgbInt(-5383962);
+    public static LightCoral = SColor.FromArgbInt(-1015680);
+    public static LightCyan = SColor.FromArgbInt(-2031617);
+    public static LightGoldenrodYellow = SColor.FromArgbInt(-329006);
+    public static LightGreen = SColor.FromArgbInt(-7278960);
+    public static LightGray = SColor.FromArgbInt(-2894893);
+    public static LightPink = SColor.FromArgbInt(-18751);
+    public static LightSalmon = SColor.FromArgbInt(-24454);
+    public static LightSeaGreen = SColor.FromArgbInt(-14634326);
+    public static LightSkyBlue = SColor.FromArgbInt(-7876870);
+    public static LightSlateGray = SColor.FromArgbInt(-8943463);
+    public static LightSteelBlue = SColor.FromArgbInt(-5192482);
+    public static LightYellow = SColor.FromArgbInt(-32);
+    public static Lime = SColor.FromArgbInt(-16711936);
+    public static LimeGreen = SColor.FromArgbInt(-13447886);
+    public static Linen = SColor.FromArgbInt(-331546);
+    public static Magenta = SColor.FromArgbInt(-65281);
+    public static Maroon = SColor.FromArgbInt(-8388608);
+    public static MediumAquamarine = SColor.FromArgbInt(-10039894);
+    public static MediumBlue = SColor.FromArgbInt(-16777011);
+    public static MediumOrchid = SColor.FromArgbInt(-4565549);
+    public static MediumPurple = SColor.FromArgbInt(-7114533);
+    public static MediumSeaGreen = SColor.FromArgbInt(-12799119);
+    public static MediumSlateBlue = SColor.FromArgbInt(-8689426);
+    public static MediumSpringGreen = SColor.FromArgbInt(-16713062);
+    public static MediumTurquoise = SColor.FromArgbInt(-12004916);
+    public static MediumVioletRed = SColor.FromArgbInt(-3730043);
+    public static MidnightBlue = SColor.FromArgbInt(-15132304);
+    public static MintCream = SColor.FromArgbInt(-655366);
+    public static MistyRose = SColor.FromArgbInt(-6943);
+    public static Moccasin = SColor.FromArgbInt(-6987);
+    public static NavajoWhite = SColor.FromArgbInt(-8531);
+    public static Navy = SColor.FromArgbInt(-16777088);
+    public static OldLace = SColor.FromArgbInt(-133658);
+    public static Olive = SColor.FromArgbInt(-8355840);
+    public static OliveDrab = SColor.FromArgbInt(-9728477);
+    public static Orange = SColor.FromArgbInt(-23296);
+    public static OrangeRed = SColor.FromArgbInt(-47872);
+    public static Orchid = SColor.FromArgbInt(-2461482);
+    public static PaleGoldenrod = SColor.FromArgbInt(-1120086);
+    public static PaleGreen = SColor.FromArgbInt(-6751336);
+    public static PaleTurquoise = SColor.FromArgbInt(-5247250);
+    public static PaleVioletRed = SColor.FromArgbInt(-2396013);
+    public static PapayaWhip = SColor.FromArgbInt(-4139);
+    public static PeachPuff = SColor.FromArgbInt(-9543);
+    public static Peru = SColor.FromArgbInt(-3308225);
+    public static Pink = SColor.FromArgbInt(-16181);
+    public static Plum = SColor.FromArgbInt(-2252579);
+    public static PowderBlue = SColor.FromArgbInt(-5185306);
+    public static Purple = SColor.FromArgbInt(-8388480);
+    public static Red = SColor.FromArgbInt(-65536);
+    public static RosyBrown = SColor.FromArgbInt(-4419697);
+    public static RoyalBlue = SColor.FromArgbInt(-12490271);
+    public static SaddleBrown = SColor.FromArgbInt(-7650029);
+    public static Salmon = SColor.FromArgbInt(-360334);
+    public static SandyBrown = SColor.FromArgbInt(-744352);
+    public static SeaGreen = SColor.FromArgbInt(-13726889);
+    public static SeaShell = SColor.FromArgbInt(-2578);
+    public static Sienna = SColor.FromArgbInt(-6270419);
+    public static Silver = SColor.FromArgbInt(-4144960);
+    public static SkyBlue = SColor.FromArgbInt(-7876885);
+    public static SlateBlue = SColor.FromArgbInt(-9807155);
+    public static SlateGray = SColor.FromArgbInt(-9404272);
+    public static Snow = SColor.FromArgbInt(-1286);
+    public static SpringGreen = SColor.FromArgbInt(-16711809);
+    public static SteelBlue = SColor.FromArgbInt(-12156236);
+    public static Tan = SColor.FromArgbInt(-2968436);
+    public static Teal = SColor.FromArgbInt(-16744320);
+    public static Thistle = SColor.FromArgbInt(-2572328);
+    public static Tomato = SColor.FromArgbInt(-40121);
+    public static Turquoise = SColor.FromArgbInt(-12525360);
+    public static Violet = SColor.FromArgbInt(-1146130);
+    public static Wheat = SColor.FromArgbInt(-663885);
+    public static White = SColor.FromArgbInt(-1);
+    public static WhiteSmoke = SColor.FromArgbInt(-657931);
+    public static Yellow = SColor.FromArgbInt(-256);
+    public static YellowGreen = SColor.FromArgbInt(-6632142);
+
     //[[ GTA HUD COLORS ]]
     public static HUD_None = SColor.FromHudColor(-1);
     public static HUD_Pure_white = SColor.FromHudColor(0);
@@ -546,5 +558,4 @@ export class SColor {
     public static HUD_Tech_green_dark = SColor.FromHudColor(221);
     public static HUD_Tech_red = SColor.FromHudColor(222);
     public static HUD_Tech_green_very_dark = SColor.FromHudColor(223);
-
 }

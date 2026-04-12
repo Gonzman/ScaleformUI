@@ -1,3 +1,5 @@
+import { UIMenuItem } from "../items/uimenuitem";
+
 export enum PanelSide {
     Left,
     Right
@@ -11,11 +13,11 @@ export enum SidePanelsTitleType {
 export abstract class UIMenuSidePanel {
     public Selected: boolean = false;
     public Enabled: boolean = true;
-    public PanelSide: PanelSide
+    public PanelSide!: PanelSide;
     public UpdateParent(): void { }
     public SetParentItem(item: UIMenuItem) {
         this.ParentItem = item;
     }
 
-    public ParentItem: UIMenuItem;
+    public ParentItem!: UIMenuItem;
 }

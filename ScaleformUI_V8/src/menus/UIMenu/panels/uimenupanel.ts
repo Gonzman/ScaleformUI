@@ -11,5 +11,5 @@ export abstract class UIMenuPanel {
         this.ParentItem = item;
     }
 
-    public ParentItem: UIMenuItem;
+    public ParentItem!: UIMenuItem;
 }

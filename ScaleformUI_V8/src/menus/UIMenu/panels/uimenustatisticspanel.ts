@@ -34,7 +34,9 @@ export class UIMenuStatisticsPanel extends UIMenuPanel {
             this.Items[itemId].Value = 100;
         if (this.Items[itemId].Value < 0)
             this.Items[itemId].Value = 0;
-        let it = this.ParentItem.Parent.Pagination.GetScaleformIndex(this.ParentItem.Parent.Items.indexOf(this.ParentItem));
+        const parentMenu = this.ParentItem.Parent;
+        if (!parentMenu) return;
+        let it = parentMenu.Pagination.GetScaleformIndex(parentMenu.Items.indexOf(this.ParentItem));
         let van = this.ParentItem.Panels.indexOf(this);
         ScaleformUI.Scaleforms._ui?.callFunction("SET_PANEL_STATS_ITEM_VALUE", it, van, itemId, this.Items[itemId].Value);
     }

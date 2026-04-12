@@ -1,20 +1,20 @@
-import {Singleton} from "../../helpers/singleton.decorator";
-import {Scaleform, ScaleformHandler} from "../scaleform";
-import {cache} from "@babel/traverse";
+import { Singleton } from "../../helpers/singleton.decorator";
+import { Scaleform, ScaleformHandler } from "../scaleform";
+import { cache } from "@babel/traverse";
 import scope = cache.scope;
-import {block, noop, waitUntilReturns} from "../../helpers/loaders";
-import {Color} from "../../elements/color";
+import { Delay, noop, waitUntilReturns } from "../../helpers/loaders";
+import { HudColor } from "../../elements/color";
 
 @Singleton
 export class BigmessageInstance implements ScaleformHandler {
-    private scaleform?: Scaleform
-    private manualDispose = false
-    private transition: "TRANSITION_OUT" | "TRANSITION_UP" | "TRANSITION_DOWN"  = "TRANSITION_OUT"
-    private transitionDuration = 0.15
-    private transitionPreventAutoExpansion = false
-    private transitionExecuted = false
-    private start = 0
-    private duration = 0
+    private scaleform?: Scaleform;
+    private manualDispose = false;
+    private transition: "TRANSITION_OUT" | "TRANSITION_UP" | "TRANSITION_DOWN" = "TRANSITION_OUT";
+    private transitionDuration = 0.15;
+    private transitionPreventAutoExpansion = false;
+    private transitionExecuted = false;
+    private start = 0;
+    private duration = 0;
 
     constructor() {}
 
@@ -22,27 +22,32 @@ export class BigmessageInstance implements ScaleformHandler {
      * Loads the MP_BIG_MESSAGE_FREEMODE scaleform
      */
     public async load() {
-        if (this.scaleform) return
-        this.scaleform = Scaleform.request("MP_BIG_MESSAGE_FREEMODE")
-        const start = GetGameTimer()
-        const to = 1000
-        await waitUntilReturns(noop, () => this.scaleform!.isLoaded() && GetGameTimer() - start < to, true, 0)
+        if (this.scaleform) return;
+        this.scaleform = Scaleform.request("MP_BIG_MESSAGE_FREEMODE");
+        const start = GetGameTimer();
+        const to = 1000;
+        await waitUntilReturns(noop, () => this.scaleform!.isLoaded && GetGameTimer() - start < to, true, 0);
     }
 
     /**
      * Disposes the scaleform
      */
     public async destroy() {
-        if (!this.scaleform) return
+        if (!this.scaleform) return;
         if (this.manualDispose) {
-            this.scaleform.callFunction(this.transition, false, this.transitionDuration, this.transitionPreventAutoExpansion)
-            await block((this.transitionDuration * .5) * 1000)
-            this.manualDispose = false
+            this.scaleform.callFunction(
+                this.transition,
+                false,
+                this.transitionDuration,
+                this.transitionPreventAutoExpansion
+            );
+            await Delay(this.transitionDuration * 0.5 * 1000);
+            this.manualDispose = false;
         }
-        this.start = 0
-        this.transitionExecuted = false
-        this.scaleform.destroy()
-        delete this.scaleform
+        this.start = 0;
+        this.transitionExecuted = false;
+        this.scaleform.destroy();
+        delete this.scaleform;
     }
 
     /**
@@ -52,7 +57,17 @@ export class BigmessageInstance implements ScaleformHandler {
      * @param manualDispose Whether to automatically dispose the scaleform after it has been ran
      */
     public async showMissionPassedMessage(message: string, duration = 5000, manualDispose = false) {
-        await this.drawCustomScaleformFunction(manualDispose, duration, "SHOW_MISSION_PASSED_MESSAGE", message, "", 100, true, 0, true)
+        await this.drawCustomScaleformFunction(
+            manualDispose,
+            duration,
+            "SHOW_MISSION_PASSED_MESSAGE",
+            message,
+            "",
+            100,
+            true,
+            0,
+            true
+        );
     }
     /**
      * Runs the SHOW_MISSION_PASSED_MESSAGE method on the scaleform
@@ -61,7 +76,7 @@ export class BigmessageInstance implements ScaleformHandler {
      * @param manualDispose Whether to automatically dispose the scaleform after it has been ran
      */
     public async showOldMessage(message: string, duration = 5000, manualDispose = false) {
-        await this.drawCustomScaleformFunction(manualDispose, duration, "SHOW_MISSION_PASSED_MESSAGE", message)
+        await this.drawCustomScaleformFunction(manualDispose, duration, "SHOW_MISSION_PASSED_MESSAGE", message);
     }
 
     /**
@@ -73,8 +88,23 @@ export class BigmessageInstance implements ScaleformHandler {
      * @param duration The duration of the scaleform in miliseconds (defaults to `5000`)
      * @param manualDispose Whether to automatically dispose the scaleform after it has been ran
      */
-    public async showColoredShard(message: string, description: string, textColor: Color, bgColor: Color, duration = 5000, manualDispose = false) {
-        await this.drawCustomScaleformFunction(manualDispose, duration, "SHOW_SHARD_CENTERED_MP_MESSAGE", message, description, bgColor, textColor)
+    public async showColoredShard(
+        message: string,
+        description: string,
+        textColor: HudColor,
+        bgColor: HudColor,
+        duration = 5000,
+        manualDispose = false
+    ) {
+        await this.drawCustomScaleformFunction(
+            manualDispose,
+            duration,
+            "SHOW_SHARD_CENTERED_MP_MESSAGE",
+            message,
+            description,
+            bgColor,
+            textColor
+        );
     }
     /**
      * Runs the SHOW_SHARD_CREW_RANKUP_MP_MESSAGE  method on the scaleform
@@ -84,7 +114,13 @@ export class BigmessageInstance implements ScaleformHandler {
      * @param manualDispose Whether to automatically dispose the scaleform after it has been ran
      */
     public async showSimpleShard(message: string, subtitle: string, duration = 5000, manualDispose = false) {
-        await this.drawCustomScaleformFunction(manualDispose, duration, "SHOW_SHARD_CREW_RANKUP_MP_MESSAGE", message, subtitle)
+        await this.drawCustomScaleformFunction(
+            manualDispose,
+            duration,
+            "SHOW_SHARD_CREW_RANKUP_MP_MESSAGE",
+            message,
+            subtitle
+        );
     }
     /**
      * Runs the SHOW_BIG_MP_MESSAGE method on the scaleform
@@ -94,8 +130,23 @@ export class BigmessageInstance implements ScaleformHandler {
      * @param duration The duration of the scaleform in miliseconds (defaults to `5000`)
      * @param manualDispose Whether to automatically dispose the scaleform after it has been ran
      */
-    public async showRankupMessage(message: string, subtitle: string, rank: number, duration = 5000, manualDispose = false) {
-        await this.drawCustomScaleformFunction(manualDispose, duration, "SHOW_BIG_MP_MESSAGE", message, subtitle, rank, "", "")
+    public async showRankupMessage(
+        message: string,
+        subtitle: string,
+        rank: number,
+        duration = 5000,
+        manualDispose = false
+    ) {
+        await this.drawCustomScaleformFunction(
+            manualDispose,
+            duration,
+            "SHOW_BIG_MP_MESSAGE",
+            message,
+            subtitle,
+            rank,
+            "",
+            ""
+        );
     }
     /**
      * Runs the SHOW_WEAPON_PURCHASED method on the scaleform
@@ -105,8 +156,23 @@ export class BigmessageInstance implements ScaleformHandler {
      * @param duration The duration of the scaleform in miliseconds (defaults to `5000`)
      * @param manualDispose Whether to automatically dispose the scaleform after it has been ran
      */
-    public async showWeaponPurchasedMessage(bigMessage: string, weaponName: string, weaponHash: number, duration = 5000, manualDispose = false) {
-        await this.drawCustomScaleformFunction(manualDispose, duration, "SHOW_WEAPON_PURCHASED", bigMessage, weaponName, weaponHash, "", 100);
+    public async showWeaponPurchasedMessage(
+        bigMessage: string,
+        weaponName: string,
+        weaponHash: number,
+        duration = 5000,
+        manualDispose = false
+    ) {
+        await this.drawCustomScaleformFunction(
+            manualDispose,
+            duration,
+            "SHOW_WEAPON_PURCHASED",
+            bigMessage,
+            weaponName,
+            weaponHash,
+            "",
+            100
+        );
     }
 
     /**
@@ -116,7 +182,16 @@ export class BigmessageInstance implements ScaleformHandler {
      * @param manualDispose Whether to automatically dispose the scaleform after it has been ran
      */
     public async showMpMessageLarge(message: string, duration = 5000, manualDispose = false) {
-        await this.drawCustomScaleformFunction(manualDispose, duration, "SHOW_CENTERED_MP_MESSAGE_LARGE", message, "", 100, true, 100);
+        await this.drawCustomScaleformFunction(
+            manualDispose,
+            duration,
+            "SHOW_CENTERED_MP_MESSAGE_LARGE",
+            message,
+            "",
+            100,
+            true,
+            100
+        );
         this.scaleform?.callFunction("TRANSITION_IN", false);
     }
     /**
@@ -127,7 +202,13 @@ export class BigmessageInstance implements ScaleformHandler {
      * @param manualDispose Whether to automatically dispose the scaleform after it has been ran
      */
     public async showMpWastedMessage(message: string, subtitle: string, duration = 5000, manualDispose = false) {
-        await this.drawCustomScaleformFunction(manualDispose, duration, "SHOW_SHARD_WASTED_MP_MESSAGE", message, subtitle);
+        await this.drawCustomScaleformFunction(
+            manualDispose,
+            duration,
+            "SHOW_SHARD_WASTED_MP_MESSAGE",
+            message,
+            subtitle
+        );
     }
 
     /**
@@ -136,32 +217,40 @@ export class BigmessageInstance implements ScaleformHandler {
      * @param duration The duration of the transition (defaults to `0.4`), this is not the same as the duration when rendering scaleforms.
      * @param preventAutoExpansion (defaults to `true`)
      */
-    public setTransition(transition: "TRANSITION_OUT" | "TRANSITION_UP" | "TRANSITION_DOWN" = "TRANSITION_OUT", duration = 0.4, preventAutoExpansion = true, ) {
-        this.transition = transition
-        this.transitionDuration = duration + .0
-        this.transitionPreventAutoExpansion = preventAutoExpansion
+    public setTransition(
+        transition: "TRANSITION_OUT" | "TRANSITION_UP" | "TRANSITION_DOWN" = "TRANSITION_OUT",
+        duration = 0.4,
+        preventAutoExpansion = true
+    ) {
+        this.transition = transition;
+        this.transitionDuration = duration + 0.0;
+        this.transitionPreventAutoExpansion = preventAutoExpansion;
     }
 
     /**
      * Renders the scaleform, draws transitions etc
      */
     public update() {
-        if (!this.scaleform) return
+        if (!this.scaleform) return;
         //TODO! ScaleformUI.WaitTime = 0
-        this.scaleform.render2d()
-        if (this.manualDispose) return
+        this.scaleform.render2d();
+        if (this.manualDispose) return;
 
         if (this.start !== 0 && GetGameTimer() - this.start > this.duration) {
             if (!this.transitionExecuted) {
-                this.scaleform.callFunction(this.transition, false, this.transitionDuration, this.transitionPreventAutoExpansion)
-                this.transitionExecuted = true
-                this.duration = this.duration + (this.transitionDuration * .5) * 1000
+                this.scaleform.callFunction(
+                    this.transition,
+                    false,
+                    this.transitionDuration,
+                    this.transitionPreventAutoExpansion
+                );
+                this.transitionExecuted = true;
+                this.duration = this.duration + this.transitionDuration * 0.5 * 1000;
             } else {
-                this.destroy()
+                this.destroy();
             }
         }
     }
-
 
     /**
      * Internal function, do not call it manually.
@@ -171,11 +260,16 @@ export class BigmessageInstance implements ScaleformHandler {
      * @param args
      * @private
      */
-    private async drawCustomScaleformFunction(manualDispose: boolean, duration: number, funcName: string, ...args: any[]) {
-        await this.load()
-        this.start = GetGameTimer()
-        this.manualDispose = manualDispose
-        this.scaleform?.callFunction(funcName, false, ...args)
-        this.duration = duration
+    private async drawCustomScaleformFunction(
+        manualDispose: boolean,
+        duration: number,
+        funcName: string,
+        ...args: any[]
+    ) {
+        await this.load();
+        this.start = GetGameTimer();
+        this.manualDispose = manualDispose;
+        this.scaleform?.callFunction(funcName, false, ...args);
+        this.duration = duration;
     }
 }

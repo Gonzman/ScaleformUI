@@ -3,6 +3,7 @@ import { UIMenuItem } from "./uimenuitem";
 import { UIMenuGridAudio } from "elements/uimenugridaudio";
 import { ItemSliderProgressCallback, ProgressItemCallbackBuilder } from "../emitters/emitters";
 import { BadgeStyle } from "elements/badge";
+import { ScaleformUI } from "scaleforms/scaleformui/main";
 
 export class UIMenuProgressItem extends UIMenuItem {
     Pressed: boolean;
@@ -10,7 +11,7 @@ export class UIMenuProgressItem extends UIMenuItem {
     _value: number = 0;
     _max: number = 100;
     _multiplier: number = 5;
-    sliderColor: SColor;
+    sliderColor: SColor = SColor.HUD_Freemode;
     Divider: boolean = false;
     _itemSliderProgressCallback = new ProgressItemCallbackBuilder()
 

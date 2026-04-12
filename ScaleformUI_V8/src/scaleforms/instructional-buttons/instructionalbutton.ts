@@ -45,7 +45,7 @@ export enum InputGroup {
 
 export class InstructionalButton {
     Text: string;
-    ItemBind: UIMenuItem
+    ItemBind?: UIMenuItem
     GamepadButton: number
     KeyboardButton: number
     InputGroupButton: InputGroup = InputGroup.UNUSED;
@@ -116,7 +116,7 @@ export class InstructionalButton {
             }
             return retVal;
         }
-        else if (this.InputButton != InputGroup.UNUSED) return `~${this.InputButton}~`;
+        else if (this.InputGroupButton != InputGroup.UNUSED) return `~${this.InputGroupButton}~`;
         return this.IsUsingController ? GetControlInstructionalButton(2, this.GamepadButton, true) : GetControlInstructionalButton(0, this.KeyboardButton, true);
     }
 

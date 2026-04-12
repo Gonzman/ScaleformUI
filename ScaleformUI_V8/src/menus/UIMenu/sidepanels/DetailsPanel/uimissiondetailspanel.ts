@@ -7,7 +7,7 @@ import { cache } from '@babel/traverse';
 
 export class UIMissionDetailsPanel extends UIMenuPanel{
 
-    private title:string;
+    private title:string = "";
     public PanelSide:PanelSide;
     public TitleColor:SColor;
     public TitleType:number;

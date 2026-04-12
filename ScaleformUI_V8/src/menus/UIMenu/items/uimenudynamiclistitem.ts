@@ -1,10 +1,11 @@
 import { UIMenuItem } from "./uimenuitem";
 import { UIMenuCheckboxItemChangeCallback, UIMenuDynamicListItemChangeCallbackBuilder } from "../emitters/emitters";
 import { BadgeStyle } from "elements/badge";
+import { ScaleformUI } from "scaleforms/scaleformui/main";
 
 export enum ChangeDirection {
     Left = 0,
-    Right,
+    Right
 }
 
 export class UIMenuDynamicListItem extends UIMenuItem {
@@ -13,16 +14,29 @@ export class UIMenuDynamicListItem extends UIMenuItem {
 
     public set CurrentListItem(value: string) {
         this.currentListItem = value;
-        if (this.Parent !== null && this.Parent.Visible && this.Parent.Pagination.IsItemVisible(this.Parent.Items.indexOf(this))) {
-            ScaleformUI.Scaleforms._ui.callFunction("UPDATE_LISTITEM_LIST", this.Parent.Pagination.GetScaleformIndex(this.Parent.Items.indexOf(this)),
-                this.currentListItem, 0);
+        if (
+            this.Parent !== null &&
+            this.Parent.Visible &&
+            this.Parent.Pagination.IsItemVisible(this.Parent.Items.indexOf(this))
+        ) {
+            ScaleformUI.Scaleforms._ui.callFunction(
+                "UPDATE_LISTITEM_LIST",
+                this.Parent.Pagination.GetScaleformIndex(this.Parent.Items.indexOf(this)),
+                this.currentListItem,
+                0
+            );
         }
     }
     public get CurrentListItem(): string {
         return this.currentListItem;
     }
 
-    constructor(text: string, description: string, startingItem: string, changeCallback: UIMenuCheckboxItemChangeCallback) {
+    constructor(
+        text: string,
+        description: string,
+        startingItem: string,
+        changeCallback: UIMenuCheckboxItemChangeCallback
+    ) {
         super(text, description);
         this._itemId = 1;
         this.currentListItem = startingItem;

@@ -125,6 +125,9 @@ export class UIMenu extends BaseMenu {
     public AUDIO_BACK: string = "BACK";
     public AUDIO_ERROR: string = "ERROR";
     public Items: UIMenuItem[] = [];
+    public get MenuItems(): UIMenuItem[] {
+        return this.Items;
+    }
     public _unfilteredItems: UIMenuItem[] = [];
     public MouseEdgeEnabled: boolean = true;
     public ControlDisablingEnabled: boolean = true;

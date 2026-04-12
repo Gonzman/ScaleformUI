@@ -7,7 +7,7 @@ export enum ColorPanelType { Hair, Makeup }
 export class UIMenuColorPanel extends UIMenuPanel {
     Title: string;
     PanelColorType: ColorPanelType;
-    CustomColors: Scolor[]
+    CustomColors: SColor[]
     _value: number;
     private _ColorPanelChanged = new ColorPanelChangedEventBuilder();
     public OnColorPanelChange(delegate: ColorPanelChangedEvent) {
@@ -46,7 +46,9 @@ export class UIMenuColorPanel extends UIMenuPanel {
     }
 
     private _setValue(val: number) {
-        let it = this.ParentItem.Parent.Pagination.GetScaleformIndex(this.ParentItem.Parent.Items.indexOf(this.ParentItem));
+        const parentMenu = this.ParentItem.Parent;
+        if (!parentMenu) return;
+        let it = parentMenu.Pagination.GetScaleformIndex(parentMenu.Items.indexOf(this.ParentItem));
         let van = this.ParentItem.Panels.indexOf(this);
         ScaleformUI.Scaleforms._ui?.callFunction("SET_COLOR_PANEL_VALUE", it, van, val);
     }

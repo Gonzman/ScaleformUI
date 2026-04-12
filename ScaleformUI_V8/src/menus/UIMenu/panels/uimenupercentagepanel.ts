@@ -34,7 +34,9 @@ export class UIMenuPercentagePanel extends UIMenuPanel{
     }
 
     private _setValue(val:number){
-        let it = this.ParentItem.Parent.Pagination.GetScaleformIndex(this.ParentItem.Parent.Items.indexOf(this.ParentItem));
+        const parentMenu = this.ParentItem.Parent;
+        if (!parentMenu) return;
+        let it = parentMenu.Pagination.GetScaleformIndex(parentMenu.Items.indexOf(this.ParentItem));
         let van = this.ParentItem.Panels.indexOf(this);
         ScaleformUI.Scaleforms._ui?.callFunction("SET_PERCENT_PANEL_RETURN_VALUE", it, van, val);
     }

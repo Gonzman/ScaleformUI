@@ -119,6 +119,11 @@ export class Scaleform {
         this.deleted = true
     }
 
+    // Backward-compatible alias used by older handlers.
+    public destroy() {
+        this.dispose()
+    }
+
     public get isValid() {
         return !this.deleted
     }
