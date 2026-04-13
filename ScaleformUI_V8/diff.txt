@@ -1,0 +1,84 @@
+.github/workflows/build-publish.yml
+.idea/.idea.ScaleformUI/.idea/.gitignore
+.idea/.idea.ScaleformUI/.idea/encodings.xml
+.idea/.idea.ScaleformUI/.idea/indexLayout.xml
+.idea/.idea.ScaleformUI/.idea/vcs.xml
+MenuExample/MenuExample.cs
+MenuExample/MenuExample.csproj
+MenuExample/packages.config
+README.md
+ScaleformUI_Csharp/Elements/SColor.cs
+ScaleformUI_Csharp/Elements/ScaleformLabel.cs
+ScaleformUI_Csharp/Elements/ScreenTools.cs
+ScaleformUI_Csharp/Elements/VehicleColors.cs
+ScaleformUI_Csharp/Hud/Notifications/Notifications.cs
+ScaleformUI_Csharp/Menus/BreadcrumbsHandler.cs
+ScaleformUI_Csharp/Menus/MenuBase.cs
+ScaleformUI_Csharp/Menus/MenuHandler.cs
+ScaleformUI_Csharp/Menus/Pause Menus/Elements/Columns/Column.cs
+ScaleformUI_Csharp/Menus/Pause Menus/Elements/Columns/GalleryColumn.cs
+ScaleformUI_Csharp/Menus/Pause Menus/Elements/Columns/MissionsListColumn.cs
+ScaleformUI_Csharp/Menus/Pause Menus/Elements/Columns/PM_Column.cs
+ScaleformUI_Csharp/Menus/Pause Menus/Elements/Columns/PlayerListColumn.cs
+ScaleformUI_Csharp/Menus/Pause Menus/Elements/Columns/SettingsListColumn.cs
+ScaleformUI_Csharp/Menus/Pause Menus/Elements/Columns/StoreListColumn.cs
+ScaleformUI_Csharp/Menus/Pause Menus/Elements/Columns/SubmenuCentralColumn.cs
+ScaleformUI_Csharp/Menus/Pause Menus/Elements/Columns/SubmenuLeftColumn.cs
+ScaleformUI_Csharp/Menus/Pause Menus/Elements/Columns/TextColumn.cs
+ScaleformUI_Csharp/Menus/Pause Menus/Elements/CrewTag.cs
+ScaleformUI_Csharp/Menus/Pause Menus/Elements/Items/FriendItem.cs
+ScaleformUI_Csharp/Menus/Pause Menus/Elements/Items/GalleryItem.cs
+ScaleformUI_Csharp/Menus/Pause Menus/Elements/Items/LobbyItem.cs
+ScaleformUI_Csharp/Menus/Pause Menus/Elements/Items/MMPLayerItem.cs
+ScaleformUI_Csharp/Menus/Pause Menus/Elements/Items/MinimapRaceCheckpoint.cs
+ScaleformUI_Csharp/Menus/Pause Menus/Elements/Items/MinimapRoute.cs
+ScaleformUI_Csharp/Menus/Pause Menus/Elements/Items/MissionItem.cs
+ScaleformUI_Csharp/Menus/Pause Menus/Elements/Items/StoreItem.cs
+ScaleformUI_Csharp/Menus/Pause Menus/Elements/Panels/MinimapPanel.cs
+ScaleformUI_Csharp/Menus/Pause Menus/Elements/Panels/MissionDetailsPanel.cs
+ScaleformUI_Csharp/Menus/Pause Menus/Elements/Panels/PlayerStatsPanel.cs
+ScaleformUI_Csharp/Menus/Pause Menus/LobbyMenu/MainView.cs
+ScaleformUI_Csharp/Menus/Pause Menus/PauseMenu/Items/BasicTabItem.cs
+ScaleformUI_Csharp/Menus/Pause Menus/PauseMenu/Items/KeymapItem.cs
+ScaleformUI_Csharp/Menus/Pause Menus/PauseMenu/Items/PauseMenuItem.cs
+ScaleformUI_Csharp/Menus/Pause Menus/PauseMenu/Items/SettingsItems/SettingsCheckboxItem.cs
+ScaleformUI_Csharp/Menus/Pause Menus/PauseMenu/Items/SettingsItems/SettingsItem.cs
+ScaleformUI_Csharp/Menus/Pause Menus/PauseMenu/Items/SettingsItems/SettingsListItem.cs
+ScaleformUI_Csharp/Menus/Pause Menus/PauseMenu/Items/SettingsItems/SettingsProgressItem.cs
+ScaleformUI_Csharp/Menus/Pause Menus/PauseMenu/Items/SettingsItems/SettingsSeparatorItem.cs
+ScaleformUI_Csharp/Menus/Pause Menus/PauseMenu/Items/SettingsItems/SettingsSliderItem.cs
+ScaleformUI_Csharp/Menus/Pause Menus/PauseMenu/Items/StatsTabItem.cs
+ScaleformUI_Csharp/Menus/Pause Menus/PauseMenu/TabView.cs
+ScaleformUI_Csharp/Menus/Pause Menus/PauseMenu/Tabs/BaseTab.cs
+ScaleformUI_Csharp/Menus/Pause Menus/PauseMenu/Tabs/GalleryTab.cs
+ScaleformUI_Csharp/Menus/Pause Menus/PauseMenu/Tabs/PlayerListTab.cs
+ScaleformUI_Csharp/Menus/Pause Menus/PauseMenu/Tabs/SubmenuTab.cs
+ScaleformUI_Csharp/Menus/Pause Menus/PauseMenu/Tabs/TabLeftItem.cs
+ScaleformUI_Csharp/Menus/Pause Menus/PauseMenu/Tabs/TextTab.cs
+ScaleformUI_Csharp/Menus/RadialMenu/RadialMenu.cs
+ScaleformUI_Csharp/Menus/UIMenu/Items/UIMenuCheckboxItem.cs
+ScaleformUI_Csharp/Menus/UIMenu/Items/UIMenuDynamicListItem.cs
+ScaleformUI_Csharp/Menus/UIMenu/Items/UIMenuItem.cs
+ScaleformUI_Csharp/Menus/UIMenu/Items/UIMenuListItem.cs
+ScaleformUI_Csharp/Menus/UIMenu/Items/UIMenuProgressItem.cs
+ScaleformUI_Csharp/Menus/UIMenu/Items/UIMenuSliderItem.cs
+ScaleformUI_Csharp/Menus/UIMenu/Items/UIMenuStatsItem.cs
+ScaleformUI_Csharp/Menus/UIMenu/Panels/UIMenuColorPanel.cs
+ScaleformUI_Csharp/Menus/UIMenu/Panels/UIMenuColourPickePanel.cs
+ScaleformUI_Csharp/Menus/UIMenu/Panels/UIMenuGridPanel.cs
+ScaleformUI_Csharp/Menus/UIMenu/Panels/UIMenuPercentagePanel.cs
+ScaleformUI_Csharp/Menus/UIMenu/Panels/UIMenuStatisticsPanel.cs
+ScaleformUI_Csharp/Menus/UIMenu/SidePanels/ColorPicker/UIVehicleColourPickerPanel.cs
+ScaleformUI_Csharp/Menus/UIMenu/SidePanels/DetailsPanel/UIFreemodeDetailsItem.cs
+ScaleformUI_Csharp/Menus/UIMenu/SidePanels/DetailsPanel/UIMissionDetailsPanel.cs
+ScaleformUI_Csharp/Menus/UIMenu/UIMenu.cs
+ScaleformUI_Csharp/Menus/UIMenu/Windows/UIMenuDetailsWindow.cs
+ScaleformUI_Csharp/Menus/UIMenu/Windows/UIMenuHeritageWindow.cs
+ScaleformUI_Csharp/Menus/UIRadioMenu/UIRadioMenu.cs
+ScaleformUI_Csharp/ScaleformUI.csproj
+ScaleformUI_Csharp/Scaleforms/Minimap/MinimapOverlays.cs
+ScaleformUI_Csharp/Scaleforms/PauseMenu/PauseMenuScaleform.cs
+ScaleformUI_Csharp/Scaleforms/ScaleformUI/Main.cs
+ScaleformUI_Csharp/Scaleforms/Scoreboard/PlayerListHandler.cs
+ScaleformUI_Csharp/TimerBars/Bars/TextTimerBar.cs
+ScaleformUI_Csharp/TimerBars/TimerBarPool.cs

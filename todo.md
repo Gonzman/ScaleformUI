@@ -10,12 +10,13 @@ Port the C# ScaleformUI main project into the TypeScript V8 codebase.
 
 - [x] `Elements/Colors.cs` => `src/elements/notification/colors.ts`
 - [x] `Elements/Controls.cs` => `src/elements/controls.ts`
-- [x] `Elements/PointExtensions.cs`
 - [x] `Elements/SColor.cs` => `src/elements/scolor.ts`
 - [x] `Elements/ScaleformFonts.cs` => `src/elements/scaleform-fonts.ts`
 - [x] `Elements/ScaleformLabel.cs` => `src/elements/scaleform-label.ts`
 - [x] `Elements/ScaleformLiteralString.cs` => `src/elements/scaleform-literal-string.ts`
 - [x] `Elements/ScreenTools.cs` => `src/math/screen-tools.ts`
+- [x] `Elements/PointExtensions.cs` => `src/elements/PointExtensions.ts`
+- [x] `Elements/VehicleColors.cs` => `src/elements/vehicle-colors.ts`
 - [ ] `Elements/Sprite.cs`
 - [ ] `Elements/UIResRectangle.cs`
 - [ ] `Elements/UIResText.cs`
@@ -110,5 +111,12 @@ Port the C# ScaleformUI main project into the TypeScript V8 codebase.
 
 ## Notes
 
-- `Elements/ScaleformFonts.cs`, `Elements/ScaleformLabel.cs`, `Elements/ScaleformLiteralString.cs`, `Elements/ScreenTools.cs`, `Hud/Markers/Marker.cs`, `Hud/Notifications/Notifications.cs`, `Menus/BreadcrumbsHandler.cs`, `Menus/MenuBase.cs`, `Menus/MenuHandler.cs`, `Menus/UIMenu/PaginationHandler.cs`, `Menus/UIMenu/UIMenu.cs`, `Scaleforms/BigFeed/BigFeedHandler.cs`, `Scaleforms/BigMessage/BigMessage.cs`, `Scaleforms/Countdown/CountdownHandler.cs`, `Scaleforms/Instructional_Buttons/InstructionalButtons.cs`, `Scaleforms/Minimap/MinimapOverlays.cs`, `Scaleforms/PauseMenu/PauseMenuScaleform.cs`, and `Scaleforms/ScaleformUI/Main.cs` already have TypeScript equivalents in `ScaleformUI_V8/src`.
-- `ScaleformUI_V8/src` currently includes a placeholder comment for job mission selector support in `scaleforms/scaleformui/main.ts`, so `MissionSelector` is a known missing wrapper.
+- `Elements/ScaleformFonts.cs`, `Elements/ScaleformLabel.cs`, `Elements/ScaleformLiteralString.cs`, `Elements/ScreenTools.cs`, `Elements/PointExtensions.cs`, `Elements/VehicleColors.cs`, `Hud/Markers/Marker.cs`, `Hud/Notifications/Notifications.cs`, `Menus/BreadcrumbsHandler.cs`, `Menus/MenuBase.cs`, `Menus/MenuHandler.cs`, `Menus/UIMenu/PaginationHandler.cs`, `Menus/UIMenu/UIMenu.cs`, `Scaleforms/BigFeed/BigFeedHandler.cs`, `Scaleforms/BigMessage/BigMessage.cs`, `Scaleforms/Countdown/CountdownHandler.cs`, `Scaleforms/Instructional_Buttons/InstructionalButtons.cs`, `Scaleforms/Minimap/MinimapOverlays.cs`, `Scaleforms/PauseMenu/PauseMenuScaleform.cs`, and `Scaleforms/ScaleformUI/Main.cs` already have TypeScript equivalents in `ScaleformUI_V8/src`.
+- `ScaleformUI_V8/src` currently includes placeholder support in `scaleforms/scaleformui/main.ts` for `JobMissionSelector` and `RankbarHandler`, so those wrappers are still incomplete.
+
+### Diff audit
+
+- `ScaleformUI_V8/diff.txt` contains repository housekeeping changes and sample app updates only.
+- `.idea` metadata and GitHub workflow changes are environment/project config, not TypeScript port progress.
+- `MenuExample.cs` changes are C# sample updates; they do not imply completed TS source ports.
+- Keep the existing port checklist unchanged unless actual `ScaleformUI_V8/src` TypeScript files are added for the corresponding C# features.
