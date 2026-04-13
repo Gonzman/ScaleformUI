@@ -10,7 +10,7 @@ Port the C# ScaleformUI main project into the TypeScript V8 codebase.
 
 - [x] `Elements/Colors.cs` => `src/elements/notification/colors.ts`
 - [x] `Elements/Controls.cs` => `src/elements/controls.ts`
-- [ ] `Elements/PointExtensions.cs`
+- [x] `Elements/PointExtensions.cs`
 - [x] `Elements/SColor.cs` => `src/elements/scolor.ts`
 - [x] `Elements/ScaleformFonts.cs` => `src/elements/scaleform-fonts.ts`
 - [x] `Elements/ScaleformLabel.cs` => `src/elements/scaleform-label.ts`
