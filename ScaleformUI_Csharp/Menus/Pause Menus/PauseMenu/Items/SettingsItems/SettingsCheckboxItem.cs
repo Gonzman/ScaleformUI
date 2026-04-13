@@ -1,4 +1,5 @@
 ﻿using ScaleformUI.Menu;
+using ScaleformUI.PauseMenus.Elements;
 
 namespace ScaleformUI.PauseMenu
 {
@@ -14,13 +15,8 @@ namespace ScaleformUI.PauseMenu
             set
             {
                 isChecked = value;
-                if (Parent != null)
-                {
-                    int tab = Parent.Parent.Parent.Tabs.IndexOf(Parent.Parent);
-                    int leftItem = Parent.Parent.LeftItemList.IndexOf(Parent);
-                    int rightIndex = Parent.ItemList.IndexOf(this);
-                    Parent.Parent.Parent._pause.SetRightSettingsItemBool(tab, leftItem, rightIndex, isChecked);
-                }
+                if (ParentColumn != null && ParentColumn.visible)
+                    ParentColumn.UpdateSlot(ParentColumn.Items.IndexOf(this));
                 CheckboxChanged();
             }
         }

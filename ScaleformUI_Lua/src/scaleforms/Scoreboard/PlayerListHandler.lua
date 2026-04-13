@@ -87,6 +87,7 @@ function PlayerListScoreboard:Dispose()
     for i = 0, 1024 do -- cleaning up in case of a reload, this frees up all ped headshot handles :)
         UnregisterPedheadshot(i)
     end
+    self.PlayerRows = {}
 end
 
 ---Set the title of the scoreboard
@@ -96,7 +97,7 @@ end
 function PlayerListScoreboard:SetTitle(title, label, icon)
     self.TitleLeftText = title or ""
     self.TitleRightText = label or ""
-    self.TitleIcon = icon or 0
+    self.TitleIcon = icon or ""
 end
 
 ---Set the position of the scoreboard

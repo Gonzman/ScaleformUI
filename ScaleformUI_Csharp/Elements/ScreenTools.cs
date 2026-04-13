@@ -31,6 +31,162 @@ namespace ScaleformUI.Elements
         }
 
         /// <summary>
+        /// Convert resolution coords (es. 1920 x 1080) to scaleform coords.
+        /// </summary>
+        /// <param name="realX">The real X.</param>
+        /// <param name="realY">The real Y.</param>
+        /// <returns>A Vector2 with coordinates in 1280 x 720 scale</returns>
+        public static Vector2 ConvertResolutionCoordsToScaleformCoords(float realX, float realY)
+        {
+            Size screen = Screen.Resolution;
+            return new(realX / screen.Width * 1280, realY / screen.Height * 720);
+        }
+
+        /// <summary>
+        /// Convert scaleform coords to resolution coords (es. 1920 x 1080).
+        /// </summary>
+        /// <param name="scaleformX">The scaleform X.</param>
+        /// <param name="scaleformY">The scaleform Y.</param>
+        /// <returns>A Vector2 with coordinates in player's actual resolution</returns>
+        public static Vector2 ConvertScaleformCoordsToResolutionCoords(float scaleformX, float scaleformY)
+        {
+            Size screen = Screen.Resolution;
+            return new Vector2(scaleformX / 1280 * screen.Width, scaleformY / 720 * screen.Height);
+        }
+
+        /// <summary>
+        /// Convert screen coords (0.0 - 1.0) to scaleform coords.
+        /// </summary>
+        /// <param name="scX">The screen coord X.</param>
+        /// <param name="scY">The screen coord Y.</param>
+        /// <returns>A Vector2 with coordinates in 1280 x 720 scale</returns>
+        public static Vector2 ConvertScreenCoordsToScaleformCoords(float scX, float scY)
+        {
+            return new (scX * 1280, scY * 720);
+        }
+
+        /// <summary>
+        /// Convert scaleform coords to screen coords (0.0 - 1.0).
+        /// </summary>
+        /// <param name="scaleformX">The scaleform X.</param>
+        /// <param name="scaleformY">The scaleform Y.</param>
+        /// <returns>A Vector2 with coordinates in screen coords resolution (0.0 - 1.0)</returns>
+        public static Vector2 ConvertScaleformCoordsToScreenCoords(float scaleformX, float scaleformY)
+        {
+            // Normalize coordinates to 0.0 - 1.0 range
+            int w = 0, h = 0;
+            GetActiveScreenResolution(ref w, ref h);
+            return new Vector2(scaleformX / w, scaleformY / h);
+        }
+
+        public static Vector2 ConvertResolutionCoordsToScreenCoords(float x, float y)
+        {
+            float normalizedX = Math.Max(0.0f, Math.Min(1.0f, (float)x / 1920.0f));
+            float normalizedY = Math.Max(0.0f, Math.Min(1.0f, (float)y / 1080.0f));
+
+            return new Vector2(normalizedX, normalizedY);
+        }
+
+
+        /// <summary>
+        /// Converts scaleform size(1280 x 720) into screen size(0.0 - 1.0)
+        /// </summary>
+        /// <param name="scaleformWidth"></param>
+        /// <param name="scaleformHeight"></param>
+        /// <returns></returns>
+        public static SizeF ConvertScaleformSizeToScreenSize(float scaleformWidth, float scaleformHeight)
+        {
+            //Normalize size to 0.0 - 1.0 range
+            int w = 0, h = 0;
+            GetActiveScreenResolution(ref w, ref h);
+            return new SizeF(scaleformWidth / w, scaleformHeight / h);
+        }
+
+        public static void AdjustNormalized16_9ValuesForCurrentAspectRatio(int widescreen, ref Vector2 pos, ref SizeF size)
+        {
+            if (widescreen == 0)
+            {
+                float oldPosX = pos != null ? pos.X : 0.5f;
+                if (oldPosX > 0.5f)
+                    widescreen = 2;
+                else if (oldPosX < 0.5f)
+                    widescreen = 1;
+                else
+                    widescreen = 3;
+            }
+
+            float fPhysicalAspect = GetAspectRatio(false);
+            if (IsSuperWideScreen())
+            {
+                fPhysicalAspect = 16f / 9f;
+            }
+
+            float fScalar = (16f / 9f) / fPhysicalAspect, fAdjustPos = 1.0f - fScalar;
+            switch (widescreen)
+            {
+                case 1:
+                    if (size != null)
+                        size.Width *= fScalar;
+
+                    if (pos != null)
+                        pos = new Vector2(pos.X *= fScalar, pos.Y);
+                    break;
+                case 2:
+                    if (size != null)
+                        size.Width *= fScalar;
+
+                    if (pos != null)
+                        pos = new Vector2((pos.X *= fScalar) + fAdjustPos, pos.Y);
+                    break;
+                case 3:
+                    if (size != null)
+                        size.Width *= fScalar;
+
+                    if (pos != null)
+                        pos = new Vector2((pos.X *= fScalar) + fAdjustPos * 0.5f, pos.Y);
+                    break;
+                case 4:
+                    if (size != null)
+                        size.Width *= fScalar;
+                    break;
+            }
+            AdjustForSuperWidescreen(ref pos, ref size);
+        }
+
+        private static void AdjustForSuperWidescreen(ref Vector2 pos, ref SizeF size)
+        {
+            if (!IsSuperWideScreen())
+            {
+                return;
+            }
+
+            float fDifference = ((16f/9f) / GetAspectRatio(false));
+            if (pos != null)
+                pos = new Vector2(0.5f - ((0.5f - pos.X) * fDifference), pos.Y);
+
+            if (size != null)
+                size.Width *= fDifference;
+        }
+
+        public static bool IsSuperWideScreen()
+        {
+            float fAspectRatio = GetAspectRatio(false);
+            return fAspectRatio > (16f / 9f);
+
+        }
+
+        public static bool GetWideScreen()
+        {
+            float WIDESCREEN_ASPECT = 1.5f;
+            float fLogicalAspectRatio = GetAspectRatio(false);
+            float fPhysicalAspectRatio = Screen.Resolution.Width / Screen.Resolution.Height;
+            if (fPhysicalAspectRatio <= WIDESCREEN_ASPECT)
+                return false;
+
+            return fLogicalAspectRatio > WIDESCREEN_ASPECT;
+        }
+
+        /// <summary>
         /// Chech whether the mouse is inside the specified rectangle.
         /// </summary>
         /// <param name="topLeft">Start point of the rectangle at the top left.</param>

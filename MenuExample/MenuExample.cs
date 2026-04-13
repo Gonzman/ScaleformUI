@@ -5,6 +5,7 @@ using ScaleformUI;
 using ScaleformUI.Elements;
 using ScaleformUI.LobbyMenu;
 using ScaleformUI.Menu;
+using ScaleformUI.Menus;
 using ScaleformUI.PauseMenu;
 using ScaleformUI.PauseMenus.Elements;
 using ScaleformUI.PauseMenus.Elements.Columns;
@@ -26,19 +27,20 @@ public class MenuExample : BaseScript
     //private TimerBarPool _timerBarPool;
     private long txd;
     private Random Random = new Random(API.GetGameTimer());
+    private UIMenu exampleMenu = new UIMenu("ScaleformUI", "ScaleformUI ~o~SHOWCASE", new PointF(376, 50), "commonmenu", "interaction_bgd", true, true, MenuAlignment.RIGHT);
     #region UIMenu
     public async void ExampleMenu()
     {
-        long _titledui = API.CreateDui("https://i.imgur.com/3yrFYbF.gif", 288, 130);
+        long _titledui = API.CreateDui("https://media.tenor.com/-sL5lSwzQSkAAAAi/rolling-cute.gif", 288, 130);
         API.CreateRuntimeTextureFromDuiHandle(txd, "bannerbackground", API.GetDuiHandle(_titledui));
+
+        long _kitten = API.CreateDui("https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExczA0dXhscDRqbHBmb3I2bmk4dDVzd25uNmhhbHNmMnE5N3hkYTM0MiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/tY27Dk0H8IisGidQv6/giphy.gif", 480, 480);
+        API.CreateRuntimeTextureFromDuiHandle(txd, "kitty", API.GetDuiHandle(_kitten));
 
         // first true means add menu Glare scaleform to the menu
         // last true means it's using the alternative title style
-        UIMenu exampleMenu = new UIMenu("ScaleformUI", "ScaleformUI ~o~SHOWCASE", new PointF(20, 20), "scaleformui", "bannerbackground", true, true);
+        exampleMenu = new UIMenu("ScaleformUI", "ScaleformUI ~o~SHOWCASE", new PointF(376, 50), "commonmenu", "interaction_bgd", true, true, MenuAlignment.RIGHT);
         exampleMenu.MaxItemsOnScreen = 7; // To decide max items on screen at time, default 7
-        exampleMenu.BuildingAnimation = MenuBuildingAnimation.LEFT_RIGHT;
-        exampleMenu.AnimationType = MenuAnimationType.BACK_INOUT;
-        exampleMenu.ScrollingType = ScrollingType.CLASSIC;
         exampleMenu.SetMouse(true, false, true, false, false);
 
         //exampleMenu.CounterColor = HudColor.HUD_COLOUR_PINK;
@@ -47,7 +49,11 @@ public class MenuExample : BaseScript
 
         #region Big Message
 
-        UIMenuItem bigMessageItem = new UIMenuItem("~g~Big ~w~Message ~r~Examples", "Select me to switch to the BigMessage menu!");
+        UIMenuItem bigMessageItem = new UIMenuItem("~g~Big~s~ Message ~r~Examples~s~", "Select me to switch to the BigMessage menu!");
+        bigMessageItem.KeepTextColorWhite = true;
+        bigMessageItem.SetCustomLeftBadge("scaleformui", "kitty");
+        bigMessageItem.SetCustomRightBadge("scaleformui", "kitty");
+
         UIMenu uiMenuBigMessage = new UIMenu("Big Message", "Big Message");
         exampleMenu.AddItem(bigMessageItem);
         UIMenuListItem uiListBigMessageTransition = new UIMenuListItem("Big Message", new List<dynamic>() { "TRANSITION_OUT", "TRANSITION_UP", "TRANSITION_DOWN" }, 0);
@@ -148,7 +154,7 @@ public class MenuExample : BaseScript
         UIMenuCheckboxItem ketchupItem = new UIMenuCheckboxItem("~g~Scrolling animation enabled? ~b~in a very long label to ~o~test the text scrolling feature!", UIMenuCheckboxStyle.Tick, enabled, "Do you wish to enable the scrolling animation?");
         long _paneldui = API.CreateDui("https://i.imgur.com/mH0Y65C.gif", 288, 160);
         API.CreateRuntimeTextureFromDuiHandle(txd, "panelbackground", API.GetDuiHandle(_paneldui));
-        UIMissionDetailsPanel sidePanel = new UIMissionDetailsPanel(PanelSide.Right, "Side Panel", true, "scaleformui", "panelbackground");
+        UIMissionDetailsPanel sidePanel = new UIMissionDetailsPanel(PanelSide.Right, "Side Panel", false, "scaleformui", "bannerbackground");
         UIFreemodeDetailsItem detailItem1 = new UIFreemodeDetailsItem("Left Label", "RIGHT LABEL", ScaleformFonts.SIGNPAINTER_HOUSESCRIPT, ScaleformFonts.GTAV_TAXI_DIGITAL, BadgeIcon.BRIEFCASE, SColor.FromRandomValues());
         UIFreemodeDetailsItem detailItem2 = new UIFreemodeDetailsItem("Left Label", "RIGHT LABEL", ScaleformFonts.SIGNPAINTER_HOUSESCRIPT, ScaleformFonts.GTAV_TAXI_DIGITAL, BadgeIcon.MISSION_STAR, SColor.FromRandomValues());
         UIFreemodeDetailsItem detailItem3 = new UIFreemodeDetailsItem("Left Label", "RIGHT LABEL", ScaleformFonts.SIGNPAINTER_HOUSESCRIPT, ScaleformFonts.GTAV_TAXI_DIGITAL, BadgeIcon.ARMOR, SColor.FromRandomValues());
@@ -177,7 +183,7 @@ public class MenuExample : BaseScript
             sidePanelB.Title = ((VehicleColor)value).ToString();
         };
 
-        UIMenuListItem scrollType = new UIMenuListItem("Choose how this menu will scroll!", new List<dynamic>() { "CLASSIC", "PAGINATED", "ENDLESS" }, (int)exampleMenu.ScrollingType);
+        UIMenuListItem scrollType = new UIMenuListItem("Choose how this menu will scroll!", new List<dynamic>() { "~r~CLASSIC", "~g~PAGINATED", "~b~ENDLESS" }, (int)exampleMenu.ScrollingType);
         exampleMenu.AddItem(scrollType);
 
         scrollType.OnListChanged += (item, index) =>
@@ -226,10 +232,6 @@ public class MenuExample : BaseScript
         exampleMenu.AddItem(BlankItem);
         exampleMenu.AddItem(BlankItem_2);
 
-        UIMenuListItem colorListItem = new UIMenuListItem("Choose the scrolling animation", foodsList, (int)exampleMenu.AnimationType, "~BLIP_BARBER~ ~BLIP_INFO_ICON~ ~BLIP_TANK~ ~BLIP_OFFICE~ ~BLIP_CRIM_DRUGS~ ~BLIP_WAYPOINT~ ~INPUTGROUP_MOVE~~n~You can use Blips and Inputs in description as you prefer!~n~⚠ 🐌 ❤️ 🥺 💪🏻 You can use Emojis too!", SColor.HUD_Freemode_dark, SColor.HUD_Freemode);
-        colorListItem.BlinkDescription = true;
-        exampleMenu.AddItem(colorListItem);
-
         UIMenuSliderItem slider = new UIMenuSliderItem("Slider Item", "Cool!", true); // by default max is 100 and multipler 5 = 20 steps.
         exampleMenu.AddItem(slider);
         UIMenuProgressItem progress = new UIMenuProgressItem("Slider Progress Item", 10, 0);
@@ -252,13 +254,19 @@ public class MenuExample : BaseScript
         exampleMenu.AddItem(listPanelItem2);
         listPanelItem2.AddPanel(PercentagePanel);
 
-        UIMenuItem listPanelItem3 = new UIMenuItem("Change Grid Position", "It can be whatever item you want it to be");
+        UIMenuListItem listPanelItem3 = new UIMenuListItem("Change Grid Position", new List<dynamic>() { "It", "can", "be", "whatever", "item", "you", "want", "it", "to", "be" }, 0);
         UIMenuGridPanel GridPanel = new UIMenuGridPanel("Up", "Left", "Right", "Down", new System.Drawing.PointF(.5f, .5f));
         UIMenuGridPanel HorizontalGridPanel = new UIMenuGridPanel("Left", "Right", new System.Drawing.PointF(.5f, .5f));
         // you can choose the text in every position and where to place the starting position of the cirlce
         exampleMenu.AddItem(listPanelItem3);
         listPanelItem3.AddPanel(GridPanel);
         listPanelItem3.AddPanel(HorizontalGridPanel);
+        listPanelItem3.OnListChanged += (a, b) =>
+        {
+            var rand = new Random();
+            ((UIMenuGridPanel)listPanelItem3.Panels[0]).CirclePosition = new PointF((float)rand.NextDouble(), (float)rand.NextDouble());
+        };
+
 
         UIMenuListItem listPanelItem4 = new UIMenuListItem("Look at Statistics", new List<object> { "Example", "example2" }, 0);
         UIMenuStatisticsPanel statistics = new UIMenuStatisticsPanel();
@@ -271,11 +279,29 @@ public class MenuExample : BaseScript
         statistics.UpdateStatistic(0, 10f);
         statistics.UpdateStatistic(1, 50f);
         statistics.UpdateStatistic(2, 100f);
+        listPanelItem4.OnListChanged += (a, b) =>
+        {
+            switch (b)
+            {
+                case 0:
+                    statistics.UpdateStatistic(0, 10f);
+                    statistics.UpdateStatistic(1, 50f);
+                    statistics.UpdateStatistic(2, 100f);
+                    break;
+                case 1:
+                    statistics.UpdateStatistic(0, 100f);
+                    statistics.UpdateStatistic(1, 50f);
+                    statistics.UpdateStatistic(2, 10f);
+                    break;
+            }
+        };
         //and you can get / set their percentage
 
 
         #region Windows SubMenu
         UIMenuItem windowsItem = new UIMenuItem("Windows SubMenu item label", "this is the submenu binded item description");
+        UIMenuColourPickePanel p = new UIMenuColourPickePanel(ColorPickerType.Classic);
+        windowsItem.AddPanel(p);
         windowsItem.SetRightLabel(">>>");
         exampleMenu.AddItem(windowsItem);
         UIMenu windowSubmenu = new UIMenu("Windows Menu", "submenu description");
@@ -286,12 +312,13 @@ public class MenuExample : BaseScript
         windowSubmenu.AddWindow(statsWindow);
         List<dynamic> momfaces = new List<dynamic>() { "Hannah", "Audrey", "Jasmine", "Giselle", "Amelia", "Isabella", "Zoe", "Ava", "Camilla", "Violet", "Sophia", "Eveline", "Nicole", "Ashley", "Grace", "Brianna", "Natalie", "Olivia", "Elizabeth", "Charlotte", "Emma", "Misty" };
         List<dynamic> dadfaces = new List<dynamic>() { "Benjamin", "Daniel", "Joshua", "Noah", "Andrew", "Joan", "Alex", "Isaac", "Evan", "Ethan", "Vincent", "Angel", "Diego", "Adrian", "Gabriel", "Michael", "Santiago", "Kevin", "Louis", "Samuel", "Anthony", "Claude", "Niko", "John" };
-        UIMenuListItem mom = new UIMenuListItem("Mamma", momfaces, 0);
-        UIMenuListItem dad = new UIMenuListItem("Papà", dadfaces, 0);
+        UIMenuListItem mom = new UIMenuListItem("Mom", momfaces, 0);
+        UIMenuListItem dad = new UIMenuListItem("Dad", dadfaces, 0);
         UIMenuSliderItem newItem = new UIMenuSliderItem("Heritage Slider", "This is Useful on heritage", 100, 5, 50, true);
         windowSubmenu.AddItem(mom);
         windowSubmenu.AddItem(dad);
         windowSubmenu.AddItem(newItem);
+
         statsWindow.DetailMid = "Dad: " + newItem.Value + "%";
         statsWindow.DetailBottom = "Mom: " + (100 - newItem.Value) + "%";
         statsWindow.DetailStats = new List<UIDetailStat>()
@@ -400,6 +427,58 @@ public class MenuExample : BaseScript
         exampleMenu.AddItem(ResetFiltering);
 
         #endregion
+        
+        #region Offset Changer
+        UIMenuItem offsetItem = new UIMenuItem("Change Offset", "Change the offset of the menu");
+        offsetItem.SetRightLabel(">>>");
+        exampleMenu.AddItem(offsetItem);
+        
+        UIMenu offsetMenu = new UIMenu("Offset Menu", "Change the offset of the menu");
+
+        UIMenuListItem align = new UIMenuListItem("Align Menu", new List<dynamic>() { "Left", "Right" }, (int)exampleMenu.MenuAlignment, "Aligns the menu Left or Right side while still be dependant to SafeZone and offsets");
+
+        align.OnListChanged += (item, index) => 
+        { 
+            item.Parent.MenuAlignment = (MenuAlignment)index; 
+            exampleMenu.MenuAlignment = (MenuAlignment)index;
+        };
+
+        UIMenuDynamicListItem offsetX = new UIMenuDynamicListItem("Offset X", "Change the X offset of the menu", exampleMenu.Offset.X.ToString("F3"), async (sender, direction) =>
+        {
+            var offset = exampleMenu.Offset.X;
+            if (direction == ChangeDirection.Left)
+                offset--;
+            else 
+                offset++;
+
+            sender.Parent.SetMenuOffset(new PointF(offset, exampleMenu.Offset.Y));
+            exampleMenu.SetMenuOffset(new PointF(offset, exampleMenu.Offset.Y));
+            return exampleMenu.Offset.X.ToString("F3");
+        });
+        
+        UIMenuDynamicListItem offsetY = new UIMenuDynamicListItem("Offset Y", "Change the Y offset of the menu", exampleMenu.Offset.Y.ToString("F3"), async (sender, direction) =>
+        {
+            var offset = exampleMenu.Offset.Y;
+            if (direction == ChangeDirection.Left)
+                offset--;
+            else
+                offset++;
+
+            sender.Parent.SetMenuOffset(new PointF(exampleMenu.Offset.X, offset));
+            exampleMenu.SetMenuOffset(new PointF(exampleMenu.Offset.X, offset));
+            return exampleMenu.Offset.Y.ToString("F3");
+        });
+
+        offsetMenu.AddItem(align);
+        offsetMenu.AddItem(offsetX);
+        offsetMenu.AddItem(offsetY);
+
+        offsetItem.Activated += (sender, args) =>
+        {
+            sender.SwitchTo(offsetMenu, inheritOldMenuParams: true);
+        };
+        #endregion
+        
 
         #endregion
 
@@ -938,8 +1017,8 @@ public class MenuExample : BaseScript
             if (item == ketchupItem)
             {
                 enabled = checked_;
-                sender.EnableAnimation = enabled;
-                colorListItem.Enabled = enabled;
+                scrollType.Enabled = checked_;
+                scrollType.SetLeftBadge(checked_ ? BadgeIcon.NONE : BadgeIcon.LOCK);
                 Notifications.ShowNotification("~r~Menu animation: ~b~" + (enabled ? "Enabled" : "Disabled"));
             }
         };
@@ -957,12 +1036,6 @@ public class MenuExample : BaseScript
         {
             //if (sender.MenuItems[index] == cookItem)
             //cookItem.SetLeftBadge(BadgeIcon.NONE);
-        };
-
-        exampleMenu.OnListChange += (sender, item, index) =>
-        {
-            if (item == colorListItem)
-                sender.AnimationType = (MenuAnimationType)index;
         };
 
         exampleMenu.OnMenuOpen += (menu, data) =>
@@ -1104,7 +1177,8 @@ public class MenuExample : BaseScript
     {
         UIMenu mainMenu = _menu;
         // tabview is the main menu.. the container of all the tabs.
-        TabView pauseMenu = new TabView("PauseMenu example", "Look there's a subtitle too!", "Detail 1", "Detail 2", "Detail 3");
+        TabView pauseMenu = new TabView("PauseMenu example", "Look there's a subtitle too! It can be veeeeery long or not so long it depends on you!! (2 lines max)" +
+            "~n~ Look there's a subtitle too! It can be veeeeery long or not so long it depends on you!! (2 lines max)", "Detail 1", "Detail 2", "Detail 3");
         int mugshot = API.RegisterPedheadshot(Game.PlayerPed.Handle);
         while (!API.IsPedheadshotReady(mugshot)) await BaseScript.Delay(1);
         string mugtxd = API.GetPedheadshotTxdString(mugshot);
@@ -1115,25 +1189,40 @@ public class MenuExample : BaseScript
         long bg_dui = API.CreateDui("https://giphy.com/embed/sxwk9hGlsULcYm6hDX", 1280, 720);
         API.CreateRuntimeTextureFromDuiHandle(txd, "pausebigbg", API.GetDuiHandle(bg_dui));
 
+        long rightPic = API.CreateDui("https://i.giphy.com/sEU384ODAcnSg.webp", 288, 430);
+        API.CreateRuntimeTextureFromDuiHandle(txd, "rightPic", API.GetDuiHandle(rightPic));
+
         basicTab.UpdateBackground("scaleformui", "pausebigbg");
-        basicTab.AddItem(new BasicTabItem("~y~Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat"));
-        basicTab.LabelsList[0].LabelFont = ScaleformFonts.HANDSTYLE_HEIST;
-        basicTab.AddItem(new BasicTabItem("~BLIP_INFO_ICON~ ~r~Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat"));
-        basicTab.AddItem(new BasicTabItem("~BLIP_INFO_ICON~ ~b~Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat"));
-        basicTab.AddItem(new BasicTabItem("~BLIP_INFO_ICON~ ~g~Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat"));
-        basicTab.AddItem(new BasicTabItem("~BLIP_INFO_ICON~ ~p~Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat"));
-        basicTab.AddItem(new BasicTabItem("~BLIP_INFO_ICON~ ~p~Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat"));
-        basicTab.AddItem(new BasicTabItem("~BLIP_INFO_ICON~ ~p~Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat"));
-        basicTab.AddItem(new BasicTabItem("~BLIP_INFO_ICON~ ~p~Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat"));
-        basicTab.AddItem(new BasicTabItem("~BLIP_INFO_ICON~ ~p~Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat"));
-        basicTab.AddItem(new BasicTabItem("~BLIP_INFO_ICON~ ~p~Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat"));
-        basicTab.AddItem(new BasicTabItem("~BLIP_INFO_ICON~ ~p~Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat"));
-        basicTab.AddItem(new BasicTabItem("~BLIP_INFO_ICON~ ~r~Use the mouse wheel to scroll the text!!"));
+        basicTab.AddPicture("scaleformui", "rightPic");
+        basicTab.AddItem(new PauseMenuItem("~y~Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat"));
+        basicTab.AddItem(new PauseMenuItem("~BLIP_INFO_ICON~ ~r~Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat"));
+        basicTab.AddItem(new PauseMenuItem("~BLIP_INFO_ICON~ ~b~Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat"));
+        basicTab.AddItem(new PauseMenuItem("~BLIP_INFO_ICON~ ~g~Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat"));
+        basicTab.AddItem(new PauseMenuItem("~BLIP_INFO_ICON~ ~p~Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat"));
+        basicTab.AddItem(new PauseMenuItem("~BLIP_INFO_ICON~ ~p~Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat"));
+        basicTab.AddItem(new PauseMenuItem("~BLIP_INFO_ICON~ ~p~Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat"));
+        basicTab.AddItem(new PauseMenuItem("~BLIP_INFO_ICON~ ~p~Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat"));
+        basicTab.AddItem(new PauseMenuItem("~BLIP_INFO_ICON~ ~p~Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat"));
+        basicTab.AddItem(new PauseMenuItem("~BLIP_INFO_ICON~ ~p~Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat"));
+        basicTab.AddItem(new PauseMenuItem("~BLIP_INFO_ICON~ ~p~Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat"));
+        basicTab.AddItem(new PauseMenuItem("~BLIP_INFO_ICON~ ~r~Use the mouse wheel to scroll the text!!"));
+        basicTab.AddItem(new PauseMenuItem("~BLIP_INFO_ICON~ ~r~Use the mouse wheel to scroll the text!!"));
+        basicTab.AddItem(new PauseMenuItem("~BLIP_INFO_ICON~ ~r~Use the mouse wheel to scroll the text!!"));
+        basicTab.AddItem(new PauseMenuItem("~BLIP_INFO_ICON~ ~r~Use the mouse wheel to scroll the text!!"));
+        basicTab.AddItem(new PauseMenuItem("~BLIP_INFO_ICON~ ~r~Use the mouse wheel to scroll the text!!"));
+        basicTab.AddItem(new PauseMenuItem("~BLIP_INFO_ICON~ ~r~Use the mouse wheel to scroll the text!!"));
+        basicTab.AddItem(new PauseMenuItem("~BLIP_INFO_ICON~ ~r~Use the mouse wheel to scroll the text!!"));
+        basicTab.AddItem(new PauseMenuItem("~BLIP_INFO_ICON~ ~r~Use the mouse wheel to scroll the text!!"));
+        basicTab.AddItem(new PauseMenuItem("~BLIP_INFO_ICON~ ~r~Use the mouse wheel to scroll the text!!"));
+        basicTab.AddItem(new PauseMenuItem("~BLIP_INFO_ICON~ ~r~Use the mouse wheel to scroll the text!!"));
+        basicTab.AddItem(new PauseMenuItem("~BLIP_INFO_ICON~ ~r~Use the mouse wheel to scroll the text!!"));
+        basicTab.AddItem(new PauseMenuItem("~BLIP_INFO_ICON~ ~r~Use the mouse wheel to scroll the text!!"));
+        basicTab.AddItem(new PauseMenuItem("~BLIP_INFO_ICON~ ~r~Use the mouse wheel to scroll the text!!"));
         pauseMenu.AddTab(basicTab);
 
         SubmenuTab multiItemTab = new SubmenuTab("SUBMENUTAB", SColor.HUD_Freemode);
         pauseMenu.AddTab(multiItemTab);
-        TabLeftItem first = new TabLeftItem("1 - Empty", LeftItemType.Empty);
+        TabLeftItem first = new TabLeftItem("1 - Empty", LeftItemType.Empty, ScaleformFonts.CHALET_LONDON_NINETEENSIXTY, SColor.HUD_Pause_bg, SColor.HUD_White);
         TabLeftItem second = new TabLeftItem("2 - Info", LeftItemType.Info);
         TabLeftItem third = new TabLeftItem("3 - Statistics", LeftItemType.Statistics);
         TabLeftItem fourth = new TabLeftItem("4 - Settings", LeftItemType.Settings);
@@ -1152,6 +1241,7 @@ public class MenuExample : BaseScript
         third.UpdateBackground("scaleformui", "pausestatsbg", LeftItemBGType.Masked);
         fourth.UpdateBackground("scaleformui", "pausesetsbg", LeftItemBGType.Resized);
 
+        first.Enabled = false;
         multiItemTab.AddLeftItem(first);
         multiItemTab.AddLeftItem(second);
         multiItemTab.AddLeftItem(third);
@@ -1159,18 +1249,18 @@ public class MenuExample : BaseScript
         multiItemTab.AddLeftItem(fifth);
 
         second.RightTitle = "Info Title!!";
-        second.AddItem(new BasicTabItem("~BLIP_INFO_ICON~ ~y~Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat"));
-        second.AddItem(new BasicTabItem("~BLIP_INFO_ICON~ ~r~Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat"));
-        second.AddItem(new BasicTabItem("~BLIP_INFO_ICON~ ~b~Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat"));
-        second.AddItem(new BasicTabItem("~BLIP_INFO_ICON~ ~g~Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat"));
-        second.AddItem(new BasicTabItem("~BLIP_INFO_ICON~ ~p~Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat"));
-        second.AddItem(new BasicTabItem("~BLIP_INFO_ICON~ ~p~Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat"));
-        second.AddItem(new BasicTabItem("~BLIP_INFO_ICON~ ~p~Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat"));
-        second.AddItem(new BasicTabItem("~BLIP_INFO_ICON~ ~p~Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat"));
-        second.AddItem(new BasicTabItem("~BLIP_INFO_ICON~ ~p~Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat"));
-        second.AddItem(new BasicTabItem("~BLIP_INFO_ICON~ ~p~Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat"));
-        second.AddItem(new BasicTabItem("~BLIP_INFO_ICON~ ~p~Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat"));
-        second.AddItem(new BasicTabItem("~BLIP_INFO_ICON~ ~r~Use the mouse wheel to scroll the text!!"));
+        second.AddItem(new PauseMenuItem("~BLIP_INFO_ICON~ ~y~Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat"));
+        second.AddItem(new PauseMenuItem("~BLIP_INFO_ICON~ ~r~Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat"));
+        second.AddItem(new PauseMenuItem("~BLIP_INFO_ICON~ ~b~Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat"));
+        second.AddItem(new PauseMenuItem("~BLIP_INFO_ICON~ ~g~Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat"));
+        second.AddItem(new PauseMenuItem("~BLIP_INFO_ICON~ ~p~Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat"));
+        second.AddItem(new PauseMenuItem("~BLIP_INFO_ICON~ ~p~Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat"));
+        second.AddItem(new PauseMenuItem("~BLIP_INFO_ICON~ ~p~Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat"));
+        second.AddItem(new PauseMenuItem("~BLIP_INFO_ICON~ ~p~Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat"));
+        second.AddItem(new PauseMenuItem("~BLIP_INFO_ICON~ ~p~Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat"));
+        second.AddItem(new PauseMenuItem("~BLIP_INFO_ICON~ ~p~Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat"));
+        second.AddItem(new PauseMenuItem("~BLIP_INFO_ICON~ ~p~Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat"));
+        second.AddItem(new PauseMenuItem("~BLIP_INFO_ICON~ ~r~Use the mouse wheel to scroll the text!!"));
 
         StatsTabItem _labelStatItem = new StatsTabItem("Item's Label", "Item's right label");
         StatsTabItem _coloredBarStatItem0 = new StatsTabItem("Item's Label", 0, SColor.HUD_Orange);
@@ -1185,20 +1275,49 @@ public class MenuExample : BaseScript
         third.AddItem(_coloredBarStatItem2);
         third.AddItem(_coloredBarStatItem3);
         third.AddItem(_coloredBarStatItem4);
+        third.AddItem(_labelStatItem);
+        third.AddItem(_coloredBarStatItem0);
+        third.AddItem(_coloredBarStatItem1);
+        third.AddItem(_coloredBarStatItem2);
+        third.AddItem(_coloredBarStatItem3);
+        third.AddItem(_coloredBarStatItem4);
+        third.AddItem(_labelStatItem);
+        third.AddItem(_coloredBarStatItem0);
+        third.AddItem(_coloredBarStatItem1);
+        third.AddItem(_coloredBarStatItem2);
+        third.AddItem(_coloredBarStatItem3);
+        third.AddItem(_coloredBarStatItem4);
 
-        List<dynamic> itemList = new List<dynamic>() { "This", "Is", "The", "List", "Super", "Power", "Wooow" };
-        SettingsItem _settings1 = new SettingsItem("Item's Label", "Item's right Label");
-        SettingsItem _settings2 = new SettingsListItem("Item's Label", itemList, 0);
-        SettingsItem _settings3 = new SettingsProgressItem("Item's Label", 100, 25, false, SColor.HUD_Freemode);
-        SettingsItem _settings4 = new SettingsProgressItem("Item's Label", 100, 75, true, SColor.HUD_Pink);
-        SettingsItem _settings5 = new SettingsCheckboxItem("Item's Label", UIMenuCheckboxStyle.Tick, true);
-        SettingsItem _settings6 = new SettingsSliderItem("Item's Label", 100, 50, SColor.HUD_Red);
-        fourth.AddItem(_settings1);
-        fourth.AddItem(_settings2);
-        fourth.AddItem(_settings3);
-        fourth.AddItem(_settings4);
-        fourth.AddItem(_settings5);
-        fourth.AddItem(_settings6);
+        for (int i = 0; i < 3; i++)
+        {
+
+            List<dynamic> itemList = new List<dynamic>() { "This", "Is", "The", "List", "Super", "Power", "Wooow" };
+            SettingsItem _settings1 = new SettingsItem("Basic Item's Label", "Item's right Label");
+            SettingsListItem _settings2 = new SettingsListItem("List Item's Label", itemList, 0);
+            SettingsProgressItem _settings3 = new SettingsProgressItem("Progress Item's Label", 100, 25, false, SColor.HUD_Freemode);
+            SettingsProgressItem _settings4 = new SettingsProgressItem("Masked Progress Item's Label", 100, 75, true, SColor.HUD_Pink);
+            SettingsCheckboxItem _settings5 = new SettingsCheckboxItem("Checkbox Item's Label", UIMenuCheckboxStyle.Tick, true);
+            SettingsSliderItem _settings6 = new SettingsSliderItem("Slider Item's Label", 100, 50, SColor.HUD_Red);
+            SettingsSeparatorItem _settings7 = new SettingsSeparatorItem();
+            SettingsItem _settings8 = new SettingsItem("BLIP Item's Label ~BLIP_INFO_ICON~ ~INPUT_CONTEXT~", "Right Label") { ItemType = SettingsItemType.BlipType };
+            _settings1.OnActivate += (a) =>
+            {
+                Debug.WriteLine("Item activated!");
+            };
+            _settings2.OnListItemChanged += (a, b, c) =>
+            {
+                Debug.WriteLine($"Selected {c}!");
+            };
+
+            fourth.AddItem(_settings1);
+            fourth.AddItem(_settings2);
+            fourth.AddItem(_settings3);
+            fourth.AddItem(_settings4);
+            fourth.AddItem(_settings5);
+            fourth.AddItem(_settings6);
+            fourth.AddItem(_settings7);
+            fourth.AddItem(_settings8);
+        }
 
         fifth.RightTitle = "ACTION";
         fifth.KeymapRightLabel_1 = "PRIMARY";
@@ -1217,33 +1336,72 @@ public class MenuExample : BaseScript
         long _paneldui = API.CreateDui("https://i.imgur.com/mH0Y65C.gif", 288, 160);
         API.CreateRuntimeTextureFromDuiHandle(txd, "lobby_panelbackground", API.GetDuiHandle(_paneldui));
 
-        PlayerListTab playersTab = new("PLAYERLISTTAB", SColor.HUD_Freemode, false);
-        List<Column> columns = new List<Column>()
-        {
-            new SettingsListColumn("COLUMN SETTINGS", SColor.HUD_Red), // color will be ignored for PauseMenu
-            //new PlayerListColumn("COLUMN PLAYERS", SColor.HUD_Orange), // color will be ignored for PauseMenu
-            new MissionsListColumn("COLUMN MISSIONS", SColor.HUD_Orange), // color will be ignored for PauseMenu
-            //new StoreListColumn("CONTENT", SColor.HUD_Freemode),
-            new MissionDetailsPanel("COLUMN INFO PANEL", SColor.HUD_Green), // color will be ignored for PauseMenu
-            //new MinimapPanel("Minimap", SColor.HUD_Freemode)
-        };
-        playersTab.SetUpColumns(columns);
+        PlayerListTab playersTab = new("PLAYERLISTTAB", SColor.HUD_Freemode);
         pauseMenu.AddTab(playersTab);
+        // in new version of ScaleformUI you can initialize the columns directly and give them to the tab.
+        // this way you can create multiple instances of the same column.
+
+        SettingsListColumn settings = new SettingsListColumn("settings", 16); // Giving a label in pause menu is useless.. works only for corona mode.
+        PlayerListColumn players = new PlayerListColumn("players", 16); // Giving a label in pause menu is useless.. works only for corona mode.
+        MissionsListColumn missions = new MissionsListColumn("missions", 16); // Giving a label in pause menu is useless.. works only for corona mode.
+        StoreListColumn store = new StoreListColumn("store"); // Giving a label in pause menu is useless.. works only for corona mode.
+        MissionDetailsPanel missionPanel = new MissionDetailsPanel("missionPanel"); // Giving a label in pause menu is useless.. works only for corona mode.
+
+        playersTab.SetupLeftColumn(settings);
+        playersTab.SetupCenterColumn(players);
+        playersTab.SetupRightColumn(missionPanel);
+
+        missionPanel.Title = "ScaleformUI - Title";
+        missionPanel.UpdatePanelPicture("scaleformui", "bannerbackground");
+        for (int i = 0; i < 3; i++)
+        {
+            UIFreemodeDetailsItem missionItem1 = new("Hellooooo", "I'm here too!", false, ScaleformFonts.GTAV_COURIER, ScaleformFonts.HANDSTYLE_HEIST);
+            UIFreemodeDetailsItem missionItem2 = new("Hellooooo", "I'm here too!", ScaleformFonts.GTAV_COURIER, ScaleformFonts.HANDSTYLE_HEIST, BadgeIcon.COUNTRY_ITALY, SColor.HUD_Pure_white, true);
+            UIFreemodeDetailsItem missionItem3 = new("Hellooooo", "I'm here too!", true, ScaleformFonts.GTAV_COURIER, ScaleformFonts.HANDSTYLE_HEIST);
+            var ct = new CrewTag("TEST", false, false, CrewHierarchy.Generic, SColor.AliceBlue);
+            UIFreemodeDetailsItem missionItem5 = new("Hellooooo", ct);
+            missionPanel.AddItem(missionItem1);
+            missionPanel.AddItem(missionItem2);
+            missionPanel.AddItem(missionItem3);
+            missionPanel.AddItem(missionItem5);
+        }
+        UIFreemodeDetailsItem missionItem4 = new("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat");
+        missionPanel.AddItem(missionItem4);
+
+        for (int i = 0; i < 5; i++)
+        {
+            StoreItem item1 = new StoreItem("scaleformui", "bannerbackground", "Description");
+            StoreItem item2 = new StoreItem("scaleformui", "bannerbackground", "Description");
+            StoreItem item3 = new StoreItem("scaleformui", "bannerbackground", "Description");
+            StoreItem item4 = new StoreItem("scaleformui", "bannerbackground", "Description");
+            StoreItem item5 = new StoreItem("scaleformui", "bannerbackground", "Description");
+            store.AddStoreItem(item1);
+            store.AddStoreItem(item2);
+            store.AddStoreItem(item3);
+            store.AddStoreItem(item4);
+            store.AddStoreItem(item5);
+        }
 
         UIMenuItem n1 = new("Base Item", "Basic Description");
-        UIMenuListItem n2 = new("List Item", new List<dynamic> { "item1", "item2", "item3" }, 0, "List Description");
+        n1.SetRightLabel("Right Label");
+        UIMenuListItem n2 = new("List Item", new List<dynamic> { "~r~item1", "item2", "item3" }, 0, "List Description");
         UIMenuCheckboxItem n3 = new("Checkbox Item", UIMenuCheckboxStyle.Tick, true, "Checkbox Description");
         UIMenuSliderItem n4 = new("Slider Item", "Slider Description", 100, 10, 50, false);
         UIMenuProgressItem n5 = new("Progress Item", 100, 50, "Progress Description");
-        playersTab.SettingsColumn.AddSettings(n1);
-        playersTab.SettingsColumn.AddSettings(n2);
-        playersTab.SettingsColumn.AddSettings(n3);
-        playersTab.SettingsColumn.AddSettings(n4);
-        playersTab.SettingsColumn.AddSettings(n5);
+        settings.AddSettings(n1);
+        settings.AddSettings(n2);
+        settings.AddSettings(n3);
+        settings.AddSettings(n4);
+        settings.AddSettings(n5);
 
-        n1.Activated += (sender, args) =>
+        //n1.Activated += (sender, args) =>
+        //{
+        //    playersTab.SwitchColumn(1);
+        //};
+
+        settings.OnSettingItemActivated += delegate
         {
-            playersTab.SelectColumn(1);
+            settings.RemoveItemAt(settings.Index);
         };
 
         MissionItem mission1 = new MissionItem("Mission 1");
@@ -1251,173 +1409,220 @@ public class MenuExample : BaseScript
         MissionItem mission3 = new MissionItem("Mission 3");
         MissionItem mission4 = new MissionItem("Mission 4");
         MissionItem mission5 = new MissionItem("Mission 5");
-
-        mission1.SetLeftIcon((BadgeIcon)API.GetRandomIntInRange(1, 179), SColor.FromRandomValues());
-        mission1.SetRightIcon((BadgeIcon)API.GetRandomIntInRange(1, 179), SColor.FromRandomValues());
-        mission2.SetLeftIcon((BadgeIcon)API.GetRandomIntInRange(1, 179), SColor.FromRandomValues());
-        mission2.SetRightIcon((BadgeIcon)API.GetRandomIntInRange(1, 179), SColor.FromRandomValues());
-        mission3.SetLeftIcon((BadgeIcon)API.GetRandomIntInRange(1, 179), SColor.FromRandomValues());
-        mission3.SetRightIcon((BadgeIcon)API.GetRandomIntInRange(1, 179), SColor.FromRandomValues());
-        mission4.SetLeftIcon((BadgeIcon)API.GetRandomIntInRange(1, 179), SColor.FromRandomValues());
-        mission4.SetRightIcon((BadgeIcon)API.GetRandomIntInRange(1, 179), SColor.FromRandomValues());
-        mission5.SetLeftIcon((BadgeIcon)API.GetRandomIntInRange(1, 179), SColor.FromRandomValues());
-        mission5.SetRightIcon((BadgeIcon)API.GetRandomIntInRange(1, 179), SColor.FromRandomValues(), true);
-
-        playersTab.MissionsColumn.AddMissionItem(mission1);
-        playersTab.MissionsColumn.AddMissionItem(mission2);
-        playersTab.MissionsColumn.AddMissionItem(mission3);
-        playersTab.MissionsColumn.AddMissionItem(mission4);
-        playersTab.MissionsColumn.AddMissionItem(mission5);
-
-        playersTab.MissionPanel.UpdatePanelPicture("scaleformui", "lobby_panelbackground");
-        playersTab.MissionPanel.Title = "ScaleformUI - Title";
-        UIFreemodeDetailsItem missionItem1 = new("Hellooooo", "I'm here too!", false, ScaleformFonts.GTAV_COURIER, ScaleformFonts.HANDSTYLE_HEIST);
-        UIFreemodeDetailsItem missionItem2 = new("Hellooooo", "I'm here too!", ScaleformFonts.GTAV_COURIER, ScaleformFonts.HANDSTYLE_HEIST, BadgeIcon.COUNTRY_ITALY, SColor.HUD_Pure_white, true);
-        UIFreemodeDetailsItem missionItem3 = new("Hellooooo", "I'm here too!", true, ScaleformFonts.GTAV_COURIER, ScaleformFonts.HANDSTYLE_HEIST);
-        UIFreemodeDetailsItem missionItem4 = new("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat");
-        playersTab.MissionPanel.AddItem(missionItem1);
-        playersTab.MissionPanel.AddItem(missionItem2);
-        playersTab.MissionPanel.AddItem(missionItem3);
-        playersTab.MissionPanel.AddItem(missionItem4);
-
-        /*
-
-        CrewTag crew1 = new CrewTag("hello", false, false, CrewHierarchy.Leader, SColor.HUD_Green);
-        CrewTag crew2 = new CrewTag("evry1", false, false, CrewHierarchy.Commissioner, SColor.HUD_Pink);
-        CrewTag crew3 = new CrewTag("look", false, false, CrewHierarchy.Liutenant, SColor.HUD_Blue);
-        CrewTag crew4 = new CrewTag("at", false, false, CrewHierarchy.Representative, SColor.HUD_Orange);
-        CrewTag crew5 = new CrewTag("this", false, false, CrewHierarchy.Muscle, SColor.HUD_Red);
-
-        FriendItem friend = new FriendItem(Game.Player.Name + " #1", SColor.HUD_Green, true, API.GetRandomIntInRange(15, 55), "Online", crew1);
-        FriendItem friend2 = new FriendItem(Game.Player.Name + " #2", SColor.HUD_Pink, true, API.GetRandomIntInRange(15, 55), "Offline", crew2);
-        FriendItem friend3 = new FriendItem(Game.Player.Name + " #3", SColor.HUD_Blue, true, API.GetRandomIntInRange(15, 55), "Online", crew3);
-        FriendItem friend4 = new FriendItem(Game.Player.Name + " #4", SColor.HUD_Orange, true, API.GetRandomIntInRange(15, 55), "Offline", crew4);
-        FriendItem friend5 = new FriendItem(Game.Player.Name + " #5", SColor.HUD_Red, true, API.GetRandomIntInRange(15, 55), "Busy", crew5);
-
-        //friend.ClonePed = Game.PlayerPed;
-        //friend2.ClonePed = Game.PlayerPed;
-        //friend3.ClonePed = Game.PlayerPed;
-        //friend4.ClonePed = Game.PlayerPed;
-        //friend5.ClonePed = Game.PlayerPed;
-
-        friend.SetOnline();
-        friend3.SetOnline();
-        friend5.SetOnline();
-
-        playersTab.PlayersColumn.AddPlayer(friend);
-        playersTab.PlayersColumn.AddPlayer(friend2);
-        playersTab.PlayersColumn.AddPlayer(friend3);
-        playersTab.PlayersColumn.AddPlayer(friend4);
-        playersTab.PlayersColumn.AddPlayer(friend5);
-
-
-        PlayerStatsPanel panel = new PlayerStatsPanel("Player 1", SColor.HUD_Green)
+        MissionSeparatorItem separator = new MissionSeparatorItem("Separator", true);
+        mission1.MissionActivated += delegate
         {
-            Description = "",
-            HasPlane = true,
-            HasHeli = true,
+            missions.RemoveSlot(0);
         };
-        panel.RankInfo.RankLevel = 150;
-        panel.RankInfo.LowLabel = "This is the low label";
-        panel.RankInfo.MidLabel = "This is the middle label";
-        panel.RankInfo.UpLabel = "This is the upper label";
-        panel.HardwareVisible = false;
-        panel.AddStat(new PlayerStatsPanelStatItem("Statistic 1", "Description 1", 50));
-        panel.AddStat(new PlayerStatsPanelStatItem("Statistic 2", "Description 2", 100));
-        panel.AddStat(new PlayerStatsPanelStatItem("Statistic 3", "Description 3", API.GetRandomIntInRange(30, 150)));
-        panel.AddStat(new PlayerStatsPanelStatItem("Statistic 4", "Description 4", API.GetRandomIntInRange(30, 150)));
-        panel.AddStat(new PlayerStatsPanelStatItem("Statistic 5", "Description 5", API.GetRandomIntInRange(30, 150)));
-        panel.AddStat(new PlayerStatsPanelStatItem("Statistic 6", "Description 6", API.GetRandomIntInRange(30, 150)));
-        UIFreemodeDetailsItem descriptionStatItem1 = new("Hellooooo", "I'm here too!", false, ScaleformFonts.GTAV_COURIER, ScaleformFonts.HANDSTYLE_HEIST);
-        UIFreemodeDetailsItem descriptionStatItem2 = new("Hellooooo", "I'm here too!", ScaleformFonts.GTAV_COURIER, ScaleformFonts.HANDSTYLE_HEIST, BadgeIcon.COUNTRY_ITALY, SColor.HUD_Pure_white, true);
-        UIFreemodeDetailsItem descriptionStatItem3 = new("Hellooooo", "I'm here too!", true, ScaleformFonts.GTAV_COURIER, ScaleformFonts.HANDSTYLE_HEIST);
-        UIFreemodeDetailsItem descriptionStatItem4 = new("Hellooooo", "I'm here too!", false, ScaleformFonts.GTAV_COURIER, ScaleformFonts.HANDSTYLE_HEIST);
-        UIFreemodeDetailsItem descriptionStatItem5 = new("Hellooooo", "I'm here too!", ScaleformFonts.GTAV_COURIER, ScaleformFonts.HANDSTYLE_HEIST, BadgeIcon.COUNTRY_ITALY, SColor.HUD_Pure_white, true);
-        UIFreemodeDetailsItem descriptionStatItem6 = new("Hellooooo", "I'm here too!", true, ScaleformFonts.GTAV_COURIER, ScaleformFonts.HANDSTYLE_HEIST);
-        UIFreemodeDetailsItem descriptionStatItem7 = new("Hellooooo", "I'm here too!", false, ScaleformFonts.GTAV_COURIER, ScaleformFonts.HANDSTYLE_HEIST);
-        UIFreemodeDetailsItem descriptionStatItem8 = new("Hellooooo", "I'm here too!", ScaleformFonts.GTAV_COURIER, ScaleformFonts.HANDSTYLE_HEIST, BadgeIcon.COUNTRY_ITALY, SColor.HUD_Pure_white, true);
-        UIFreemodeDetailsItem descriptionStatItem9 = new("Hellooooo", "I'm here too!", true, ScaleformFonts.GTAV_COURIER, ScaleformFonts.HANDSTYLE_HEIST);
-        panel.AddDescriptionStatItem(descriptionStatItem1);
-        panel.AddDescriptionStatItem(descriptionStatItem2);
-        panel.AddDescriptionStatItem(descriptionStatItem3);
-        panel.AddDescriptionStatItem(descriptionStatItem4);
-        panel.AddDescriptionStatItem(descriptionStatItem5);
-        panel.AddDescriptionStatItem(descriptionStatItem6);
-        panel.AddDescriptionStatItem(descriptionStatItem7);
-        //panel.AddDescriptionStatItem(descriptionStatItem8);
-        //panel.AddDescriptionStatItem(descriptionStatItem9);
-        friend.AddPanel(panel);
 
-        PlayerStatsPanel panel2 = new PlayerStatsPanel("Player 2", SColor.HUD_Pink)
-        {
-            Description = "This is the description for Player 2!!",
-            HasPlane = true,
-            HasHeli = true,
-            HasVehicle = true
-        };
-        panel2.RankInfo.RankLevel = 15;
-        panel2.RankInfo.LowLabel = "This is the low label";
-        panel2.RankInfo.MidLabel = "This is the middle label";
-        panel2.RankInfo.UpLabel = "This is the upper label";
-        panel2.AddStat(new PlayerStatsPanelStatItem("Statistic 1", "Description 1", API.GetRandomIntInRange(30, 150)));
-        panel2.AddStat(new PlayerStatsPanelStatItem("Statistic 2", "Description 2", API.GetRandomIntInRange(30, 150)));
-        panel2.AddStat(new PlayerStatsPanelStatItem("Statistic 3", "Description 3", API.GetRandomIntInRange(30, 150)));
-        panel2.AddStat(new PlayerStatsPanelStatItem("Statistic 4", "Description 4", API.GetRandomIntInRange(30, 150)));
-        panel2.AddStat(new PlayerStatsPanelStatItem("Statistic 5", "Description 5", API.GetRandomIntInRange(30, 150)));
-        friend2.AddPanel(panel2);
+        //mission1.SetLeftIcon((BadgeIcon)API.GetRandomIntInRange(1, 179), SColor.FromRandomValues());
+        //mission1.SetRightIcon((BadgeIcon)API.GetRandomIntInRange(1, 179), SColor.FromRandomValues());
+        //mission2.SetLeftIcon((BadgeIcon)API.GetRandomIntInRange(1, 179), SColor.FromRandomValues());
+        //mission2.SetRightIcon((BadgeIcon)API.GetRandomIntInRange(1, 179), SColor.FromRandomValues());
+        //mission3.SetLeftIcon((BadgeIcon)API.GetRandomIntInRange(1, 179), SColor.FromRandomValues());
+        //mission3.SetRightIcon((BadgeIcon)API.GetRandomIntInRange(1, 179), SColor.FromRandomValues());
+        //mission4.SetLeftIcon((BadgeIcon)API.GetRandomIntInRange(1, 179), SColor.FromRandomValues());
+        //mission4.SetRightIcon((BadgeIcon)API.GetRandomIntInRange(1, 179), SColor.FromRandomValues());
+        //mission5.SetLeftIcon((BadgeIcon)API.GetRandomIntInRange(1, 179), SColor.FromRandomValues());
+        //mission5.SetRightIcon((BadgeIcon)API.GetRandomIntInRange(1, 179), SColor.FromRandomValues(), true);
 
-        PlayerStatsPanel panel3 = new PlayerStatsPanel("Player 3", SColor.HUD_Freemode)
-        {
-            Description = "This is the description for Player 3!!",
-            HasPlane = true,
-            HasHeli = true,
-            HasBoat = true
-        };
-        panel3.RankInfo.RankLevel = 10;
-        panel3.RankInfo.LowLabel = "This is the low label";
-        panel3.RankInfo.MidLabel = "This is the middle label";
-        panel3.RankInfo.UpLabel = "This is the upper label";
-        panel3.AddStat(new PlayerStatsPanelStatItem("Statistic 1", "Description 1", API.GetRandomIntInRange(30, 150)));
-        panel3.AddStat(new PlayerStatsPanelStatItem("Statistic 2", "Description 2", API.GetRandomIntInRange(30, 150)));
-        panel3.AddStat(new PlayerStatsPanelStatItem("Statistic 3", "Description 3", API.GetRandomIntInRange(30, 150)));
-        panel3.AddStat(new PlayerStatsPanelStatItem("Statistic 4", "Description 4", API.GetRandomIntInRange(30, 150)));
-        panel3.AddStat(new PlayerStatsPanelStatItem("Statistic 5", "Description 5", API.GetRandomIntInRange(30, 150)));
-        friend3.AddPanel(panel3);
+        mission1.SetCustomLeftIcon("scaleformui", "kitty");
+        mission1.SetCustomRightIcon("scaleformui", "kitty");
+        mission2.SetCustomLeftIcon("scaleformui", "kitty");
+        mission2.SetCustomRightIcon("scaleformui", "kitty");
+        mission3.SetCustomLeftIcon("scaleformui", "kitty");
+        mission3.SetCustomRightIcon("scaleformui", "kitty");
+        mission4.SetCustomLeftIcon("scaleformui", "kitty");
+        mission4.SetCustomRightIcon("scaleformui", "kitty");
+        mission5.SetCustomLeftIcon("scaleformui", "kitty");
+        mission5.SetCustomRightIcon("scaleformui", "kitty", true);
 
-        PlayerStatsPanel panel4 = new PlayerStatsPanel("Player 4", SColor.HUD_Orange)
-        {
-            Description = "This is the description for Player 4!!",
-            HasPlane = true,
-            HasHeli = true,
-        };
-        panel4.RankInfo.RankLevel = 1000;
-        panel4.RankInfo.LowLabel = "This is the low label";
-        panel4.RankInfo.MidLabel = "This is the middle label";
-        panel4.RankInfo.UpLabel = "This is the upper label";
-        panel4.AddStat(new PlayerStatsPanelStatItem("Statistic 1", "Description 1", API.GetRandomIntInRange(30, 150)));
-        panel4.AddStat(new PlayerStatsPanelStatItem("Statistic 2", "Description 2", API.GetRandomIntInRange(30, 150)));
-        panel4.AddStat(new PlayerStatsPanelStatItem("Statistic 3", "Description 3", API.GetRandomIntInRange(30, 150)));
-        panel4.AddStat(new PlayerStatsPanelStatItem("Statistic 4", "Description 4", API.GetRandomIntInRange(30, 150)));
-        panel4.AddStat(new PlayerStatsPanelStatItem("Statistic 5", "Description 5", API.GetRandomIntInRange(30, 150)));
-        friend4.AddPanel(panel4);
+        missions.AddMissionItem(separator);
+        missions.AddMissionItem(mission1);
+        missions.AddMissionItem(mission2);
+        missions.AddMissionItem(mission3);
+        missions.AddMissionItem(mission4);
+        missions.AddMissionItem(mission5);
 
-        PlayerStatsPanel panel5 = new PlayerStatsPanel("Player 5", SColor.HUD_Red)
+        for (int i = 0; i < 5; i++)
         {
-            Description = "This is the description for Player 5!!",
-            HasPlane = true,
-            HasHeli = true,
+            CrewTag crew1 = new CrewTag("hello", false, false, CrewHierarchy.Leader, SColor.HUD_Green);
+            CrewTag crew2 = new CrewTag("evry1", false, false, CrewHierarchy.Commissioner, SColor.HUD_Pink);
+            CrewTag crew3 = new CrewTag("look", false, false, CrewHierarchy.Liutenant, SColor.HUD_Blue);
+            CrewTag crew4 = new CrewTag("at", false, false, CrewHierarchy.Representative, SColor.HUD_Orange);
+            CrewTag crew5 = new CrewTag("this", false, false, CrewHierarchy.Muscle, SColor.HUD_Red);
+
+            FriendItem friend = new FriendItem(Game.Player.Name + " #1", SColor.HUD_Green, true, API.GetRandomIntInRange(15, 55), "Online", crew1);
+            FriendItem friend2 = new FriendItem(Game.Player.Name + " #2", SColor.HUD_Pink, true, API.GetRandomIntInRange(15, 55), "Offline", crew2);
+            FriendItem friend3 = new FriendItem(Game.Player.Name + " #3", SColor.HUD_Blue, true, API.GetRandomIntInRange(15, 55), "Online", crew3);
+            FriendItem friend4 = new FriendItem(Game.Player.Name + " #4", SColor.HUD_Orange, true, API.GetRandomIntInRange(15, 55), "Offline", crew4);
+            FriendItem friend5 = new FriendItem(Game.Player.Name + " #5", SColor.HUD_Red, true, API.GetRandomIntInRange(15, 55), "Busy", crew5);
+            friend.SetLeftIcon(LobbyBadgeIcon.IS_CONSOLE_PLAYER);
+            friend2.SetLeftIcon(BadgeIcon.COUNTRY_ITALY);
+            friend3.SetLeftIcon(BadgeIcon.COUNTRY_ITALY);
+            friend4.SetLeftIcon(BadgeIcon.COUNTRY_ITALY);
+            friend5.SetLeftIcon(BadgeIcon.COUNTRY_ITALY);
+
+
+            players.OnPlayerItemActivated += (col, item) =>
+            {
+                playersTab.SwitchColumn(PM_COLUMNS.RIGHT);
+            };
+
+            friend.ClonePed = Game.PlayerPed;
+            friend2.ClonePed = Game.PlayerPed;
+            friend3.ClonePed = Game.PlayerPed;
+            friend4.ClonePed = Game.PlayerPed;
+            friend5.ClonePed = Game.PlayerPed;
+
+            friend.SetOnline();
+            friend3.SetOnline();
+            friend5.SetOnline();
+
+            PlayerStatsPanel panel = new PlayerStatsPanel("Player 1", SColor.HUD_Green)
+            {
+                Description = "",
+                HasPlane = true,
+                HasHeli = true,
+            };
+            panel.RankInfo.RankLevel = 150;
+            panel.RankInfo.LowLabel = "This is the low label";
+            panel.RankInfo.MidLabel = "This is the middle label";
+            panel.RankInfo.UpLabel = "This is the upper label";
+            panel.HardwareVisible = false;
+            panel.AddStat(new PlayerStatsPanelStatItem("Statistic 1", "Description 1", 50));
+            panel.AddStat(new PlayerStatsPanelStatItem("Statistic 2", "Description 2", 100));
+            panel.AddStat(new PlayerStatsPanelStatItem("Statistic 3", "Description 3", API.GetRandomIntInRange(30, 100)));
+            panel.AddStat(new PlayerStatsPanelStatItem("Statistic 4", "Description 4", API.GetRandomIntInRange(30, 100)));
+            panel.AddStat(new PlayerStatsPanelStatItem("Statistic 5", "Description 5", API.GetRandomIntInRange(30, 100)));
+            panel.AddStat(new PlayerStatsPanelStatItem("Statistic 6", "Description 6", API.GetRandomIntInRange(30, 100)));
+            UIFreemodeDetailsItem descriptionStatItem1 = new("Hellooooo", "I'm here too!", false, ScaleformFonts.GTAV_COURIER, ScaleformFonts.HANDSTYLE_HEIST);
+            UIFreemodeDetailsItem descriptionStatItem2 = new("Hellooooo", "I'm here too!", ScaleformFonts.GTAV_COURIER, ScaleformFonts.HANDSTYLE_HEIST, BadgeIcon.COUNTRY_ITALY, SColor.HUD_Pure_white, true);
+            UIFreemodeDetailsItem descriptionStatItem3 = new("Hellooooo", "I'm here too!", true, ScaleformFonts.GTAV_COURIER, ScaleformFonts.HANDSTYLE_HEIST);
+            UIFreemodeDetailsItem descriptionStatItem4 = new("Hellooooo", "I'm here too!", false, ScaleformFonts.GTAV_COURIER, ScaleformFonts.HANDSTYLE_HEIST);
+            UIFreemodeDetailsItem descriptionStatItem5 = new("Hellooooo", "I'm here too!", ScaleformFonts.GTAV_COURIER, ScaleformFonts.HANDSTYLE_HEIST, BadgeIcon.COUNTRY_ITALY, SColor.HUD_Pure_white, true);
+            UIFreemodeDetailsItem descriptionStatItem6 = new("Hellooooo", "I'm here too!", true, ScaleformFonts.GTAV_COURIER, ScaleformFonts.HANDSTYLE_HEIST);
+            UIFreemodeDetailsItem descriptionStatItem7 = new("Hellooooo", "I'm here too!", false, ScaleformFonts.GTAV_COURIER, ScaleformFonts.HANDSTYLE_HEIST);
+            panel.AddDescriptionStatItem(descriptionStatItem1);
+            panel.AddDescriptionStatItem(descriptionStatItem2);
+            panel.AddDescriptionStatItem(descriptionStatItem3);
+            panel.AddDescriptionStatItem(descriptionStatItem4);
+            panel.AddDescriptionStatItem(descriptionStatItem5);
+            panel.AddDescriptionStatItem(descriptionStatItem6);
+            panel.AddDescriptionStatItem(descriptionStatItem7);
+            friend.AddPanel(panel);
+
+            PlayerStatsPanel panel2 = new PlayerStatsPanel("Player 2", SColor.HUD_Pink)
+            {
+                Description = "This is the description for Player 2!!",
+                HasPlane = true,
+                HasHeli = true,
+                HasVehicle = true
+            };
+            panel2.RankInfo.RankLevel = 15;
+            panel2.RankInfo.LowLabel = "This is the low label";
+            panel2.RankInfo.MidLabel = "This is the middle label";
+            panel2.RankInfo.UpLabel = "This is the upper label";
+            panel2.AddStat(new PlayerStatsPanelStatItem("Statistic 1", "Description 1", API.GetRandomIntInRange(30, 100)));
+            panel2.AddStat(new PlayerStatsPanelStatItem("Statistic 2", "Description 2", API.GetRandomIntInRange(30, 100)));
+            panel2.AddStat(new PlayerStatsPanelStatItem("Statistic 3", "Description 3", API.GetRandomIntInRange(30, 100)));
+            panel2.AddStat(new PlayerStatsPanelStatItem("Statistic 4", "Description 4", API.GetRandomIntInRange(30, 100)));
+            panel2.AddStat(new PlayerStatsPanelStatItem("Statistic 5", "Description 5", API.GetRandomIntInRange(30, 100)));
+            friend2.AddPanel(panel2);
+
+            PlayerStatsPanel panel3 = new PlayerStatsPanel("Player 3", SColor.HUD_Freemode)
+            {
+                Description = "This is the description for Player 3!!",
+                HasPlane = true,
+                HasHeli = true,
+                HasBoat = true
+            };
+            panel3.RankInfo.RankLevel = 10;
+            panel3.RankInfo.LowLabel = "This is the low label";
+            panel3.RankInfo.MidLabel = "This is the middle label";
+            panel3.RankInfo.UpLabel = "This is the upper label";
+            panel3.AddStat(new PlayerStatsPanelStatItem("Statistic 1", "Description 1", API.GetRandomIntInRange(30, 100)));
+            panel3.AddStat(new PlayerStatsPanelStatItem("Statistic 2", "Description 2", API.GetRandomIntInRange(30, 100)));
+            panel3.AddStat(new PlayerStatsPanelStatItem("Statistic 3", "Description 3", API.GetRandomIntInRange(30, 100)));
+            panel3.AddStat(new PlayerStatsPanelStatItem("Statistic 4", "Description 4", API.GetRandomIntInRange(30, 100)));
+            panel3.AddStat(new PlayerStatsPanelStatItem("Statistic 5", "Description 5", API.GetRandomIntInRange(30, 100)));
+            friend3.AddPanel(panel3);
+
+            PlayerStatsPanel panel4 = new PlayerStatsPanel("Player 4", SColor.HUD_Orange)
+            {
+                Description = "This is the description for Player 4!!",
+                HasPlane = true,
+                HasHeli = true,
+            };
+            panel4.RankInfo.RankLevel = 1000;
+            panel4.RankInfo.LowLabel = "This is the low label";
+            panel4.RankInfo.MidLabel = "This is the middle label";
+            panel4.RankInfo.UpLabel = "This is the upper label";
+            panel4.AddStat(new PlayerStatsPanelStatItem("Statistic 1", "Description 1", API.GetRandomIntInRange(30, 100)));
+            panel4.AddStat(new PlayerStatsPanelStatItem("Statistic 2", "Description 2", API.GetRandomIntInRange(30, 100)));
+            panel4.AddStat(new PlayerStatsPanelStatItem("Statistic 3", "Description 3", API.GetRandomIntInRange(30, 100)));
+            panel4.AddStat(new PlayerStatsPanelStatItem("Statistic 4", "Description 4", API.GetRandomIntInRange(30, 100)));
+            panel4.AddStat(new PlayerStatsPanelStatItem("Statistic 5", "Description 5", API.GetRandomIntInRange(30, 100)));
+            friend4.AddPanel(panel4);
+
+            PlayerStatsPanel panel5 = new PlayerStatsPanel("Player 5", SColor.HUD_Red)
+            {
+                Description = "This is the description for Player 5!!",
+                HasPlane = true,
+                HasHeli = true,
+            };
+            panel5.RankInfo.RankLevel = 22;
+            panel5.RankInfo.LowLabel = "This is the low label";
+            panel5.RankInfo.MidLabel = "This is the middle label";
+            panel5.RankInfo.UpLabel = "This is the upper label";
+            panel5.AddStat(new PlayerStatsPanelStatItem("Statistic 1", "Description 1", API.GetRandomIntInRange(30, 100)));
+            panel5.AddStat(new PlayerStatsPanelStatItem("Statistic 2", "Description 2", API.GetRandomIntInRange(30, 100)));
+            panel5.AddStat(new PlayerStatsPanelStatItem("Statistic 3", "Description 3", API.GetRandomIntInRange(30, 100)));
+            panel5.AddStat(new PlayerStatsPanelStatItem("Statistic 4", "Description 4", API.GetRandomIntInRange(30, 100)));
+            panel5.AddStat(new PlayerStatsPanelStatItem("Statistic 5", "Description 5", API.GetRandomIntInRange(30, 100)));
+            friend5.AddPanel(panel5);
+
+            players.AddPlayer(friend);
+            players.AddPlayer(friend2);
+            players.AddPlayer(friend3);
+            players.AddPlayer(friend4);
+            players.AddPlayer(friend5);
+        }
+        
+        GalleryTab gallerytab = new GalleryTab("GALLERY EXAMPLE", SColor.HUD_Freemode);
+        pauseMenu.AddTab(gallerytab);
+        gallerytab.SetDescriptionLabels("TITLE", "DATE", "LOCATION", "TRACK", true);
+        for (int i = 0; i < 14; i += 2)
+        {
+            GalleryItem item0 = new GalleryItem("scaleformui", "pausebigbg");
+            item0.SetLabels("ITEM " + i + " TITLE", "ITEM " + i + " DATE", "ITEM " + i + " LOCATION", "ITEM " + i + " TRACK");
+            FakeBlip blip0 = new FakeBlip(BlipSprite.Camera, new Vector3(API.GetRandomFloatInRange(-5, 5), API.GetRandomFloatInRange(-5, 5), 0));
+            blip0.Scale = 1f;
+            item0.Blip = blip0;
+            GalleryItem item1 = new GalleryItem("scaleformui", "pausebigbg");
+            item1.SetLabels("ITEM " + (i + 1) + " TITLE", "ITEM " + (i + 1) + " DATE", "ITEM " + (i + 1) + " LOCATION", "ITEM " + (i + 1) + " TRACK");
+            item1.SetRightDescription("" +
+                "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua." +
+                "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.");
+            gallerytab.AddItem(item0);
+            gallerytab.AddItem(item1);
+        }
+
+        gallerytab.OnGalleryIndexChanged += (tab, item, pictureIndex, gridIndex) =>
+        {
+            Debug.WriteLine($"Gallery Tab index changed. PictureIndex: {pictureIndex}, GridIndex: {gridIndex}");
         };
-        panel5.RankInfo.RankLevel = 22;
-        panel5.RankInfo.LowLabel = "This is the low label";
-        panel5.RankInfo.MidLabel = "This is the middle label";
-        panel5.RankInfo.UpLabel = "This is the upper label";
-        panel5.AddStat(new PlayerStatsPanelStatItem("Statistic 1", "Description 1", API.GetRandomIntInRange(30, 150)));
-        panel5.AddStat(new PlayerStatsPanelStatItem("Statistic 2", "Description 2", API.GetRandomIntInRange(30, 150)));
-        panel5.AddStat(new PlayerStatsPanelStatItem("Statistic 3", "Description 3", API.GetRandomIntInRange(30, 150)));
-        panel5.AddStat(new PlayerStatsPanelStatItem("Statistic 4", "Description 4", API.GetRandomIntInRange(30, 150)));
-        panel5.AddStat(new PlayerStatsPanelStatItem("Statistic 5", "Description 5", API.GetRandomIntInRange(30, 150)));
-        friend5.AddPanel(panel5);
-        */
+
+        gallerytab.OnGalleryModeChanged += (tab, item, bigPicture) =>
+        {
+            Debug.WriteLine($"Gallery Tab mode changed. Is BigPicture? {bigPicture}");
+        };
+
+        gallerytab.OnGalleryItemSelected += (tab, item, pictureIndex, gridIndex) =>
+        {
+            Debug.WriteLine($"Gallery Tab index changed. PictureIndex: {pictureIndex}, GridIndex: {gridIndex}");
+        };
+
         pauseMenu.OnPauseMenuOpen += (menu) =>
         {
             Screen.ShowSubtitle(menu.Title + " Opened!");
@@ -1431,17 +1636,6 @@ public class MenuExample : BaseScript
             Screen.ShowSubtitle(menu.Title + " Closed!");
             Debug.WriteLine(menu.Title + " Closed!");
             // to prevent the pause menu to close the menu too!
-
-            // clear the player list
-            foreach (BaseTab tab in menu.Tabs)
-            {
-                if (tab is PlayerListTab)
-                {
-                    PlayerListTab t = tab as PlayerListTab;
-                    if (t.PlayersColumn != null)
-                        t.PlayersColumn.Items.ForEach(item => item.Dispose());
-                }
-            }
 
             await BaseScript.Delay(250);
             if (mainMenu != null)
@@ -1507,29 +1701,34 @@ public class MenuExample : BaseScript
 
         };
 
-        pauseMenu.OnLeftItemChange += (menu, leftItem, leftItemIndex) =>
+        pauseMenu.OnColumnItemChange += (menu, tab, column, itemIndex) =>
         {
-            Screen.ShowSubtitle(menu.Tabs[menu.Index].Title + " Focus at level => ~y~" + menu.FocusLevel + "~w~, and left Item ~o~N° " + (leftItemIndex + 1) + "~w~ selected!");
-            Debug.WriteLine(menu.Tabs[menu.Index].Title + " Focus at level => ~y~" + menu.FocusLevel + "~w~, and left Item ~o~N° " + (leftItemIndex + 1) + "~w~ selected!");
+            if (column == ScaleformUI.Menus.PM_COLUMNS.LEFT)
+            {
+                Screen.ShowSubtitle(menu.Tabs[menu.Index].Title + " Focus at level => ~y~" + menu.FocusLevel + "~w~, and left Item ~o~N° " + (itemIndex + 1) + "~w~ selected!");
+                Debug.WriteLine(menu.Tabs[menu.Index].Title + " Focus at level => ~y~" + menu.FocusLevel + "~w~, and left Item ~o~N° " + (itemIndex + 1) + "~w~ selected!");
+            }
+            else if (column == ScaleformUI.Menus.PM_COLUMNS.MIDDLE)
+            {
+                Screen.ShowSubtitle(menu.Tabs[menu.Index].Title + " Focus at level => ~y~" + menu.FocusLevel + "~w~, left Item ~o~N° " + (tab.LeftColumn.Index + 1) + "~w~ and right Item ~b~N° " + (itemIndex + 1) + "~w~ selected!");
+                Debug.WriteLine(menu.Tabs[menu.Index].Title + " Focus at level => ~y~" + menu.FocusLevel + "~w~, left Item ~o~N° " + (tab.LeftColumn.Index + 1) + "~w~ and right Item ~b~N° " + (itemIndex + 1) + "~w~ selected!");
+            }
         };
 
-        pauseMenu.OnLeftItemSelect += (menu, leftItem, leftItemIndex) =>
+        pauseMenu.OnColumnItemSelect += (menu, tab, column, itemIndex) =>
         {
-            Screen.ShowSubtitle(menu.Tabs[menu.Index].Title + " Focus at level => ~y~" + menu.FocusLevel + "~w~, and left Item ~o~N° " + (leftItemIndex + 1) + "~w~ selected!");
-            Debug.WriteLine(menu.Tabs[menu.Index].Title + " Focus at level => ~y~" + menu.FocusLevel + "~w~, and left Item ~o~N° " + (leftItemIndex + 1) + "~w~ selected!");
+            if (column == ScaleformUI.Menus.PM_COLUMNS.LEFT)
+            {
+                Screen.ShowSubtitle(menu.Tabs[menu.Index].Title + " Focus at level => ~y~" + menu.FocusLevel + "~w~, and left Item ~o~N° " + (itemIndex + 1) + "~w~ selected!");
+                Debug.WriteLine(menu.Tabs[menu.Index].Title + " Focus at level => ~y~" + menu.FocusLevel + "~w~, and left Item ~o~N° " + (itemIndex + 1) + "~w~ selected!");
+            }
+            else if (column == ScaleformUI.Menus.PM_COLUMNS.MIDDLE)
+            {
+                Screen.ShowSubtitle(menu.Tabs[menu.Index].Title + "~w~, left Item ~o~N° " + (tab.LeftColumn.Index + 1) + "~w~ and right Item ~b~N° " + (itemIndex + 1));
+                Debug.WriteLine(menu.Tabs[menu.Index].Title + "~w~, left Item ~o~N° " + (tab.LeftColumn.Index + 1) + "~w~ and right Item ~b~N° " + (itemIndex + 1));
+            }
         };
 
-        pauseMenu.OnRightItemChange += (menu, item, leftItemIndex, rightItemIndex) =>
-        {
-            Screen.ShowSubtitle(menu.Tabs[menu.Index].Title + " Focus at level => ~y~" + menu.FocusLevel + "~w~, left Item ~o~N° " + (leftItemIndex + 1) + "~w~ and right Item ~b~N° " + (rightItemIndex + 1) + "~w~ selected!");
-            Debug.WriteLine(menu.Tabs[menu.Index].Title + " Focus at level => ~y~" + menu.FocusLevel + "~w~, left Item ~o~N° " + (leftItemIndex + 1) + "~w~ and right Item ~b~N° " + (rightItemIndex + 1) + "~w~ selected!");
-        };
-
-        pauseMenu.OnRightItemSelect += (menu, item, leftItemIndex, rightItemIndex) =>
-        {
-            Screen.ShowSubtitle(menu.Tabs[menu.Index].Title + "~w~, left Item ~o~N° " + (leftItemIndex + 1) + "~w~ and right Item ~b~N° " + (rightItemIndex + 1) + "~w~ of type ~p~" + item.ItemType + "~w~ selected!");
-            Debug.WriteLine(menu.Tabs[menu.Index].Title + "~w~, left Item ~o~N° " + (leftItemIndex + 1) + "~w~ and right Item ~b~N° " + (rightItemIndex + 1) + "~w~ of type ~p~" + item.ItemType + "~w~ selected!");
-        };
         pauseMenu.Visible = true;
         //API.UnregisterPedheadshot(mugshot);
     }
@@ -1538,9 +1737,14 @@ public class MenuExample : BaseScript
     public async void LobbyPauseMenuShowcase(UIMenu _menu)
     {
         UIMenu mainMenu = _menu;
+
         // tabview is the main menu.. the container of all the tabs.
-        MainView pauseMenu = new("Lobby Menu", "ScaleformUI for you by Manups4e!", "Detail 1", "Detail 2", "Detail 3", true);
+        // MainView is an extension of TabView it's the same as creating a tabView, setting an internal fixed PlayerListTab and
+        // a boolean IsCorona to true
+
+        MainView pauseMenu = new("Lobby Menu", "ScaleformUI for you by Manups4e!", "Detail 1", "Detail 2", "Detail 3");
         pauseMenu.CanPlayerCloseMenu = true;
+        pauseMenu.TabsColor = HudColor.HUD_COLOUR_PINK;
         pauseMenu.InstructionalButtons.Add(new InstructionalButton(Control.FrontendX, "Show Map panel"));
         pauseMenu.InstructionalButtons[2].OnControlSelected += (button) =>
         {
@@ -1562,34 +1766,41 @@ public class MenuExample : BaseScript
         };
         //pauseMenu.ShowStoreBackground = true;
         // this is a showcase... CanPlayerCloseMenu is always defaulted to true.. if false players won't be able to close the menu!
-        List<Column> columns = new List<Column>()
-        {
-            new SettingsListColumn("COLUMN SETTINGS", SColor.HUD_Red),
-            new PlayerListColumn("COLUMN PLAYERS", SColor.HUD_Orange),
-            new MissionDetailsPanel("COLUMN INFO PANEL", SColor.HUD_Green),
-            //new MinimapPanel("RACE DETAILS", SColor.HUD_Green),
 
-        };
-
-        pauseMenu.SetUpColumns(columns);
         int mugshot = API.RegisterPedheadshot(Game.PlayerPed.Handle);
         while (!API.IsPedheadshotReady(mugshot)) await BaseScript.Delay(1);
         string ped_txd = API.GetPedheadshotTxdString(mugshot);
         pauseMenu.HeaderPicture = new(ped_txd, ped_txd);
 
+        SettingsListColumn settings = new SettingsListColumn("SETTINGS", 16); // Giving a label for corona mode.
+        settings.Color = SColor.Cyan;
+        PlayerListColumn players = new PlayerListColumn("PLAYERS", 16); // Giving a label for corona mode.
+        players.Color = SColor.HUD_Orange;
+        MissionsListColumn missions = new MissionsListColumn("MISSIONS", 16); // Giving a label for corona mode.
+        missions.Color = SColor.HUD_Green;
+        StoreListColumn store = new StoreListColumn("STORE"); // Giving a label for corona mode.
+        store.Color = SColor.Purple;
+        MissionDetailsPanel missionPanel = new MissionDetailsPanel("DETAILS"); // Giving a label for corona mode.
+        missionPanel.Color = SColor.HUD_Pink;
+
+        pauseMenu.SetupLeftColumn(settings);
+        pauseMenu.SetupCenterColumn(players);
+        pauseMenu.SetupRightColumn(missionPanel);
+
         UIMenuItem item = new UIMenuItem("UIMenuItem", "UIMenuItem description");
-        UIMenuListItem item1 = new UIMenuListItem("~g~UIMenuListItem", new List<dynamic>() { "This", "is", "a", "Test" }, 0, "UIMenuListItem description");
+        UIMenuListItem item1 = new UIMenuListItem("~g~UIMenuListItem", new List<dynamic>() { "~r~This", "~g~is", "~b~a", "~o~Test" }, 0, "UIMenuListItem description");
         UIMenuCheckboxItem item2 = new UIMenuCheckboxItem("~b~UIMenuCheckboxItem", true, "UIMenuCheckboxItem description");
         UIMenuSliderItem item3 = new UIMenuSliderItem("~p~UIMenuSliderItem", "UIMenuSliderItem description", 100, 5, 50, false);
         UIMenuProgressItem item4 = new UIMenuProgressItem("~o~UIMenuProgressItem", 10, 5, "UIMenuProgressItem description");
         item.LabelFont = ScaleformFonts.ENGRAVERS_OLD_ENGLISH_MT_STD;
         item.BlinkDescription = true;
-        item1.Enabled = false;
-        pauseMenu.SettingsColumn.AddSettings(item);
-        pauseMenu.SettingsColumn.AddSettings(item1);
-        pauseMenu.SettingsColumn.AddSettings(item2);
-        pauseMenu.SettingsColumn.AddSettings(item3);
-        pauseMenu.SettingsColumn.AddSettings(item4);
+        //item1.Enabled = false;
+        settings.AddSettings(item);
+        settings.AddSettings(item1);
+        settings.AddSettings(item2);
+        settings.AddSettings(item3);
+        settings.AddSettings(item4);
+
 
         item1.OnListChanged += (item, idx) =>
         {
@@ -1635,11 +1846,11 @@ public class MenuExample : BaseScript
         panel.RankInfo.LowLabel = "This is the low label";
         panel.RankInfo.MidLabel = "This is the middle label";
         panel.RankInfo.UpLabel = "This is the upper label";
-        panel.AddStat(new PlayerStatsPanelStatItem("Statistic 1", "Description 1", API.GetRandomIntInRange(30, 150)));
-        panel.AddStat(new PlayerStatsPanelStatItem("Statistic 2", "Description 2", API.GetRandomIntInRange(30, 150)));
-        panel.AddStat(new PlayerStatsPanelStatItem("Statistic 3", "Description 3", API.GetRandomIntInRange(30, 150)));
-        panel.AddStat(new PlayerStatsPanelStatItem("Statistic 4", "Description 4", API.GetRandomIntInRange(30, 150)));
-        panel.AddStat(new PlayerStatsPanelStatItem("Statistic 5", "Description 5", API.GetRandomIntInRange(30, 150)));
+        panel.AddStat(new PlayerStatsPanelStatItem("Statistic 1", "Description 1", API.GetRandomIntInRange(30, 100)));
+        panel.AddStat(new PlayerStatsPanelStatItem("Statistic 2", "Description 2", API.GetRandomIntInRange(30, 100)));
+        panel.AddStat(new PlayerStatsPanelStatItem("Statistic 3", "Description 3", API.GetRandomIntInRange(30, 100)));
+        panel.AddStat(new PlayerStatsPanelStatItem("Statistic 4", "Description 4", API.GetRandomIntInRange(30, 100)));
+        panel.AddStat(new PlayerStatsPanelStatItem("Statistic 5", "Description 5", API.GetRandomIntInRange(30, 100)));
         friend.AddPanel(panel);
 
         PlayerStatsPanel panel2 = new PlayerStatsPanel("Player 2", SColor.HUD_Menu_yellow)
@@ -1652,11 +1863,11 @@ public class MenuExample : BaseScript
         panel2.RankInfo.LowLabel = "This is the low label";
         panel2.RankInfo.MidLabel = "This is the middle label";
         panel2.RankInfo.UpLabel = "This is the upper label";
-        panel2.AddStat(new PlayerStatsPanelStatItem("Statistic 1", "Description 1", API.GetRandomIntInRange(30, 150)));
-        panel2.AddStat(new PlayerStatsPanelStatItem("Statistic 2", "Description 2", API.GetRandomIntInRange(30, 150)));
-        panel2.AddStat(new PlayerStatsPanelStatItem("Statistic 3", "Description 3", API.GetRandomIntInRange(30, 150)));
-        panel2.AddStat(new PlayerStatsPanelStatItem("Statistic 4", "Description 4", API.GetRandomIntInRange(30, 150)));
-        panel2.AddStat(new PlayerStatsPanelStatItem("Statistic 5", "Description 5", API.GetRandomIntInRange(30, 150)));
+        panel2.AddStat(new PlayerStatsPanelStatItem("Statistic 1", "Description 1", API.GetRandomIntInRange(30, 100)));
+        panel2.AddStat(new PlayerStatsPanelStatItem("Statistic 2", "Description 2", API.GetRandomIntInRange(30, 100)));
+        panel2.AddStat(new PlayerStatsPanelStatItem("Statistic 3", "Description 3", API.GetRandomIntInRange(30, 100)));
+        panel2.AddStat(new PlayerStatsPanelStatItem("Statistic 4", "Description 4", API.GetRandomIntInRange(30, 100)));
+        panel2.AddStat(new PlayerStatsPanelStatItem("Statistic 5", "Description 5", API.GetRandomIntInRange(30, 100)));
         friend2.AddPanel(panel2);
 
         PlayerStatsPanel panel3 = new PlayerStatsPanel("Player 3", SColor.HUD_Pink)
@@ -1670,11 +1881,11 @@ public class MenuExample : BaseScript
         panel3.RankInfo.LowLabel = "This is the low label";
         panel3.RankInfo.MidLabel = "This is the middle label";
         panel3.RankInfo.UpLabel = "This is the upper label";
-        panel3.AddStat(new PlayerStatsPanelStatItem("Statistic 1", "Description 1", API.GetRandomIntInRange(30, 150)));
-        panel3.AddStat(new PlayerStatsPanelStatItem("Statistic 2", "Description 2", API.GetRandomIntInRange(30, 150)));
-        panel3.AddStat(new PlayerStatsPanelStatItem("Statistic 3", "Description 3", API.GetRandomIntInRange(30, 150)));
-        panel3.AddStat(new PlayerStatsPanelStatItem("Statistic 4", "Description 4", API.GetRandomIntInRange(30, 150)));
-        panel3.AddStat(new PlayerStatsPanelStatItem("Statistic 5", "Description 5", API.GetRandomIntInRange(30, 150)));
+        panel3.AddStat(new PlayerStatsPanelStatItem("Statistic 1", "Description 1", API.GetRandomIntInRange(30, 100)));
+        panel3.AddStat(new PlayerStatsPanelStatItem("Statistic 2", "Description 2", API.GetRandomIntInRange(30, 100)));
+        panel3.AddStat(new PlayerStatsPanelStatItem("Statistic 3", "Description 3", API.GetRandomIntInRange(30, 100)));
+        panel3.AddStat(new PlayerStatsPanelStatItem("Statistic 4", "Description 4", API.GetRandomIntInRange(30, 100)));
+        panel3.AddStat(new PlayerStatsPanelStatItem("Statistic 5", "Description 5", API.GetRandomIntInRange(30, 100)));
         friend3.AddPanel(panel3);
 
         PlayerStatsPanel panel4 = new PlayerStatsPanel("Player 4", SColor.HUD_Freemode)
@@ -1688,11 +1899,11 @@ public class MenuExample : BaseScript
         panel4.RankInfo.LowLabel = "This is the low label";
         panel4.RankInfo.MidLabel = "This is the middle label";
         panel4.RankInfo.UpLabel = "This is the upper label";
-        panel4.AddStat(new PlayerStatsPanelStatItem("Statistic 1", "Description 1", API.GetRandomIntInRange(30, 150)));
-        panel4.AddStat(new PlayerStatsPanelStatItem("Statistic 2", "Description 2", API.GetRandomIntInRange(30, 150)));
-        panel4.AddStat(new PlayerStatsPanelStatItem("Statistic 3", "Description 3", API.GetRandomIntInRange(30, 150)));
-        panel4.AddStat(new PlayerStatsPanelStatItem("Statistic 4", "Description 4", API.GetRandomIntInRange(30, 150)));
-        panel4.AddStat(new PlayerStatsPanelStatItem("Statistic 5", "Description 5", API.GetRandomIntInRange(30, 150)));
+        panel4.AddStat(new PlayerStatsPanelStatItem("Statistic 1", "Description 1", API.GetRandomIntInRange(30, 100)));
+        panel4.AddStat(new PlayerStatsPanelStatItem("Statistic 2", "Description 2", API.GetRandomIntInRange(30, 100)));
+        panel4.AddStat(new PlayerStatsPanelStatItem("Statistic 3", "Description 3", API.GetRandomIntInRange(30, 100)));
+        panel4.AddStat(new PlayerStatsPanelStatItem("Statistic 4", "Description 4", API.GetRandomIntInRange(30, 100)));
+        panel4.AddStat(new PlayerStatsPanelStatItem("Statistic 5", "Description 5", API.GetRandomIntInRange(30, 100)));
         friend4.AddPanel(panel4);
 
         PlayerStatsPanel panel5 = new PlayerStatsPanel("Player 5", SColor.HUD_Orange)
@@ -1705,11 +1916,11 @@ public class MenuExample : BaseScript
         panel5.RankInfo.LowLabel = "This is the low label";
         panel5.RankInfo.MidLabel = "This is the middle label";
         panel5.RankInfo.UpLabel = "This is the upper label";
-        panel5.AddStat(new PlayerStatsPanelStatItem("Statistic 1", "Description 1", API.GetRandomIntInRange(30, 150)));
-        panel5.AddStat(new PlayerStatsPanelStatItem("Statistic 2", "Description 2", API.GetRandomIntInRange(30, 150)));
-        panel5.AddStat(new PlayerStatsPanelStatItem("Statistic 3", "Description 3", API.GetRandomIntInRange(30, 150)));
-        panel5.AddStat(new PlayerStatsPanelStatItem("Statistic 4", "Description 4", API.GetRandomIntInRange(30, 150)));
-        panel5.AddStat(new PlayerStatsPanelStatItem("Statistic 5", "Description 5", API.GetRandomIntInRange(30, 150)));
+        panel5.AddStat(new PlayerStatsPanelStatItem("Statistic 1", "Description 1", API.GetRandomIntInRange(30, 100)));
+        panel5.AddStat(new PlayerStatsPanelStatItem("Statistic 2", "Description 2", API.GetRandomIntInRange(30, 100)));
+        panel5.AddStat(new PlayerStatsPanelStatItem("Statistic 3", "Description 3", API.GetRandomIntInRange(30, 100)));
+        panel5.AddStat(new PlayerStatsPanelStatItem("Statistic 4", "Description 4", API.GetRandomIntInRange(30, 100)));
+        panel5.AddStat(new PlayerStatsPanelStatItem("Statistic 5", "Description 5", API.GetRandomIntInRange(30, 100)));
         friend5.AddPanel(panel5);
 
         PlayerStatsPanel panel6 = new PlayerStatsPanel("Player 6", SColor.HUD_Red)
@@ -1722,39 +1933,36 @@ public class MenuExample : BaseScript
         panel6.RankInfo.LowLabel = "This is the low label";
         panel6.RankInfo.MidLabel = "This is the middle label";
         panel6.RankInfo.UpLabel = "This is the upper label";
-        panel6.AddStat(new PlayerStatsPanelStatItem("Statistic 1", "Description 1", API.GetRandomIntInRange(30, 150)));
-        panel6.AddStat(new PlayerStatsPanelStatItem("Statistic 2", "Description 2", API.GetRandomIntInRange(30, 150)));
-        panel6.AddStat(new PlayerStatsPanelStatItem("Statistic 3", "Description 3", API.GetRandomIntInRange(30, 150)));
-        panel6.AddStat(new PlayerStatsPanelStatItem("Statistic 4", "Description 4", API.GetRandomIntInRange(30, 150)));
-        panel6.AddStat(new PlayerStatsPanelStatItem("Statistic 5", "Description 5", API.GetRandomIntInRange(30, 150)));
+        panel6.AddStat(new PlayerStatsPanelStatItem("Statistic 1", "Description 1", API.GetRandomIntInRange(30, 100)));
+        panel6.AddStat(new PlayerStatsPanelStatItem("Statistic 2", "Description 2", API.GetRandomIntInRange(30, 100)));
+        panel6.AddStat(new PlayerStatsPanelStatItem("Statistic 3", "Description 3", API.GetRandomIntInRange(30, 100)));
+        panel6.AddStat(new PlayerStatsPanelStatItem("Statistic 4", "Description 4", API.GetRandomIntInRange(30, 100)));
+        panel6.AddStat(new PlayerStatsPanelStatItem("Statistic 5", "Description 5", API.GetRandomIntInRange(30, 100)));
         friend5.AddPanel(panel6);
 
-        pauseMenu.PlayersColumn.AddPlayer(friend);
-        pauseMenu.PlayersColumn.AddPlayer(friend2);
-        pauseMenu.PlayersColumn.AddPlayer(friend3);
-        pauseMenu.PlayersColumn.AddPlayer(friend4);
-        pauseMenu.PlayersColumn.AddPlayer(friend5);
+        players.AddPlayer(friend);
+        players.AddPlayer(friend2);
+        players.AddPlayer(friend3);
+        players.AddPlayer(friend4);
+        players.AddPlayer(friend5);
 
-        long _paneldui = API.CreateDui("https://i.imgur.com/mH0Y65C.gif", 288, 160);
+        long _paneldui = API.CreateDui("https://media.tenor.com/-sL5lSwzQSkAAAAi/rolling-cute.gif", 288, 160);
         API.CreateRuntimeTextureFromDuiHandle(txd, "lobby_panelbackground", API.GetDuiHandle(_paneldui));
 
-        pauseMenu.MissionPanel.UpdatePanelPicture("scaleformui", "lobby_panelbackground");
-        pauseMenu.MissionPanel.Title = "ScaleformUI - Title";
+        missionPanel.UpdatePanelPicture("scaleformui", "lobby_panelbackground");
+        missionPanel.Title = "ScaleformUI - Title";
         UIFreemodeDetailsItem missionItem1 = new("Hellooooo", "I'm here too!", false, ScaleformFonts.GTAV_COURIER, ScaleformFonts.HANDSTYLE_HEIST);
         UIFreemodeDetailsItem missionItem2 = new("Hellooooo", "I'm here too!", ScaleformFonts.GTAV_COURIER, ScaleformFonts.HANDSTYLE_HEIST, BadgeIcon.COUNTRY_ITALY, SColor.HUD_Pure_white, true);
         UIFreemodeDetailsItem missionItem3 = new("Hellooooo", "I'm here too!", true, ScaleformFonts.GTAV_COURIER, ScaleformFonts.HANDSTYLE_HEIST);
         UIFreemodeDetailsItem missionItem4 = new("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat");
         //UIFreemodeDetailsItem missionItem4 = new("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat", "", false);
-        pauseMenu.MissionPanel.AddItem(missionItem1);
-        pauseMenu.MissionPanel.AddItem(missionItem2);
-        pauseMenu.MissionPanel.AddItem(missionItem3);
-        pauseMenu.MissionPanel.AddItem(missionItem4);
+        missionPanel.AddItem(missionItem1);
+        missionPanel.AddItem(missionItem2);
+        missionPanel.AddItem(missionItem3);
+        missionPanel.AddItem(missionItem4);
 
         pauseMenu.Visible = true;
-        await BaseScript.Delay(1000);
-        item1.Label = "Pippo";
-        pauseMenu.SettingsColumn.CurrentSelection = 1;
-        //API.UnregisterPedheadshot(mugshot);
+        API.UnregisterPedheadshot(mugshot);
     }
 
     bool feedOpen = false;
@@ -1781,8 +1989,13 @@ public class MenuExample : BaseScript
             if (playerMarker.IsInRange)
                 Notifications.DrawText(text: $"IsInMarker => {playerMarker.IsInMarker}");
 
-            if (Game.IsControlJustPressed(0, Control.SelectCharacterMichael) && !MenuHandler.IsAnyMenuOpen) // Our menu enabler (to exit menu simply press Back on the main menu)
-                ExampleMenu();
+            if (Game.IsControlJustPressed(0, Control.SelectCharacterMichael)) // Our menu enabler (to exit menu simply press Back on the main menu)
+            {
+                if(!MenuHandler.IsAnyMenuOpen)
+                    ExampleMenu();
+                else
+                    exampleMenu.RemoveItemAt(0);
+            }
 
             if (Game.IsControlJustPressed(0, Control.DropAmmo) && !Game.IsControlPressed(0, Control.Sprint) && !MenuHandler.IsAnyMenuOpen)
                 CreateRadialMenu();
@@ -1795,19 +2008,50 @@ public class MenuExample : BaseScript
             if (Game.IsControlJustPressed(0, Control.SelectCharacterTrevor) && !MenuHandler.IsAnyMenuOpen && !MenuHandler.IsAnyPauseMenuOpen)
                 LobbyPauseMenuShowcase(null);
 
-            /*
+
             if (Game.IsControlJustPressed(0, Control.Detonate) || Game.IsDisabledControlJustPressed(0, Control.Detonate))
             {
 
                 long _wallp = API.CreateDui("https://images8.alphacoders.com/132/1322626.png", 2560, 1440);
                 API.CreateRuntimeTextureFromDuiHandle(txd, "wallp", API.GetDuiHandle(_wallp));
 
-                int overlay1 = await MinimapOverlays.AddSizedOverlayToMap("scaleformui", "bannerbackground", 365, -422, centered: true);
+                var overlay1 = await MinimapOverlays.AddSizedOverlayToMap("scaleformui", "bannerbackground", 365, -422, centered: true);
                 World.CreateBlip(new Vector3(365, -422, 45));
 
-                int overlay2 = await MinimapOverlays.AddSizedOverlayToMap("scaleformui", "wallp", 2000, 1000, centered: true);
+                var overlay2 = await MinimapOverlays.AddSizedOverlayToMap("scaleformui", "wallp", 2000, 1000, centered: true);
+
+                List<Vector3> list = new List<Vector3>()
+                {
+                    new Vector3(-100.78f, -1129.4f, 25.8f),
+                    new Vector3(36.1f, -1120.28f, 19.2f),
+                    new Vector3(91.26f, -1004.77f, 29.35f),
+                    new Vector3(-24.42f, -963.52f, 29.35f),
+                };
+
+                var areaoverlay = await MinimapOverlays.AddAreaOverlay(list, false, SColor.FromArgb(180, SColor.HUD_Red));
+
+                overlay1.OnMouseEvent += (ev) =>
+                {
+                    Debug.WriteLine("MouseEvent: " + ev);
+                };
+                overlay2.OnMouseEvent += (ev) =>
+                {
+                    switch (ev)
+                    {
+                        case MouseEvent.MOUSE_ROLL_OVER:
+                            overlay2.Alpha = 150;
+                            break;
+                        case MouseEvent.MOUSE_ROLL_OUT:
+                            overlay2.Alpha = 255;
+                            break;
+                        case MouseEvent.MOUSE_PRESS:
+                            overlay2.Rotation += 90;
+                            break;
+                    }
+                    Debug.WriteLine("MouseEvent: " + ev);
+                };
             }
-            */
+
 
             if (Game.IsControlJustPressed(0, (Control)170)) // F3
             {

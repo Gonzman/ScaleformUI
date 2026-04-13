@@ -1,325 +1,296 @@
 ﻿using CitizenFX.Core;
+using CitizenFX.Core.Native;
 using ScaleformUI.Elements;
 using ScaleformUI.LobbyMenu;
 using ScaleformUI.Menu;
+using ScaleformUI.Menus;
 using ScaleformUI.PauseMenu;
+using ScaleformUI.PauseMenus.Elements.Items;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using static CitizenFX.Core.Native.API;
 
 namespace ScaleformUI.PauseMenus.Elements.Columns
 {
     public delegate void SettingItemSelected(UIMenuItem item, int index);
-    public class SettingsListColumn : Column
+    public class SettingsListColumn : PM_Column
     {
         public event IndexChanged OnIndexChanged;
-        public List<UIMenuItem> Items { get; internal set; }
-        private List<UIMenuItem> _unfilteredItems;
+        private List<PauseMenuItem> _unfilteredItems;
+        private int _unfilteredSelection;
         public event SettingItemSelected OnSettingItemActivated;
-        public ScrollingType ScrollingType { get => Pagination.scrollType; set => Pagination.scrollType = value; }
-        public SettingsListColumn(string label, SColor color, ScrollingType scrollType = ScrollingType.CLASSIC, int maxItems = 16) : base(label, color)
+        public SettingsListColumn(string label, int maxItems = 16) : base(-1)
         {
-            Items = new List<UIMenuItem>();
-            Type = "settings";
-            _maxItems = maxItems;
-            Pagination = new PaginationHandler
-            {
-                ItemsPerPage = _maxItems,
-                scrollType = scrollType
-            };
+            Label = label;
+            VisibleItems = maxItems;
+            type = (int)PLT_COLUMNS.SETTINGS;
         }
+
+        public void SetVisibleItems(int maxItems)
+        {
+            VisibleItems = maxItems;
+            if (visible)
+            {
+                Populate();
+                ShowColumn();
+            }
+        }
+
+        public override void AddItem(PauseMenuItem item)
+        {
+            AddSettings((UIMenuItem)item);
+        }
+
         public void AddSettings(UIMenuItem item)
         {
+            if(item.mainColor == SColor.HUD_Panel_light)
+            {
+                item.MainColor = SColor.HUD_Pause_bg;
+            }
             item.ParentColumn = this;
             Items.Add(item);
-            Pagination.TotalItems = Items.Count;
-            if (Parent != null && Parent.Visible)
+            if (visible && Items.Count <= VisibleItems)
             {
-                if (Pagination.TotalItems <= Pagination.ItemsPerPage)
-                {
-                    int sel = CurrentSelection;
-                    Pagination.MinItem = Pagination.CurrentPageStartIndex;
-                    if (Pagination.scrollType == ScrollingType.CLASSIC && Pagination.TotalPages > 1)
-                    {
-                        int missingItems = Pagination.GetMissingItems();
-                        if (missingItems > 0)
-                        {
-                            Pagination.ScaleformIndex = Pagination.GetPageIndexFromMenuIndex(Pagination.CurrentPageEndIndex) + missingItems;
-                            Pagination.MinItem = Pagination.CurrentPageStartIndex - missingItems;
-                        }
-                    }
-                    Pagination.MaxItem = Pagination.CurrentPageEndIndex;
-                    _itemCreation(0, Items.Count - 1, false);
-                    if (Parent is TabView pause)
-                    {
-                        if ((pause.Tabs[ParentTab] as PlayerListTab).listCol[(pause.Tabs[ParentTab] as PlayerListTab).Focus] == this)
-                            CurrentSelection = sel;
-                    }
-                    else if (Parent is TabView lobby)
-                    {
-                        CurrentSelection = sel;
-                    }
-                }
+                var idx = Items.Count - 1;
+                AddSlot(idx);
+                item.Selected = idx == index;
             }
         }
 
-        internal void _itemCreation(int page, int pageIndex, bool before, bool isOverflow = false)
+        public void RemoveItem(UIMenuItem item)
         {
-            int menuIndex = Pagination.GetMenuIndexFromPageIndex(page, pageIndex);
-            if (!before)
+            if (Items.Contains(item))
             {
-                if (Pagination.GetPageItemsCount(page) < Pagination.ItemsPerPage && Pagination.TotalPages > 1)
-                {
-                    if (Pagination.scrollType == ScrollingType.ENDLESS)
-                    {
-                        if (menuIndex > Pagination.TotalItems - 1)
-                        {
-                            menuIndex -= Pagination.TotalItems;
-                            Pagination.MaxItem = menuIndex;
-                        }
-                    }
-                    else if (Pagination.scrollType == ScrollingType.CLASSIC && isOverflow)
-                    {
-                        int missingItems = Pagination.ItemsPerPage - Pagination.GetPageItemsCount(page);
-                        menuIndex -= missingItems;
-                    }
-                    else if (Pagination.scrollType == ScrollingType.PAGINATED)
-                        if (menuIndex >= Items.Count) return;
-                }
-            }
-            int scaleformIndex = Pagination.GetScaleformIndex(menuIndex);
-
-            UIMenuItem item = Items[menuIndex];
-            if (item.MainColor == SColor.HUD_Panel_light)
-                item.MainColor = SColor.HUD_Pause_bg;
-            if (Parent is MainView lobby)
-            {
-                AddTextEntry($"menu_lobby_desc_{menuIndex}", item.Description);
-                BeginScaleformMovieMethod(lobby._pause._lobby.Handle, "ADD_LEFT_ITEM");
-                PushScaleformMovieFunctionParameterBool(before);
-                PushScaleformMovieFunctionParameterInt(menuIndex);
-                PushScaleformMovieFunctionParameterInt(item._itemId);
-                PushScaleformMovieMethodParameterString(item._formatLeftLabel);
-                if (item.DescriptionHash != 0 && string.IsNullOrWhiteSpace(item.Description))
-                {
-                    BeginTextCommandScaleformString("STRTNM1");
-                    AddTextComponentSubstringTextLabelHashKey(item.DescriptionHash);
-                    EndTextCommandScaleformString_2();
-                }
-                else
-                {
-                    BeginTextCommandScaleformString($"menu_lobby_desc_{menuIndex}");
-                    EndTextCommandScaleformString_2();
-                }
-                PushScaleformMovieFunctionParameterBool(item.Enabled);
-                PushScaleformMovieFunctionParameterBool(item.BlinkDescription);
-                switch (item)
-                {
-                    case UIMenuListItem:
-                        UIMenuListItem it = (UIMenuListItem)item;
-                        AddTextEntry($"listitem_lobby_{menuIndex}_list", string.Join(",", it.Items));
-                        BeginTextCommandScaleformString($"listitem_lobby_{menuIndex}_list");
-                        EndTextCommandScaleformString();
-                        PushScaleformMovieFunctionParameterInt(it.Index);
-                        PushScaleformMovieFunctionParameterInt(it.MainColor.ArgbValue/**/);
-                        PushScaleformMovieFunctionParameterInt(it.HighlightColor.ArgbValue/**/);
-                        PushScaleformMovieFunctionParameterInt(it.TextColor.ArgbValue);
-                        PushScaleformMovieFunctionParameterInt(it.HighlightedTextColor.ArgbValue);
-                        EndScaleformMovieMethod();
-                        break;
-                    case UIMenuCheckboxItem:
-                        UIMenuCheckboxItem check = (UIMenuCheckboxItem)item;
-                        PushScaleformMovieFunctionParameterInt((int)check.Style);
-                        PushScaleformMovieMethodParameterBool(check.Checked);
-                        PushScaleformMovieFunctionParameterInt(check.MainColor.ArgbValue/**/);
-                        PushScaleformMovieFunctionParameterInt(check.HighlightColor.ArgbValue/**/);
-                        PushScaleformMovieFunctionParameterInt(check.TextColor.ArgbValue);
-                        PushScaleformMovieFunctionParameterInt(check.HighlightedTextColor.ArgbValue);
-                        EndScaleformMovieMethod();
-                        break;
-                    case UIMenuSliderItem:
-                        UIMenuSliderItem prItem = (UIMenuSliderItem)item;
-                        PushScaleformMovieFunctionParameterInt(prItem._max);
-                        PushScaleformMovieFunctionParameterInt(prItem._multiplier);
-                        PushScaleformMovieFunctionParameterInt(prItem.Value);
-                        PushScaleformMovieFunctionParameterInt(prItem.MainColor.ArgbValue/**/);
-                        PushScaleformMovieFunctionParameterInt(prItem.HighlightColor.ArgbValue/**/);
-                        PushScaleformMovieFunctionParameterInt(prItem.TextColor.ArgbValue);
-                        PushScaleformMovieFunctionParameterInt(prItem.HighlightedTextColor.ArgbValue);
-                        PushScaleformMovieFunctionParameterInt(prItem.SliderColor.ArgbValue);
-                        PushScaleformMovieFunctionParameterBool(prItem._heritage);
-                        EndScaleformMovieMethod();
-                        break;
-                    case UIMenuProgressItem:
-                        UIMenuProgressItem slItem = (UIMenuProgressItem)item;
-                        PushScaleformMovieFunctionParameterInt(slItem._max);
-                        PushScaleformMovieFunctionParameterInt(slItem._multiplier);
-                        PushScaleformMovieFunctionParameterInt(slItem.Value);
-                        PushScaleformMovieFunctionParameterInt(slItem.MainColor.ArgbValue/**/);
-                        PushScaleformMovieFunctionParameterInt(slItem.HighlightColor.ArgbValue/**/);
-                        PushScaleformMovieFunctionParameterInt(slItem.TextColor.ArgbValue);
-                        PushScaleformMovieFunctionParameterInt(slItem.HighlightedTextColor.ArgbValue);
-                        PushScaleformMovieFunctionParameterInt(slItem.SliderColor.ArgbValue);
-                        EndScaleformMovieMethod();
-                        break;
-                    default:
-                        PushScaleformMovieFunctionParameterInt(item.MainColor.ArgbValue/**/);
-                        PushScaleformMovieFunctionParameterInt(item.HighlightColor.ArgbValue/**/);
-                        PushScaleformMovieFunctionParameterInt(item.TextColor.ArgbValue);
-                        PushScaleformMovieFunctionParameterInt(item.HighlightedTextColor.ArgbValue);
-                        EndScaleformMovieMethod();
-                        lobby._pause._lobby.CallFunction("UPDATE_SETTINGS_ITEM_LABEL_RIGHT", scaleformIndex, item._formatRightLabel);
-                        if (item.RightBadge != BadgeIcon.NONE)
-                        {
-                            lobby._pause._lobby.CallFunction("SET_SETTINGS_ITEM_RIGHT_BADGE", scaleformIndex, (int)item.RightBadge);
-                        }
-                        break;
-                }
-                lobby._pause._lobby.CallFunction("SET_SETTINGS_ITEM_LABEL_FONT", scaleformIndex, item.labelFont.FontName, item.labelFont.FontID);
-                lobby._pause._lobby.CallFunction("SET_SETTINGS_ITEM_RIGHT_LABEL_FONT", scaleformIndex, item.rightLabelFont.FontName, item.rightLabelFont.FontID);
-                if (item.LeftBadge != BadgeIcon.NONE)
-                    lobby._pause._lobby.CallFunction("SET_SETTINGS_ITEM_LEFT_BADGE", scaleformIndex, (int)item.LeftBadge);
-            }
-            else if (Parent is TabView pause)
-            {
-                AddTextEntry($"menu_pause_playerTab[{ParentTab}]_desc_{menuIndex}", item.Description);
-                BeginScaleformMovieMethod(pause._pause._pause.Handle, "ADD_PLAYERS_TAB_SETTINGS_ITEM");
-                PushScaleformMovieFunctionParameterInt(ParentTab);
-                PushScaleformMovieFunctionParameterBool(before);
-                PushScaleformMovieFunctionParameterInt(menuIndex);
-                PushScaleformMovieFunctionParameterInt(item._itemId);
-                PushScaleformMovieMethodParameterString(item._formatLeftLabel);
-                if (item.DescriptionHash != 0 && string.IsNullOrWhiteSpace(item.Description))
-                {
-                    BeginTextCommandScaleformString("STRTNM1");
-                    AddTextComponentSubstringTextLabelHashKey(item.DescriptionHash);
-                    EndTextCommandScaleformString_2();
-                }
-                else
-                {
-                    BeginTextCommandScaleformString($"menu_pause_playerTab[{ParentTab}]_desc_{menuIndex}");
-                    EndTextCommandScaleformString_2();
-                }
-                PushScaleformMovieFunctionParameterBool(item.Enabled);
-                PushScaleformMovieFunctionParameterBool(item.BlinkDescription);
-                switch (item)
-                {
-                    case UIMenuListItem:
-                        UIMenuListItem it = (UIMenuListItem)item;
-                        AddTextEntry($"listitem_menu_pause_playerTab[{ParentTab}]_{menuIndex}_list", string.Join(",", it.Items));
-                        BeginTextCommandScaleformString($"listitem_menu_pause_playerTab[{ParentTab}]_{menuIndex}_list");
-                        EndTextCommandScaleformString();
-                        PushScaleformMovieFunctionParameterInt(it.Index);
-                        PushScaleformMovieFunctionParameterInt(it.MainColor.ArgbValue/**/);
-                        PushScaleformMovieFunctionParameterInt(it.HighlightColor.ArgbValue/**/);
-                        PushScaleformMovieFunctionParameterInt(it.TextColor.ArgbValue);
-                        PushScaleformMovieFunctionParameterInt(it.HighlightedTextColor.ArgbValue);
-                        EndScaleformMovieMethod();
-                        break;
-                    case UIMenuCheckboxItem:
-                        UIMenuCheckboxItem check = (UIMenuCheckboxItem)item;
-                        PushScaleformMovieFunctionParameterInt((int)check.Style);
-                        PushScaleformMovieMethodParameterBool(check.Checked);
-                        PushScaleformMovieFunctionParameterInt(check.MainColor.ArgbValue/**/);
-                        PushScaleformMovieFunctionParameterInt(check.HighlightColor.ArgbValue/**/);
-                        PushScaleformMovieFunctionParameterInt(check.TextColor.ArgbValue);
-                        PushScaleformMovieFunctionParameterInt(check.HighlightedTextColor.ArgbValue);
-                        EndScaleformMovieMethod();
-                        break;
-                    case UIMenuSliderItem:
-                        UIMenuSliderItem prItem = (UIMenuSliderItem)item;
-                        PushScaleformMovieFunctionParameterInt(prItem._max);
-                        PushScaleformMovieFunctionParameterInt(prItem._multiplier);
-                        PushScaleformMovieFunctionParameterInt(prItem.Value);
-                        PushScaleformMovieFunctionParameterInt(prItem.MainColor.ArgbValue/**/);
-                        PushScaleformMovieFunctionParameterInt(prItem.HighlightColor.ArgbValue/**/);
-                        PushScaleformMovieFunctionParameterInt(prItem.TextColor.ArgbValue);
-                        PushScaleformMovieFunctionParameterInt(prItem.HighlightedTextColor.ArgbValue);
-                        PushScaleformMovieFunctionParameterInt(prItem.SliderColor.ArgbValue);
-                        PushScaleformMovieFunctionParameterBool(prItem._heritage);
-                        EndScaleformMovieMethod();
-                        break;
-                    case UIMenuProgressItem:
-                        UIMenuProgressItem slItem = (UIMenuProgressItem)item;
-                        PushScaleformMovieFunctionParameterInt(slItem._max);
-                        PushScaleformMovieFunctionParameterInt(slItem._multiplier);
-                        PushScaleformMovieFunctionParameterInt(slItem.Value);
-                        PushScaleformMovieFunctionParameterInt(slItem.MainColor.ArgbValue/**/);
-                        PushScaleformMovieFunctionParameterInt(slItem.HighlightColor.ArgbValue/**/);
-                        PushScaleformMovieFunctionParameterInt(slItem.TextColor.ArgbValue);
-                        PushScaleformMovieFunctionParameterInt(slItem.HighlightedTextColor.ArgbValue);
-                        PushScaleformMovieFunctionParameterInt(slItem.SliderColor.ArgbValue);
-                        EndScaleformMovieMethod();
-                        break;
-                    default:
-                        PushScaleformMovieFunctionParameterInt(item.MainColor.ArgbValue/**/);
-                        PushScaleformMovieFunctionParameterInt(item.HighlightColor.ArgbValue/**/);
-                        PushScaleformMovieFunctionParameterInt(item.TextColor.ArgbValue);
-                        PushScaleformMovieFunctionParameterInt(item.HighlightedTextColor.ArgbValue);
-                        EndScaleformMovieMethod();
-                        pause._pause._pause.CallFunction("UPDATE_PLAYERS_TAB_SETTINGS_ITEM_LABEL_RIGHT", ParentTab, scaleformIndex, item._formatRightLabel);
-                        if (item.RightBadge != BadgeIcon.NONE)
-                        {
-                            pause._pause._pause.CallFunction("SET_PLAYERS_TAB_SETTINGS_ITEM_RIGHT_BADGE", ParentTab, scaleformIndex, (int)item.RightBadge);
-                        }
-                        break;
-                }
-                pause._pause._pause.CallFunction("SET_PLAYERS_TAB_SETTINGS_ITEM_LABEL_FONT", ParentTab, scaleformIndex, item.labelFont.FontName, item.labelFont.FontID);
-                pause._pause._pause.CallFunction("SET_PLAYERS_TAB_SETTINGS_ITEM_RIGHT_LABEL_FONT", ParentTab, scaleformIndex, item.rightLabelFont.FontName, item.rightLabelFont.FontID);
-                if (item.LeftBadge != BadgeIcon.NONE)
-                    pause._pause._pause.CallFunction("SET_PLAYERS_TAB_SETTINGS_ITEM_LEFT_BADGE", ParentTab, scaleformIndex, (int)item.LeftBadge);
-
+                int idx = Items.IndexOf(item);
+                RemoveSlot(idx);
             }
         }
 
-        internal async void GoUp()
+        public void RemoveItemAt(int index)
         {
+            if (index >= Items.Count) return;
+            RemoveSlot(index);
+        }
+
+        public override void RemoveSlot(int idx)
+        {
+            base.RemoveSlot(idx);
+            API.AddTextEntry("PAUSEMENU_Current_Description", "");
+        }
+
+        public override void ShowColumn(bool show = true)
+        {
+            if (!visible) return;
+            base.ShowColumn(show);
+            InitColumnScroll(Items.Count >= VisibleItems, 1, ScrollType.UP_DOWN, ScrollArrowsPosition.RIGHT);
+            SetColumnScroll(Index + 1, Items.Count, VisibleItems, CaptionLeft, Items.Count < VisibleItems);
+            Main.PauseMenu._pause.CallFunction("SET_COLUMN_FOCUS", (int)position, Focused, false, false);
+            if (Items.Count > 0 && CurrentItem is UIMenuSeparatorItem it && it.Jumpable)
+            {
+                CurrentItem.Selected = false;
+                index++;
+                if (index >= Items.Count)
+                    index = 0;
+                CurrentItem.Selected = true;
+            }
+        }
+
+        public override void Populate()
+        {
+            if (!visible) return;
+            Main.PauseMenu._pause.CallFunction("SET_DATA_SLOT_EMPTY", (int)position);
+            Main.PauseMenu._pause.CallFunction("SET_COLUMN_MAX_ITEMS", (int)position, VisibleItems);
+            for (var i = 0; i < Items.Count; i++)
+            {
+                SetDataSlot(i);
+            }
+        }
+
+        public override void SetDataSlot(int index)
+        {
+            if (index >= Items.Count) return;
+            if (visible)
+                SendItemToScaleform(index);
+        }
+
+        public override void UpdateSlot(int index)
+        {
+            if (index >= Items.Count) return;
+            if (visible)
+                SendItemToScaleform(index, true);
+        }
+
+        public override void AddSlot(int index)
+        {
+            if (index >= Items.Count) return;
+            if (visible)
+                SendItemToScaleform(index, false, false, true);
+        }
+
+        public void AddItemAt(UIMenuItem item, int idx)
+        {
+            if (!visible) return;
+            if (idx >= Items.Count) return;
+            Items.Insert(idx, item);
+            if (visible)
+            {
+                SendItemToScaleform(idx, false, true, false);
+                item.Selected = idx == index;
+            }
+        }
+
+        internal void SendItemToScaleform(int i, bool update = false, bool newItem = false, bool isSlot = false)
+        {
+            if (i >= Items.Count) return;
+
+            UIMenuItem item = (UIMenuItem)Items[i];
+            string str = "SET_DATA_SLOT";
+            if (update)
+                str = "UPDATE_SLOT";
+            if (newItem)
+                str = "SET_DATA_SLOT_SPLICE";
+            if (isSlot)
+                str = "ADD_SLOT";
+
+            BeginScaleformMovieMethod(Main.PauseMenu._pause.Handle, str);
+            PushScaleformMovieFunctionParameterInt((int)position);
+            PushScaleformMovieFunctionParameterInt(i);
+            PushScaleformMovieFunctionParameterInt(0);
+            PushScaleformMovieFunctionParameterInt(0);
+            PushScaleformMovieFunctionParameterInt(item._itemId);
+            switch (item._itemId)
+            {
+                case 1:
+                    UIMenuDynamicListItem dit = (UIMenuDynamicListItem)item;
+					AddTextEntry("SCUI_SETTCOL_RLBL", dit.CurrentListItem);
+					BeginTextCommandScaleformString("SCUI_SETTCOL_RLBL");
+					EndTextCommandScaleformString_2();
+					break;
+                case 2:
+                    UIMenuCheckboxItem check = (UIMenuCheckboxItem)item;
+                    PushScaleformMovieMethodParameterBool(check.Checked);
+                    break;
+                case 3:
+                    UIMenuSliderItem prItem = (UIMenuSliderItem)item;
+                    PushScaleformMovieFunctionParameterInt(prItem.Value);
+                    break;
+                case 4:
+                    UIMenuProgressItem slItem = (UIMenuProgressItem)item;
+                    PushScaleformMovieFunctionParameterInt(slItem.Value);
+                    break;
+                case 5:
+                    UIMenuStatsItem statsItem = (UIMenuStatsItem)item;
+                    PushScaleformMovieFunctionParameterInt(statsItem.Value);
+                    break;
+                default:
+                    PushScaleformMovieFunctionParameterInt(0);
+                    break;
+            }
+            PushScaleformMovieFunctionParameterBool(item.Enabled);
+			AddTextEntry("SCUI_SETTCOL_LBL", item.Label);
+			BeginTextCommandScaleformString("SCUI_SETTCOL_LBL");
+			EndTextCommandScaleformString_2();
+			PushScaleformMovieFunctionParameterBool(item.BlinkDescription);
+            switch (item)
+            {
+                case UIMenuDynamicListItem:
+                    PushScaleformMovieFunctionParameterInt(item.MainColor.ArgbValue);
+                    PushScaleformMovieFunctionParameterInt(item.HighlightColor.ArgbValue);
+                    PushScaleformMovieFunctionParameterInt((int)item.LeftBadge);
+                    PushScaleformMovieMethodParameterString(item.customLeftBadge.Key);
+                    PushScaleformMovieMethodParameterString(item.customLeftBadge.Value);
+                    PushScaleformMovieMethodParameterString(item.labelFont.FontName);
+                    PushScaleformMovieMethodParameterString(item.rightLabelFont.FontName);
+                    break;
+                case UIMenuCheckboxItem check:
+                    PushScaleformMovieFunctionParameterInt((int)check.Style);
+                    PushScaleformMovieFunctionParameterInt(check.MainColor.ArgbValue);
+                    PushScaleformMovieFunctionParameterInt(check.HighlightColor.ArgbValue);
+                    PushScaleformMovieFunctionParameterInt((int)item.LeftBadge);
+                    PushScaleformMovieMethodParameterString(item.customLeftBadge.Key);
+                    PushScaleformMovieMethodParameterString(item.customLeftBadge.Value);
+                    PushScaleformMovieMethodParameterString(item.labelFont.FontName);
+                    break;
+                case UIMenuSliderItem prItem:
+                    PushScaleformMovieFunctionParameterInt(prItem._max);
+                    PushScaleformMovieFunctionParameterInt(prItem._multiplier);
+                    PushScaleformMovieFunctionParameterInt(prItem.MainColor.ArgbValue);
+                    PushScaleformMovieFunctionParameterInt(prItem.HighlightColor.ArgbValue);
+                    PushScaleformMovieFunctionParameterInt(prItem.SliderColor.ArgbValue);
+                    PushScaleformMovieFunctionParameterBool(prItem._heritage);
+                    PushScaleformMovieFunctionParameterInt((int)item.LeftBadge);
+                    PushScaleformMovieMethodParameterString(item.customLeftBadge.Key);
+                    PushScaleformMovieMethodParameterString(item.customLeftBadge.Value);
+                    PushScaleformMovieMethodParameterString(item.labelFont.FontName);
+                    break;
+                case UIMenuProgressItem slItem:
+                    PushScaleformMovieFunctionParameterInt(slItem._max);
+                    PushScaleformMovieFunctionParameterInt(slItem._multiplier);
+                    PushScaleformMovieFunctionParameterInt(slItem.MainColor.ArgbValue);
+                    PushScaleformMovieFunctionParameterInt(slItem.HighlightColor.ArgbValue);
+                    PushScaleformMovieFunctionParameterInt(slItem.SliderColor.ArgbValue);
+                    PushScaleformMovieFunctionParameterInt((int)item.LeftBadge);
+                    PushScaleformMovieMethodParameterString(item.customLeftBadge.Key);
+                    PushScaleformMovieMethodParameterString(item.customLeftBadge.Value);
+                    PushScaleformMovieMethodParameterString(item.labelFont.FontName);
+                    break;
+                case UIMenuStatsItem statsItem:
+                    PushScaleformMovieFunctionParameterInt(statsItem.Type);
+                    PushScaleformMovieFunctionParameterInt(statsItem.SliderColor.ArgbValue);
+                    PushScaleformMovieFunctionParameterInt(statsItem.MainColor.ArgbValue);
+                    PushScaleformMovieFunctionParameterInt(statsItem.HighlightColor.ArgbValue);
+                    break;
+                case UIMenuSeparatorItem separatorItem:
+                    PushScaleformMovieFunctionParameterBool(separatorItem.Jumpable);
+                    PushScaleformMovieFunctionParameterInt(item.MainColor.ArgbValue);
+                    PushScaleformMovieFunctionParameterInt(item.HighlightColor.ArgbValue);
+                    PushScaleformMovieMethodParameterString(item.labelFont.FontName);
+                    break;
+                default:
+                    PushScaleformMovieFunctionParameterInt(item.MainColor.ArgbValue);
+                    PushScaleformMovieFunctionParameterInt(item.HighlightColor.ArgbValue);
+                    BeginTextCommandScaleformString("CELL_EMAIL_BCON");
+                    AddTextComponentScaleform(item.RightLabel);
+                    EndTextCommandScaleformString_2();
+                    PushScaleformMovieFunctionParameterInt((int)item.LeftBadge);
+                    PushScaleformMovieMethodParameterString(item.customLeftBadge.Key);
+                    PushScaleformMovieMethodParameterString(item.customLeftBadge.Value);
+                    PushScaleformMovieFunctionParameterInt((int)item.RightBadge);
+                    PushScaleformMovieMethodParameterString(item.customRightBadge.Key);
+                    PushScaleformMovieMethodParameterString(item.customRightBadge.Value);
+                    PushScaleformMovieMethodParameterString(item.labelFont.FontName);
+                    PushScaleformMovieMethodParameterString(item.rightLabelFont.FontName);
+                    break;
+            }
+            PushScaleformMovieFunctionParameterBool(item.KeepTextColorWhite);
+            EndScaleformMovieMethod();
+        }
+
+        [Obsolete("Use item.Description instead.")]
+        public void UpdateDescription()
+        {
+            API.AddTextEntry("PAUSEMENU_Current_Description", CurrentItem.Description);
+            SendItemToScaleform(Index, true);
+        }
+
+        public override async void GoUp()
+        {
+            if (!visible) return;
             try
             {
-                Items[CurrentSelection].Selected = false;
+                CurrentItem.Selected = false;
                 do
                 {
+                    index--;
+                    if (index < 0)
+                        index = Items.Count - 1;
                     await BaseScript.Delay(0);
-                    bool overflow = CurrentSelection == 0 && Pagination.TotalPages > 1;
-                    if (Pagination.GoUp())
-                    {
-                        if (Pagination.scrollType == ScrollingType.ENDLESS || (Pagination.scrollType == ScrollingType.CLASSIC && !overflow))
-                        {
-                            _itemCreation(Pagination.GetPage(CurrentSelection), Pagination.CurrentPageIndex, true);
-                            if (Parent is MainView lobby)
-                                await lobby._pause._lobby.CallFunctionReturnValueInt("SET_INPUT_EVENT", 8, 100);
-                            else if (Parent is TabView pause)
-                                await pause._pause._pause.CallFunctionReturnValueInt("SET_INPUT_EVENT", 8, 100);
-                        }
-                        else if (Pagination.scrollType == ScrollingType.PAGINATED || (Pagination.scrollType == ScrollingType.CLASSIC && overflow))
-                        {
-                            if (Parent is MainView lobby)
-                                lobby._pause._lobby.CallFunction("CLEAR_SETTINGS_COLUMN");
-                            else if (Parent is TabView pause)
-                                pause._pause._pause.CallFunction("CLEAR_PLAYERS_TAB_SETTINGS_COLUMN", ParentTab);
-                            int max = Pagination.ItemsPerPage;
-                            isBuilding = true;
-                            for (int i = 0; i < max; i++)
-                            {
-                                if (!Parent.Visible) return;
-                                _itemCreation(Pagination.CurrentPage, i, false, true);
-                            }
-                            isBuilding = false;
-                        }
-                    }
                 }
-                while (Items[CurrentSelection] is UIMenuSeparatorItem sp && sp.Jumpable);
-
-                if (Parent is MainView _lobby)
-                {
-                    _lobby._pause._lobby.CallFunction("SET_SETTINGS_SELECTION", Pagination.ScaleformIndex);
-                    _lobby._pause._lobby.CallFunction("SET_SETTINGS_QTTY", CurrentSelection + 1, Items.Count);
-                }
-                else if (Parent is TabView _pause)
-                {
-                    _pause._pause._pause.CallFunction("SET_PLAYERS_TAB_SETTINGS_SELECTION", ParentTab, Pagination.ScaleformIndex);
-                    _pause._pause._pause.CallFunction("SET_PLAYERS_TAB_SETTINGS_QTTY", ParentTab, CurrentSelection + 1, Items.Count);
-                }
-
-                Items[CurrentSelection].Selected = true;
+                while (CurrentItem is UIMenuSeparatorItem sp && sp.Jumpable);
+                Main.PauseMenu._pause.CallFunction("SET_COLUMN_INPUT_EVENT", (int)position, 8);
+                AddTextEntry("PAUSEMENU_Current_Description", CurrentItem.Description);
+                CurrentItem.Selected = true;
                 IndexChangedEvent();
             }
             catch (Exception e)
@@ -328,57 +299,23 @@ namespace ScaleformUI.PauseMenus.Elements.Columns
             }
         }
 
-        internal async void GoDown()
+        public override async void GoDown()
         {
+            if (!visible) return;
             try
             {
-                Items[CurrentSelection].Selected = false;
+                CurrentItem.Selected = false;
                 do
                 {
-                    bool overflow = CurrentSelection == Items.Count - 1 && Pagination.TotalPages > 1;
-                    if (Pagination.GoDown())
-                    {
-                        if (Pagination.scrollType == ScrollingType.ENDLESS || (Pagination.scrollType == ScrollingType.CLASSIC && !overflow))
-                        {
-                            _itemCreation(Pagination.GetPage(CurrentSelection), Pagination.CurrentPageIndex, false);
-
-                            if (Parent is MainView lobby)
-                                lobby._pause._lobby.CallFunction("SET_INPUT_EVENT", 9, 100);
-                            else if (Parent is TabView pause)
-                                await pause._pause._pause.CallFunctionReturnValueInt("SET_INPUT_EVENT", 9, 100);
-                        }
-                        else if (Pagination.scrollType == ScrollingType.PAGINATED || (Pagination.scrollType == ScrollingType.CLASSIC && overflow))
-                        {
-                            if (Parent is MainView lobby)
-                                lobby._pause._lobby.CallFunction("CLEAR_SETTINGS_COLUMN");
-                            else if (Parent is TabView pause)
-                                pause._pause._pause.CallFunction("CLEAR_PLAYERS_TAB_SETTINGS_COLUMN", ParentTab);
-                            int i = 0;
-                            int max = Pagination.ItemsPerPage;
-                            isBuilding = true;
-                            for (i = 0; i < max; i++)
-                            {
-                                if (!Parent.Visible) return;
-                                _itemCreation(Pagination.CurrentPage, i, false, true);
-                            }
-                            isBuilding = false;
-                        }
-                    }
+                    index++;
+                    if (index >= Items.Count)
+                        index = 0;
+                    await BaseScript.Delay(0);
                 }
-                while (Items[CurrentSelection] is UIMenuSeparatorItem sp && sp.Jumpable);
-
-                if (Parent is MainView _lobby)
-                {
-                    _lobby._pause._lobby.CallFunction("SET_SETTINGS_SELECTION", Pagination.ScaleformIndex);
-                    _lobby._pause._lobby.CallFunction("SET_SETTINGS_QTTY", CurrentSelection + 1, Items.Count);
-                }
-                else if (Parent is TabView _pause)
-                {
-                    _pause._pause._pause.CallFunction("SET_PLAYERS_TAB_SETTINGS_SELECTION", ParentTab, Pagination.ScaleformIndex);
-                    _pause._pause._pause.CallFunction("SET_PLAYERS_TAB_SETTINGS_QTTY", ParentTab, CurrentSelection + 1, Items.Count);
-                }
-
-                Items[CurrentSelection].Selected = true;
+                while (CurrentItem is UIMenuSeparatorItem sp && sp.Jumpable);
+                Main.PauseMenu._pause.CallFunction("SET_COLUMN_INPUT_EVENT", (int)position, 9);
+                API.AddTextEntry("PAUSEMENU_Current_Description", CurrentItem.Description);
+                CurrentItem.Selected = true;
                 IndexChangedEvent();
             }
             catch (Exception e)
@@ -387,256 +324,327 @@ namespace ScaleformUI.PauseMenus.Elements.Columns
             }
         }
 
+        public override async void GoLeft()
+        {
+            if (!visible) return;
+            if (!CurrentItem.Enabled)
+            {
+                Game.PlaySound(TabView.AUDIO_ERROR, TabView.AUDIO_LIBRARY);
+                return;
+            }
+            switch (CurrentItem)
+            {
+                case UIMenuListItem it:
+                    {
+                        it.Index--;
+                        it.ListChangedTrigger(it.Index);
+                        break;
+                    }
+                case UIMenuDynamicListItem it:
+                    {
+                        string newItem = await it.Callback(it, ChangeDirection.Left);
+                        it.CurrentListItem = newItem;
+                        break;
+                    }
+                case UIMenuSliderItem it:
+                    {
+                        it.Value--;
+                        break;
+                    }
+                case UIMenuProgressItem it:
+                    {
+                        it.Value--;
+                        break;
+                    }
+                case UIMenuStatsItem it:
+                    {
+                        it.Value--;
+                        break;
+                    }
+            }
+            Game.PlaySound(TabView.AUDIO_LEFTRIGHT, TabView.AUDIO_LIBRARY);
+        }
+
+        public override async void GoRight()
+        {
+            if (!visible) return;
+            if (!CurrentItem.Enabled)
+            {
+                Game.PlaySound(TabView.AUDIO_ERROR, TabView.AUDIO_LIBRARY);
+                return;
+            }
+            switch (CurrentItem)
+            {
+                case UIMenuListItem it:
+                    {
+                        it.Index++;
+                        it.ListChangedTrigger(it.Index);
+                        break;
+                    }
+                case UIMenuDynamicListItem it:
+                    {
+                        string newItem = await it.Callback(it, ChangeDirection.Left);
+                        it.CurrentListItem = newItem;
+                        break;
+                    }
+                case UIMenuSliderItem it:
+                    {
+                        it.Value++;
+                        break;
+                    }
+                case UIMenuProgressItem it:
+                    {
+                        it.Value++;
+                        break;
+                    }
+                case UIMenuStatsItem it:
+                    {
+                        it.Value++;
+                        break;
+                    }
+            }
+            Game.PlaySound(TabView.AUDIO_LEFTRIGHT, TabView.AUDIO_LIBRARY);
+        }
+
+        public override void Select()
+        {
+            if (!visible) return;
+            UIMenuItem item = CurrentItem;
+            if (!item.Enabled)
+            {
+                Game.PlaySound(TabView.AUDIO_ERROR, TabView.AUDIO_LIBRARY);
+                return;
+            }
+            switch (item)
+            {
+                case UIMenuCheckboxItem it:
+                    {
+                        it.Checked = !it.Checked;
+                        it.CheckboxEventTrigger();
+                        break;
+                    }
+                case UIMenuListItem it:
+                    {
+                        it.ListSelectedTrigger(it.Index);
+                        item.ItemActivate(null);
+                        SelectItem();
+                        break;
+                    }
+                default :
+                    item.ItemActivate(null);
+                    SelectItem();
+                    break;
+            }
+        }
+        public override void GoBack()
+        {
+            Focused = false;
+        }
+
+        public async override void MouseScroll(int dir)
+        {
+            if (!visible) return;
+            CurrentItem._selected = false;
+            do
+            {
+                await BaseScript.Delay(0);
+                index += dir;
+                if(index < 0)
+                    index = Items.Count - 1;
+                if (index >= Items.Count)
+                    index = 0;
+            }
+            while (CurrentItem is UIMenuSeparatorItem sp && sp.Jumpable);
+            API.AddTextEntry("PAUSEMENU_Current_Description", CurrentItem.Description);
+            CurrentItem._selected = true;
+            IndexChangedEvent();
+        }
+
+        public UIMenuItem CurrentItem => (UIMenuItem)Items[Index];
         public int CurrentSelection
         {
-            get { return Items.Count == 0 ? 0 : Pagination.CurrentMenuIndex; }
+            get => index;
             set
             {
-                if (value < 0)
-                {
-                    Pagination.CurrentMenuIndex = 0;
-                }
-                else if (value >= Items.Count)
-                {
-                    Pagination.CurrentMenuIndex = Items.Count - 1;
-                }
-                if (Pagination.TotalItems > 0)
-                {
-                    Items[CurrentSelection].Selected = false;
+                CurrentItem.Selected = false;
+                index = value;
+                if (index < 0)
+                    index = Items.Count - 1;
+                else if (index >= Items.Count)
+                    index = 0;
+                CurrentItem.Selected = true;
 
-                    Pagination.CurrentMenuIndex = value;
-                    Pagination.CurrentPage = Pagination.GetPage(Pagination.CurrentMenuIndex);
-                    Pagination.CurrentPageIndex = value;
-                    Pagination.ScaleformIndex = Pagination.GetScaleformIndex(value);
-                    if (value > Pagination.MaxItem || value < Pagination.MinItem)
-                    {
-                        RefreshColumn();
-                    }
-
-                    if (Parent != null && Parent.Visible)
-                    {
-                        if (Parent is MainView lobby)
-                        {
-                            lobby._pause._lobby.CallFunction("SET_SETTINGS_SELECTION", Pagination.GetScaleformIndex(Pagination.CurrentMenuIndex));
-                            lobby._pause._lobby.CallFunction("SET_SETTINGS_QTTY", CurrentSelection + 1, Items.Count);
-                            Items[CurrentSelection].Selected = true;
-                        }
-                        else if (Parent is TabView pause)
-                        {
-                            pause._pause._pause.CallFunction("SET_PLAYERS_TAB_SETTINGS_SELECTION", ParentTab, Pagination.GetScaleformIndex(Pagination.CurrentMenuIndex));
-                            pause._pause._pause.CallFunction("SET_PLAYERS_TAB_SETTINGS_QTTY", ParentTab, CurrentSelection + 1, Items.Count);
-                            if (pause.Index == pause.Tabs.IndexOf(pause.Tabs[ParentTab]) && pause.FocusLevel == 1)
-                                Items[CurrentSelection].Selected = true;
-                        }
-                    }
-                    if (Items[CurrentSelection] is UIMenuSeparatorItem jp)
-                    {
-                        if (jp.Jumpable)
-                            GoDown();
-                        else
-                        {
-                            if (Pagination.TotalItems == 1)
-                                Items[CurrentSelection].Selected = false;
-                        }
-                    }
-                }
+                if (visible && Focused)
+                    Main.PauseMenu._pause.CallFunction("SET_COLUMN_HIGHLIGHT", (int)position, index, true, true);
+                IndexChangedEvent();
             }
         }
 
         public void UpdateItemLabels(int index, string leftLabel, string rightLabel)
         {
-            if (Parent != null)
+            if (visible)
             {
-                if (Parent is MainView lobby)
-                    lobby._pause._lobby.CallFunction("UPDATE_SETTINGS_ITEM_LABELS", Pagination.GetScaleformIndex(index), leftLabel, rightLabel);
-                else if (Parent is TabView pause)
-                    pause._pause._pause.CallFunction("UPDATE_PLAYERS_TAB_SETTINGS_ITEM_LABELS", ParentTab, Pagination.GetScaleformIndex(index), leftLabel, rightLabel);
+                if (index >= Items.Count) return;
+                ((UIMenuItem)Items[index]).Label = leftLabel;
+                ((UIMenuItem)Items[index]).SetRightLabel(rightLabel);
             }
         }
 
         public void UpdateItemBlinkDescription(int index, bool blink)
         {
-            if (Parent != null)
+            if (visible)
             {
-                if (Parent is MainView lobby)
-                    lobby._pause._lobby.CallFunction("UPDATE_SETTINGS_ITEM_BLINK_DESC", Pagination.GetScaleformIndex(index), blink);
-                else if (Parent is TabView pause)
-                    pause._pause._pause.CallFunction("UPDATE_PLAYERS_TAB_SETTINGS_ITEM_BLINK_DESC", ParentTab, Pagination.GetScaleformIndex(index), blink);
+                if(index >= Items.Count) return;
+                ((UIMenuItem)Items[index]).BlinkDescription = blink;
             }
         }
 
         public void UpdateItemLabel(int index, string label)
         {
-            if (Parent != null)
+            if (visible)
             {
-                if (Parent is MainView lobby)
-                    lobby._pause._lobby.CallFunction("UPDATE_SETTINGS_ITEM_LABEL", Pagination.GetScaleformIndex(index), label);
-                else if (Parent is TabView pause)
-                    pause._pause._pause.CallFunction("UPDATE_PLAYERS_TAB_SETTINGS_ITEM_LABEL", ParentTab, Pagination.GetScaleformIndex(index), label);
+                if(index >= Items.Count) return;
+                ((UIMenuItem)Items[index]).Label = label;
             }
         }
 
         public void UpdateItemRightLabel(int index, string label)
         {
-            if (Parent != null)
+            if (visible)
             {
-                if (Parent is MainView lobby)
-                    lobby._pause._lobby.CallFunction("UPDATE_SETTINGS_ITEM_LABEL_RIGHT", Pagination.GetScaleformIndex(index), label);
-                else if (Parent is TabView pause)
-                    pause._pause._pause.CallFunction("UPDATE_PLAYERS_TAB_SETTINGS_ITEM_LABEL_RIGHT", ParentTab, Pagination.GetScaleformIndex(index), label);
+                if(index >= Items.Count) return;
+                ((UIMenuItem)Items[index]).SetRightLabel(label);
             }
         }
 
         public void UpdateItemLeftBadge(int index, BadgeIcon badge)
         {
-            if (Parent != null)
+            if (visible)
             {
-                if (Parent is MainView lobby)
-                    lobby._pause._lobby.CallFunction("SET_SETTINGS_ITEM_LEFT_BADGE", Pagination.GetScaleformIndex(index), (int)badge);
-                else if (Parent is TabView pause)
-                    pause._pause._pause.CallFunction("SET_PLAYERS_TAB_SETTINGS_ITEM_LEFT_BADGE", ParentTab, Pagination.GetScaleformIndex(index), (int)badge);
+                if (index >= Items.Count) return;
+                ((UIMenuItem)Items[index]).SetLeftBadge(badge);
             }
         }
 
         public void UpdateItemRightBadge(int index, BadgeIcon badge)
         {
-            if (Parent != null)
+            if (visible)
             {
-                if (Parent is MainView lobby)
-                    lobby._pause._lobby.CallFunction("SET_SETTINGS_ITEM_RIGHT_BADGE", Pagination.GetScaleformIndex(index), (int)badge);
-                else if (Parent is TabView pause)
-                    pause._pause._pause.CallFunction("SET_PLAYERS_TAB_SETTINGS_ITEM_RIGHT_BADGE", ParentTab, Pagination.GetScaleformIndex(index), (int)badge);
+                if (index >= Items.Count) return;
+                ((UIMenuItem)Items[index]).SetRightBadge(badge);
             }
         }
 
         public void EnableItem(int index, bool enable)
         {
-            if (Parent != null)
+            if (visible)
             {
-                if (Parent is MainView lobby)
-                    lobby._pause._lobby.CallFunction("ENABLE_SETTINGS_ITEM", Pagination.GetScaleformIndex(index), enable);
-                else if (Parent is TabView pause)
-                    pause._pause._pause.CallFunction("ENABLE_PLAYERS_TAB_SETTINGS_ITEM", ParentTab, Pagination.GetScaleformIndex(index), enable);
+                if (index >= Items.Count) return;
+                ((UIMenuItem)Items[index]).Enabled = enable;
             }
-        }
-
-        public void Clear()
-        {
-            if (Parent is MainView lobby)
-                lobby._pause._lobby.CallFunction("CLEAR_SETTINGS_COLUMN");
-            else if (Parent is TabView pause)
-                pause._pause._pause.CallFunction("CLEAR_PLAYERS_TAB_SETTINGS_COLUMN", ParentTab);
-            Items.Clear();
-            Pagination.Reset();
         }
 
         public void SortSettings(Comparison<UIMenuItem> compare)
         {
-            Items[CurrentSelection].Selected = false;
-            if (_unfilteredItems == null || _unfilteredItems.Count == 0)
+            if (!visible) return;
+            try
             {
+                CurrentItem.Selected = false;
                 _unfilteredItems = Items.ToList();
+                _unfilteredSelection = CurrentSelection;
+                Clear();
+                List<UIMenuItem> list = _unfilteredItems.Cast<UIMenuItem>().ToList();
+                list.Sort(compare);
+                Items = list.Cast<PauseMenuItem>().ToList();
+                if(visible)
+                {
+                    Populate();
+                    ShowColumn();
+                }
             }
-            Clear();
-            List<UIMenuItem> list = _unfilteredItems.ToList();
-            list.Sort(compare);
-            Items = list.ToList();
-            Pagination.TotalItems = Items.Count;
-            if (Parent != null && Parent.Visible)
+            catch (Exception ex)
             {
-                if (Parent is MainView lobby)
-                    lobby.buildSettings();
-                else if (Parent is TabView pause)
-                    pause.buildSettings(pause.Tabs[ParentTab] as PlayerListTab);
+                ResetFilter();
+                Debug.WriteLine("ScaleformUI - " + ex.ToString());
             }
         }
 
         public void FilterSettings(Func<UIMenuItem, bool> predicate)
         {
-            Items[CurrentSelection].Selected = false;
-            if (_unfilteredItems == null || _unfilteredItems.Count == 0)
+            if (!visible) return;
+            if (predicate == null)
+                throw new ArgumentNullException(nameof(predicate));
+            try
             {
                 _unfilteredItems = Items.ToList();
+                _unfilteredSelection = CurrentSelection;
+                //_unfilteredTopEdge = topEdge;
+
+                var filteredItems = Items.Cast<UIMenuItem>().Where(predicate).ToList();
+
+                if (!filteredItems.Any())
+                {
+                    Debug.WriteLine("^1ScaleformUI - No items were found, resetting the filter");
+                    _unfilteredItems.Clear();
+                    _unfilteredSelection = 0;
+                    //_unfilteredTopEdge = 0;
+                    return;
+                }
+
+                Items[CurrentSelection].Selected = false;
+                Clear();
+
+                Items = filteredItems.Cast<PauseMenuItem>().ToList();
+                CurrentSelection = 0;
+                //topEdge = 0;
+
+                if (visible)
+                {
+                    Populate();
+                    ShowColumn();
+                }
             }
-            Clear();
-            Items = _unfilteredItems.Where(predicate.Invoke).ToList();
-            Pagination.TotalItems = Items.Count;
-            if (Parent != null && Parent.Visible)
+            catch (Exception ex)
             {
-                if (Parent is MainView lobby)
-                    lobby.buildSettings();
-                else if (Parent is TabView pause)
-                    pause.buildSettings(pause.Tabs[ParentTab] as PlayerListTab);
+                ResetFilter();
+                Debug.WriteLine($"^1ScaleformUI - Error filtering menu items: {ex}");
+                throw;
             }
         }
 
         public void ResetFilter()
         {
-            if (_unfilteredItems != null && _unfilteredItems.Count > 0)
+            if (!visible) return;
+            try
             {
-                Items[CurrentSelection].Selected = false;
-                Clear();
-                Items = _unfilteredItems.ToList();
-                Pagination.TotalItems = Items.Count;
-                if (Parent != null && Parent.Visible)
+                if (_unfilteredItems != null && _unfilteredItems.Count > 0)
                 {
-                    if (Parent is MainView lobby)
-                        lobby.buildSettings();
-                    else if (Parent is TabView pause)
-                        pause.buildSettings(pause.Tabs[ParentTab] as PlayerListTab);
-                }
-            }
-        }
-
-        private void RefreshColumn()
-        {
-            if (Parent is MainView lobby)
-                lobby._pause._lobby.CallFunction("CLEAR_SETTINGS_COLUMN");
-            else if (Parent is TabView pause)
-                pause._pause._pause.CallFunction("CLEAR_PLAYERS_TAB_SETTINGS_COLUMN", ParentTab);
-            if (Items.Count > 0)
-            {
-                isBuilding = true;
-                int max = Pagination.ItemsPerPage;
-                if (Items.Count < max)
-                    max = Items.Count;
-
-                Pagination.MinItem = Pagination.CurrentPageStartIndex;
-                if (Pagination.scrollType == ScrollingType.CLASSIC && Pagination.TotalPages > 1)
-                {
-                    int missingItems = Pagination.GetMissingItems();
-                    if (missingItems > 0)
+                    CurrentItem.Selected = false;
+                    Clear();
+                    Items = _unfilteredItems.ToList();
+                    CurrentSelection = _unfilteredSelection;
+                    if (visible)
                     {
-                        Pagination.ScaleformIndex = Pagination.GetPageIndexFromMenuIndex(Pagination.CurrentPageEndIndex) + missingItems;
-                        Pagination.MinItem = Pagination.CurrentPageStartIndex - missingItems;
+                        Populate();
+                        ShowColumn();
                     }
                 }
-                Pagination.MaxItem = Pagination.CurrentPageEndIndex;
-
-                for (int i = 0; i < max; i++)
-                {
-                    if (!Parent.Visible) return;
-                    _itemCreation(Pagination.CurrentPage, i, false, true);
-                }
-                Pagination.ScaleformIndex = Pagination.GetScaleformIndex(CurrentSelection);
-                if (Parent is MainView _lobby)
-                {
-                    _lobby._pause._lobby.CallFunction("SET_SETTINGS_SELECTION", Pagination.ScaleformIndex);
-                    _lobby._pause._lobby.CallFunction("SET_SETTINGS_QTTY", CurrentSelection + 1, Items.Count);
-                }
-                else if (Parent is TabView _pause)
-                {
-                    _pause._pause._pause.CallFunction("SET_PLAYERS_TAB_SETTINGS_SELECTION", ParentTab, Pagination.ScaleformIndex);
-                    _pause._pause._pause.CallFunction("SET_PLAYERS_TAB_SETTINGS_QTTY", ParentTab, CurrentSelection + 1, Items.Count);
-                }
-                isBuilding = false;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("ScaleformUI - " + ex.ToString());
             }
         }
 
+        public override void ClearColumn()
+        {
+            base.ClearColumn();
+            API.AddTextEntry("PAUSEMENU_Current_Description", "");
+        }
 
         public void SelectItem()
         {
-            OnSettingItemActivated?.Invoke(Items[CurrentSelection], CurrentSelection);
+            OnSettingItemActivated?.Invoke(CurrentItem, CurrentSelection);
         }
         public void IndexChangedEvent()
         {

@@ -9,6 +9,7 @@ namespace ScaleformUI.Menu
 {
     public enum BadgeIcon
     {
+        CUSTOM = -1,
         NONE,
         LOCK,
         STAR,
@@ -188,29 +189,43 @@ namespace ScaleformUI.Menu
         BRAND_WESTERNMOTORCYCLE,
         BRAND_WILLARD,
         BRAND_ZIRCONIUM,
-        INFO
+        INFO,
+        MISSION_YELLOW,
+        MISSION_BLUE,
+        MISSION_GREEN,
+        MISSION_PURPLE,
+        MISSION_ORANGE,
+        MISSION_RED,
+        MISSION_AQUA,
+        MISSION_LIGHTRED,
+        PLUS,
+        ARROW_LEFT,
+        ARROW_RIGHT,
     }
     /// <summary>
     /// Simple item with a label.
     /// </summary>
-    public class UIMenuItem
+    public class UIMenuItem : PauseMenuItem
     {
         internal int _itemId = 0;
-        internal string _formatLeftLabel = "";
-        internal string _formatRightLabel = "";
-        private bool _selected = false;
+        //internal string _formatLeftLabel = "";
+        //internal string _formatRightLabel = "";
+        internal bool _selected = false;
         private string _label = "";
         private string _rightLabel = "";
         private bool _enabled;
         private bool blinkDescription;
-        private SColor mainColor;
-        private SColor highlightColor;
-        private SColor textColor = SColor.HUD_White;
-        private SColor highlightedTextColor = SColor.HUD_Black;
+        internal SColor mainColor;
+        internal SColor highlightColor;
         private string description;
-        private uint descriptionHash;
         internal ItemFont labelFont = ScaleformFonts.CHALET_LONDON_NINETEENSIXTY;
         internal ItemFont rightLabelFont = ScaleformFonts.CHALET_LONDON_NINETEENSIXTY;
+        internal KeyValuePair<string, string> customLeftBadge = new KeyValuePair<string, string>("", "");
+        internal KeyValuePair<string, string> customRightBadge = new KeyValuePair<string, string>("", "");
+        /// <summary>
+        ///     This will override all the text color formatting to a pure white color both when highlighted and not.
+        /// </summary>
+        public bool KeepTextColorWhite = false;
 
         /// <summary>
         /// The item color when not highlighted
@@ -221,10 +236,10 @@ namespace ScaleformUI.Menu
             set
             {
                 mainColor = value;
-                if (Parent != null && Parent.Visible && Parent.Pagination.IsItemVisible(Parent.MenuItems.IndexOf(this)))
-                {
-                    Main.scaleformUI.CallFunction("UPDATE_COLORS", Parent.Pagination.GetScaleformIndex(Parent.MenuItems.IndexOf(this)), value, highlightColor, textColor, highlightedTextColor);
-                }
+                if (Parent != null && Parent.Visible)
+                    Parent.SendItemToScaleform(Parent.MenuItems.IndexOf(this), true);
+                if (ParentColumn != null && ParentColumn.visible)
+                    ParentColumn.SendItemToScaleform(ParentColumn.Items.IndexOf(this), true);
             }
         }
         /// <summary>
@@ -236,43 +251,15 @@ namespace ScaleformUI.Menu
             set
             {
                 highlightColor = value;
-                if (Parent != null && Parent.Visible && Parent.Pagination.IsItemVisible(Parent.MenuItems.IndexOf(this)))
-                {
-                    Main.scaleformUI.CallFunction("UPDATE_COLORS", Parent.Pagination.GetScaleformIndex(Parent.MenuItems.IndexOf(this)), mainColor, value, textColor, highlightedTextColor);
-                }
+                if (Parent != null && Parent.Visible)
+                    Parent.SendItemToScaleform(Parent.MenuItems.IndexOf(this), true);
+                if (ParentColumn != null && ParentColumn.visible)
+                    ParentColumn.SendItemToScaleform(ParentColumn.Items.IndexOf(this), true);
             }
         }
         /// <summary>
         /// The item text color when not highlighted
         /// </summary>
-
-        public SColor TextColor
-        {
-            get => textColor;
-            set
-            {
-                textColor = value;
-                if (Parent != null && Parent.Visible && Parent.Pagination.IsItemVisible(Parent.MenuItems.IndexOf(this)))
-                {
-                    Main.scaleformUI.CallFunction("UPDATE_COLORS", Parent.Pagination.GetScaleformIndex(Parent.MenuItems.IndexOf(this)), mainColor, highlightColor, value, highlightedTextColor);
-                }
-            }
-        }
-        /// <summary>
-        /// The item text color when highlighted
-        /// </summary>
-        public SColor HighlightedTextColor
-        {
-            get => highlightedTextColor;
-            set
-            {
-                highlightedTextColor = value;
-                if (Parent != null && Parent.Visible && Parent.Pagination.IsItemVisible(Parent.MenuItems.IndexOf(this)))
-                {
-                    Main.scaleformUI.CallFunction("UPDATE_COLORS", Parent.Pagination.GetScaleformIndex(Parent.MenuItems.IndexOf(this)), mainColor, highlightColor, textColor, value);
-                }
-            }
-        }
 
         public ItemFont LabelFont
         {
@@ -280,17 +267,10 @@ namespace ScaleformUI.Menu
             set
             {
                 labelFont = value;
-                if (Parent != null && Parent.Visible && Parent.Pagination.IsItemVisible(Parent.MenuItems.IndexOf(this)))
-                {
-                    Main.scaleformUI.CallFunction("SET_ITEM_LABEL_FONT", Parent.Pagination.GetScaleformIndex(Parent.MenuItems.IndexOf(this)), labelFont.FontName, labelFont.FontID);
-                }
-                if (ParentColumn != null && ParentColumn.Parent.Visible)
-                {
-                    if (ParentColumn.Parent is MainView lobby)
-                        lobby._pause._lobby.CallFunction("SET_SETTINGS_ITEM_LABEL_FONT", ParentColumn.Pagination.GetScaleformIndex(ParentColumn.Items.IndexOf(this)), labelFont.FontName, labelFont.FontID);
-                    else if (ParentColumn.Parent is TabView pause)
-                        pause._pause._pause.CallFunction("SET_PLAYERS_TAB_SETTINGS_ITEM_LABEL_FONT", ParentColumn.ParentTab, ParentColumn.Pagination.GetScaleformIndex(ParentColumn.Items.IndexOf(this)), labelFont.FontName, labelFont.FontID);
-                }
+                if (Parent != null && Parent.Visible)
+                    Parent.SendItemToScaleform(Parent.MenuItems.IndexOf(this), true);
+                if (ParentColumn != null && ParentColumn.visible)
+                    ParentColumn.SendItemToScaleform(ParentColumn.Items.IndexOf(this), true);
             }
         }
 
@@ -300,17 +280,10 @@ namespace ScaleformUI.Menu
             set
             {
                 rightLabelFont = value;
-                if (Parent != null && Parent.Visible && Parent.Pagination.IsItemVisible(Parent.MenuItems.IndexOf(this)))
-                {
-                    Main.scaleformUI.CallFunction("SET_ITEM_RIGHT_LABEL_FONT", Parent.Pagination.GetScaleformIndex(Parent.MenuItems.IndexOf(this)), rightLabelFont.FontName, rightLabelFont.FontID);
-                }
-                if (ParentColumn != null && ParentColumn.Parent.Visible)
-                {
-                    if (ParentColumn.Parent is MainView lobby)
-                        lobby._pause._lobby.CallFunction("SET_SETTINGS_ITEM_RIGHT_LABEL_FONT", ParentColumn.Pagination.GetScaleformIndex(ParentColumn.Items.IndexOf(this)), labelFont.FontName, labelFont.FontID);
-                    else if (ParentColumn.Parent is TabView pause)
-                        pause._pause._pause.CallFunction("SET_PLAYERS_TAB_SETTINGS_ITEM_RIGHT_LABEL_FONT", ParentColumn.ParentTab, ParentColumn.Pagination.GetScaleformIndex(ParentColumn.Items.IndexOf(this)), labelFont.FontName, labelFont.FontID);
-                }
+                if (Parent != null && Parent.Visible)
+                    Parent.SendItemToScaleform(Parent.MenuItems.IndexOf(this), true);
+                if (ParentColumn != null && ParentColumn.visible)
+                    ParentColumn.SendItemToScaleform(ParentColumn.Items.IndexOf(this), true);
             }
         }
 
@@ -327,6 +300,7 @@ namespace ScaleformUI.Menu
         /// Called when user selects the current item.
         /// </summary>
         public event ItemActivatedEvent Activated;
+        public event ItemActivatedEvent OnTabPressed;
 
         /// <summary>
         /// Called when user "highlights" the current item.
@@ -344,17 +318,7 @@ namespace ScaleformUI.Menu
         /// </summary>
         /// <param name="text">Button label.</param>
         /// <param name="description">Description.</param>
-        public UIMenuItem(string text, string description) : this(text, description, SColor.HUD_Panel_light, SColor.HUD_White, SColor.HUD_White, SColor.HUD_Black) { }
-
-        /// <summary>
-        /// Basic menu button with description.
-        /// </summary>
-        /// <param name="text">Button label.</param>
-        /// <param name="descriptionHash">Description label hash.</param>
-        public UIMenuItem(string text, uint descriptionHash) : this(text, descriptionHash, SColor.HUD_Panel_light, SColor.HUD_White, SColor.HUD_White, SColor.HUD_Black) { }
-
-        public UIMenuItem(string text, string description, SColor mainColor, SColor highlightColor) : this(text, description, mainColor, highlightColor, SColor.HUD_White, SColor.HUD_Black) { }
-        public UIMenuItem(string text, uint descriptionHash, SColor mainColor, SColor highlightColor) : this(text, descriptionHash, mainColor, highlightColor, SColor.HUD_White, SColor.HUD_Black) { }
+        public UIMenuItem(string text, string description) : this(text, description, SColor.HUD_Panel_light, SColor.HUD_White) { }
 
         /// <summary>
         /// Basic menu item with description and colors.
@@ -363,39 +327,15 @@ namespace ScaleformUI.Menu
         /// <param name="description">Item's description</param>
         /// <param name="color">Main Color</param>
         /// <param name="highlightColor">Highlighted Color</param>
-        /// <param name="textColor">Text's main color</param>
-        /// <param name="highlightedTextColor">Highlighted text color</param>
-        public UIMenuItem(string text, string description, SColor color, SColor highlightColor, SColor textColor, SColor highlightedTextColor)
+        public UIMenuItem(string text, string description, SColor color, SColor highlightColor) : base(text)
         {
             _enabled = true;
             MainColor = color;
             HighlightColor = highlightColor;
-            TextColor = textColor;
-            HighlightedTextColor = highlightedTextColor;
             Label = text;
             Description = description;
         }
 
-        /// <summary>
-        /// Basic menu item with description and colors.
-        /// </summary>
-        /// <param name="text">Item's label.</param>
-        /// <param name="descriptionHash">Item's description label hash obtained with (uint)GetHashKey(label)</param>
-        /// <param name="color">Main Color</param>
-        /// <param name="highlightColor">Highlighted Color</param>
-        /// <param name="textColor">Text's main color</param>
-        /// <param name="highlightedTextColor">Highlighted text color</param>
-        public UIMenuItem(string text, uint descriptionHash, SColor color, SColor highlightColor, SColor textColor, SColor highlightedTextColor)
-        {
-            _enabled = true;
-            MainColor = color;
-            HighlightColor = highlightColor;
-            TextColor = textColor;
-            HighlightedTextColor = highlightedTextColor;
-            Label = text;
-            this.description = string.Empty;
-            DescriptionHash = descriptionHash;
-        }
 
         /// <summary>
         /// Should the Info symbol blink?
@@ -406,59 +346,28 @@ namespace ScaleformUI.Menu
             set
             {
                 blinkDescription = value;
-                if (Parent != null && Parent.Visible && Parent.Pagination.IsItemVisible(Parent.MenuItems.IndexOf(this)))
-                {
-                    Main.scaleformUI.CallFunction("SET_BLINK_DESC", Parent.Pagination.GetScaleformIndex(Parent.MenuItems.IndexOf(this)), blinkDescription);
-                }
-                if (ParentColumn != null && ParentColumn.Parent.Visible)
-                {
-                    if (ParentColumn.Parent is MainView lobby)
-                        lobby._pause._lobby.CallFunction("UPDATE_SETTINGS_ITEM_BLINK_DESC", ParentColumn.Pagination.GetScaleformIndex(ParentColumn.Items.IndexOf(this)), blinkDescription);
-                    else if (ParentColumn.Parent is TabView pause)
-                        pause._pause._pause.CallFunction("UPDATE_PLAYERS_TAB_SETTINGS_ITEM_BLINK_DESC", ParentColumn.ParentTab, ParentColumn.Pagination.GetScaleformIndex(ParentColumn.Items.IndexOf(this)), blinkDescription);
-                }
+                if (Parent != null && Parent.Visible)
+                    Parent.SendItemToScaleform(Parent.MenuItems.IndexOf(this), true);
+                if (ParentColumn != null && ParentColumn.visible)
+                    ParentColumn.SendItemToScaleform(ParentColumn.Items.IndexOf(this), true);
             }
         }
 
         /// <summary>
         /// Whether this item is currently selected.
         /// </summary>
-        public virtual bool Selected
+        public override bool Selected
         {
             get => _selected;
-            internal set
+            set
             {
                 _selected = value;
                 if (value)
-                {
-                    _formatLeftLabel = _formatLeftLabel.Replace("~w~", "~l~");
-                    _formatLeftLabel = _formatLeftLabel.Replace("~s~", "~l~");
-                    if (!string.IsNullOrWhiteSpace(_formatRightLabel))
-                    {
-                        _formatRightLabel = _formatRightLabel.Replace("~w~", "~l~");
-                        _formatRightLabel = _formatRightLabel.Replace("~s~", "~l~");
-                    }
                     Highlighted?.Invoke(Parent, this);
-                }
-                else
-                {
-                    _formatLeftLabel = _formatLeftLabel.Replace("~l~", "~s~");
-                    if (!string.IsNullOrWhiteSpace(_formatRightLabel))
-                    {
-                        _formatRightLabel = _formatRightLabel.Replace("~l~", "~s~");
-                    }
-                }
-                if (Parent != null && Parent.Pagination.IsItemVisible(Parent.MenuItems.IndexOf(this)))
-                {
-                    Main.scaleformUI.CallFunction("SET_ITEM_LABELS", Parent.Pagination.GetScaleformIndex(Parent.MenuItems.IndexOf(this)), _formatLeftLabel, _formatRightLabel);
-                }
-                if (ParentColumn != null && ParentColumn.Parent != null && ParentColumn.Parent.Visible)
-                {
-                    if (ParentColumn.Parent is MainView lobby)
-                        lobby._pause._lobby.CallFunction("UPDATE_SETTINGS_ITEM_LABELS", ParentColumn.Pagination.GetScaleformIndex(ParentColumn.Items.IndexOf(this)), _formatLeftLabel, _formatRightLabel);
-                    else if (ParentColumn.Parent is TabView pause)
-                        pause._pause._pause.CallFunction("UPDATE_PLAYERS_TAB_SETTINGS_ITEM_LABELS", ParentColumn.ParentTab, ParentColumn.Pagination.GetScaleformIndex(ParentColumn.Items.IndexOf(this)), _formatLeftLabel, _formatRightLabel);
-                }
+                if (Parent != null && Parent.Visible)
+                    Parent.SendItemToScaleform(Parent.MenuItems.IndexOf(this), true);
+                if (ParentColumn != null && ParentColumn.visible)
+                    ParentColumn.SendItemToScaleform(ParentColumn.Items.IndexOf(this), true);
             }
         }
 
@@ -477,81 +386,15 @@ namespace ScaleformUI.Menu
             set
             {
                 description = value;
-                if (descriptionHash != 0) descriptionHash = 0;
-                if (Parent != null && Parent.Visible && Parent.Pagination.IsItemVisible(Parent.MenuItems.IndexOf(this)))
+                if (Parent != null && Parent.Visible)
                 {
-                    API.AddTextEntry($"menu_{BreadcrumbsHandler.CurrentDepth}_desc_{Parent.MenuItems.IndexOf(this)}", description);
-                    API.BeginScaleformMovieMethod(Main.scaleformUI.Handle, "UPDATE_ITEM_DESCRIPTION");
-                    API.ScaleformMovieMethodAddParamInt(Parent.Pagination.GetScaleformIndex(Parent.MenuItems.IndexOf(this)));
-                    API.BeginTextCommandScaleformString($"menu_{BreadcrumbsHandler.CurrentDepth}_desc_{Parent.MenuItems.IndexOf(this)}");
-                    API.EndTextCommandScaleformString_2();
-                    API.EndScaleformMovieMethod();
+                    API.AddTextEntry("UIMenu_Current_Description", value);
+                    Parent.SendItemToScaleform(Parent.MenuItems.IndexOf(this), true);
                 }
-                if (ParentColumn != null && ParentColumn.Parent.Visible)
+                if (ParentColumn != null && ParentColumn.visible)
                 {
-                    if (ParentColumn.Parent is MainView lobby)
-                    {
-                        API.AddTextEntry($"lobbymenu_desc_{ParentColumn.Pagination.GetScaleformIndex(ParentColumn.Items.IndexOf(this))}", description);
-                        API.BeginScaleformMovieMethod(lobby._pause._lobby.Handle, "UPDATE_SETTINGS_ITEM_DESCRIPTION");
-                        API.ScaleformMovieMethodAddParamInt(ParentColumn.Pagination.GetScaleformIndex(ParentColumn.Items.IndexOf(this)));
-                        API.BeginTextCommandScaleformString($"lobbymenu_desc_{ParentColumn.Pagination.GetScaleformIndex(ParentColumn.Items.IndexOf(this))}");
-                        API.EndTextCommandScaleformString_2();
-                        API.EndScaleformMovieMethod();
-                    }
-                    else if (ParentColumn.Parent is TabView pause)
-                    {
-                        API.AddTextEntry($"pausemenu_{ParentColumn.ParentTab}_desc_{ParentColumn.Pagination.GetScaleformIndex(ParentColumn.Items.IndexOf(this))}", description);
-                        API.BeginScaleformMovieMethod(pause._pause._pause.Handle, "UPDATE_PLAYERS_TAB_SETTINGS_ITEM_DESCRIPTION");
-                        API.ScaleformMovieMethodAddParamInt(ParentColumn.ParentTab);
-                        API.ScaleformMovieMethodAddParamInt(ParentColumn.Pagination.GetScaleformIndex(ParentColumn.Items.IndexOf(this)));
-                        API.BeginTextCommandScaleformString($"pausemenu_{ParentColumn.ParentTab}_desc_{ParentColumn.Pagination.GetScaleformIndex(ParentColumn.Items.IndexOf(this))}");
-                        API.EndTextCommandScaleformString_2();
-                        API.EndScaleformMovieMethod();
-                    }
-                }
-            }
-        }
-        /// <summary>
-        /// Sets the item's description by a label's hash (used by (uint)GetHashKey(label))
-        /// </summary>
-        public virtual uint DescriptionHash
-        {
-            get => descriptionHash;
-            set
-            {
-                descriptionHash = value;
-                if (!string.IsNullOrWhiteSpace(description))
-                    description = string.Empty;
-                if (Parent != null && Parent.Visible && Parent.Pagination.IsItemVisible(Parent.MenuItems.IndexOf(this)))
-                {
-                    API.BeginScaleformMovieMethod(Main.scaleformUI.Handle, "UPDATE_ITEM_DESCRIPTION");
-                    API.ScaleformMovieMethodAddParamInt(Parent.Pagination.GetScaleformIndex(Parent.MenuItems.IndexOf(this)));
-                    API.BeginTextCommandScaleformString("STRTNM1");
-                    API.AddTextComponentSubstringTextLabelHashKey(descriptionHash);
-                    API.EndTextCommandScaleformString_2();
-                    API.EndScaleformMovieMethod();
-                }
-                if (ParentColumn != null && ParentColumn.Parent.Visible)
-                {
-                    if (ParentColumn.Parent is MainView lobby)
-                    {
-                        API.BeginScaleformMovieMethod(lobby._pause._lobby.Handle, "UPDATE_SETTINGS_ITEM_DESCRIPTION");
-                        API.ScaleformMovieMethodAddParamInt(ParentColumn.Pagination.GetScaleformIndex(ParentColumn.Items.IndexOf(this)));
-                        API.BeginTextCommandScaleformString("STRTNM1");
-                        API.AddTextComponentSubstringTextLabelHashKey(descriptionHash);
-                        API.EndTextCommandScaleformString_2();
-                        API.EndScaleformMovieMethod();
-                    }
-                    else if (ParentColumn.Parent is TabView pause)
-                    {
-                        API.BeginScaleformMovieMethod(pause._pause._pause.Handle, ""); // da aggiungere
-                        API.ScaleformMovieMethodAddParamInt(ParentColumn.ParentTab);
-                        API.ScaleformMovieMethodAddParamInt(ParentColumn.Pagination.GetScaleformIndex(ParentColumn.Items.IndexOf(this)));
-                        API.BeginTextCommandScaleformString("STRTNM1");
-                        API.AddTextComponentSubstringTextLabelHashKey(descriptionHash);
-                        API.EndTextCommandScaleformString_2();
-                        API.EndScaleformMovieMethod();
-                    }
+                    API.AddTextEntry("PauseMenu_Current_Description", value);
+                    ParentColumn.SendItemToScaleform(ParentColumn.Items.IndexOf(this), true);
                 }
             }
         }
@@ -566,28 +409,10 @@ namespace ScaleformUI.Menu
             set
             {
                 _enabled = value;
-                if (!value)
-                    _formatLeftLabel = _formatLeftLabel.ReplaceRstarColorsWith("~c~");
-                else
-                    Label = _label;
-                if (Parent != null && Parent.Visible && Parent.Pagination.IsItemVisible(Parent.MenuItems.IndexOf(this)))
-                {
-                    Main.scaleformUI.CallFunction("SET_ITEM_LABELS", Parent.Pagination.GetScaleformIndex(Parent.MenuItems.IndexOf(this)), _formatLeftLabel, _formatRightLabel);
-                    Main.scaleformUI.CallFunction("ENABLE_ITEM", Parent.Pagination.GetScaleformIndex(Parent.MenuItems.IndexOf(this)), _enabled);
-                }
-                if (ParentColumn != null && ParentColumn.Parent.Visible && ParentColumn.Pagination.IsItemVisible(ParentColumn.Items.IndexOf(this)))
-                {
-                    if (ParentColumn.Parent is MainView lobby)
-                    {
-                        lobby._pause._lobby.CallFunction("UPDATE_SETTINGS_ITEM_LABELS", ParentColumn.Pagination.GetScaleformIndex(ParentColumn.Items.IndexOf(this)), _formatLeftLabel, _formatRightLabel);
-                        lobby._pause._lobby.CallFunction("ENABLE_SETTINGS_ITEM", ParentColumn.Pagination.GetScaleformIndex(ParentColumn.Items.IndexOf(this)), _enabled);
-                    }
-                    else if (ParentColumn.Parent is TabView pause)
-                    {
-                        pause._pause._pause.CallFunction("UPDATE_PLAYERS_TAB_SETTINGS_ITEM_LABELS", ParentColumn.ParentTab, ParentColumn.Pagination.GetScaleformIndex(ParentColumn.Items.IndexOf(this)), _formatLeftLabel, _formatRightLabel);
-                        pause._pause._pause.CallFunction("ENABLE_PLAYERS_TAB_SETTINGS_ITEM", ParentColumn.ParentTab, ParentColumn.Pagination.GetScaleformIndex(ParentColumn.Items.IndexOf(this)), _enabled);
-                    }
-                }
+                if (Parent != null && Parent.Visible)
+                    Parent.SendItemToScaleform(Parent.MenuItems.IndexOf(this), true);
+                if (ParentColumn != null && ParentColumn.visible)
+                    ParentColumn.SendItemToScaleform(ParentColumn.Items.IndexOf(this), true);
             }
         }
 
@@ -601,33 +426,16 @@ namespace ScaleformUI.Menu
         /// <summary>
         /// Returns this item's label.
         /// </summary>
-        public virtual string Label
+        public new virtual string Label
         {
             get => _label;
             set
             {
                 _label = value;
-                _formatLeftLabel = value.StartsWith("~") ? value : "~s~" + value;
-                if (_selected)
-                {
-                    _formatLeftLabel = _formatLeftLabel.Replace("~w~", "~l~");
-                    _formatLeftLabel = _formatLeftLabel.Replace("~s~", "~l~");
-                }
-                else
-                {
-                    _formatLeftLabel = _formatLeftLabel.Replace("~l~", "~s~");
-                }
-                if (Parent != null && Parent.Visible && Parent.Pagination.IsItemVisible(Parent.MenuItems.IndexOf(this)))
-                {
-                    Main.scaleformUI.CallFunction("SET_LEFT_LABEL", Parent.Pagination.GetScaleformIndex(Parent.MenuItems.IndexOf(this)), _formatLeftLabel);
-                }
-                if (ParentColumn != null && ParentColumn.Parent.Visible)
-                {
-                    if (ParentColumn.Parent is MainView lobby)
-                        lobby._pause._lobby.CallFunction("UPDATE_SETTINGS_ITEM_LABEL", ParentColumn.Pagination.GetScaleformIndex(ParentColumn.Items.IndexOf(this)), _formatLeftLabel);
-                    else if (ParentColumn.Parent is TabView pause)
-                        pause._pause._pause.CallFunction("UPDATE_PLAYERS_TAB_SETTINGS_ITEM_LABEL", ParentColumn.ParentTab, ParentColumn.Pagination.GetScaleformIndex(ParentColumn.Items.IndexOf(this)), _formatLeftLabel);
-                }
+                if (Parent != null && Parent.Visible)
+                    Parent.SendItemToScaleform(Parent.MenuItems.IndexOf(this), true);
+                if (ParentColumn != null && ParentColumn.visible)
+                    ParentColumn.SendItemToScaleform(ParentColumn.Items.IndexOf(this), true);
             }
         }
 
@@ -639,17 +447,10 @@ namespace ScaleformUI.Menu
         public virtual void SetLeftBadge(BadgeIcon badge)
         {
             LeftBadge = badge;
-            if (Parent != null && Parent.Visible && Parent.Pagination.IsItemVisible(Parent.MenuItems.IndexOf(this)))
-            {
-                Main.scaleformUI.CallFunction("SET_LEFT_BADGE", Parent.Pagination.GetScaleformIndex(Parent.MenuItems.IndexOf(this)), (int)badge);
-            }
-            if (ParentColumn != null && ParentColumn.Parent.Visible)
-            {
-                if (ParentColumn.Parent is MainView lobby)
-                    lobby._pause._lobby.CallFunction("SET_SETTINGS_ITEM_LEFT_BADGE", ParentColumn.Pagination.GetScaleformIndex(ParentColumn.Items.IndexOf(this)), (int)badge);
-                else if (ParentColumn.Parent is TabView pause)
-                    pause._pause._pause.CallFunction("SET_PLAYERS_TAB_SETTINGS_ITEM_LEFT_BADGE", ParentColumn.ParentTab, ParentColumn.Pagination.GetScaleformIndex(ParentColumn.Items.IndexOf(this)), (int)badge);
-            }
+            if (Parent != null && Parent.Visible)
+                Parent.SendItemToScaleform(Parent.MenuItems.IndexOf(this), true);
+            if (ParentColumn != null && ParentColumn.visible)
+                ParentColumn.SendItemToScaleform(ParentColumn.Items.IndexOf(this), true);
         }
 
         /// <summary>
@@ -659,17 +460,42 @@ namespace ScaleformUI.Menu
         public virtual void SetRightBadge(BadgeIcon badge)
         {
             RightBadge = badge;
-            if (Parent != null && Parent.Visible && Parent.Pagination.IsItemVisible(Parent.MenuItems.IndexOf(this)))
-            {
-                Main.scaleformUI.CallFunction("SET_RIGHT_BADGE", Parent.Pagination.GetScaleformIndex(Parent.MenuItems.IndexOf(this)), (int)badge);
-            }
-            if (ParentColumn != null && ParentColumn.Parent.Visible)
-            {
-                if (ParentColumn.Parent is MainView lobby)
-                    lobby._pause._lobby.CallFunction("SET_SETTINGS_ITEM_RIGHT_BADGE", ParentColumn.Pagination.GetScaleformIndex(ParentColumn.Items.IndexOf(this)), (int)badge);
-                else if (ParentColumn.Parent is TabView pause)
-                    pause._pause._pause.CallFunction("SET_PLAYERS_TAB_SETTINGS_ITEM_RIGHT_BADGE", ParentColumn.ParentTab, ParentColumn.Pagination.GetScaleformIndex(ParentColumn.Items.IndexOf(this)), (int)badge);
-            }
+            if (Parent != null && Parent.Visible)
+                Parent.SendItemToScaleform(Parent.MenuItems.IndexOf(this), true);
+            if (ParentColumn != null && ParentColumn.visible)
+                ParentColumn.SendItemToScaleform(ParentColumn.Items.IndexOf(this), true);
+        }
+
+        /// <summary>
+        /// Set the right badge with a custom texture. 
+        /// Use SetRightBadge(BadgeIcon.NONE) to remove the badge.
+        /// </summary>
+        /// <param name="txd">The texture dictionary.</param>
+        /// <param name="txn">The texture name.</param>
+        public virtual void SetCustomRightBadge(string txd, string txn)
+        {
+            RightBadge = BadgeIcon.CUSTOM;
+            customRightBadge = new KeyValuePair<string, string>(txd, txn);
+            if (Parent != null && Parent.Visible)
+                Parent.SendItemToScaleform(Parent.MenuItems.IndexOf(this), true);
+            if (ParentColumn != null && ParentColumn.visible)
+                ParentColumn.SendItemToScaleform(ParentColumn.Items.IndexOf(this), true);
+        }
+
+        /// <summary>
+        /// Set the left badge with a custom texture. 
+        /// Use SetLeftBadge(BadgeIcon.NONE) to remove the badge.
+        /// </summary>
+        /// <param name="txd">The texture dictionary.</param>
+        /// <param name="txn">The texture name.</param>
+        public virtual void SetCustomLeftBadge(string txd, string txn)
+        {
+            LeftBadge = BadgeIcon.CUSTOM;
+            customLeftBadge = new KeyValuePair<string, string>(txd, txn);
+            if (Parent != null && Parent.Visible)
+                Parent.SendItemToScaleform(Parent.MenuItems.IndexOf(this), true);
+            if (ParentColumn != null && ParentColumn.visible)
+                ParentColumn.SendItemToScaleform(ParentColumn.Items.IndexOf(this), true);
         }
 
 
@@ -691,27 +517,10 @@ namespace ScaleformUI.Menu
             private set
             {
                 _rightLabel = value;
-                _formatRightLabel = value.StartsWith("~") ? value : "~s~" + value;
-                if (_selected)
-                {
-                    _formatRightLabel = _formatRightLabel.Replace("~w~", "~l~");
-                    _formatRightLabel = _formatRightLabel.Replace("~s~", "~l~");
-                }
-                else
-                {
-                    _formatRightLabel = _formatRightLabel.Replace("~l~", "~s~");
-                }
-                if (Parent != null && Parent.Visible && Parent.Pagination.IsItemVisible(Parent.MenuItems.IndexOf(this)))
-                {
-                    Main.scaleformUI.CallFunction("SET_RIGHT_LABEL", Parent.Pagination.GetScaleformIndex(Parent.MenuItems.IndexOf(this)), _formatRightLabel);
-                }
-                if (ParentColumn != null && ParentColumn.Parent.Visible)
-                {
-                    if (ParentColumn.Parent is MainView lobby)
-                        lobby._pause._lobby.CallFunction("UPDATE_SETTINGS_ITEM_LABEL_RIGHT", ParentColumn.Pagination.GetScaleformIndex(ParentColumn.Items.IndexOf(this)), _formatRightLabel);
-                    else if (ParentColumn.Parent is TabView pause)
-                        pause._pause._pause.CallFunction("UPDATE_PLAYERS_TAB_SETTINGS_ITEM_LABEL_RIGHT", ParentColumn.ParentTab, ParentColumn.Pagination.GetScaleformIndex(ParentColumn.Items.IndexOf(this)), _formatRightLabel);
-                }
+                if (Parent != null && Parent.Visible)
+                    Parent.SendItemToScaleform(Parent.MenuItems.IndexOf(this), true);
+                if (ParentColumn != null && ParentColumn.visible)
+                    ParentColumn.SendItemToScaleform(ParentColumn.Items.IndexOf(this), true);
             }
         }
 
@@ -737,10 +546,8 @@ namespace ScaleformUI.Menu
         public virtual void RemovePanelAt(int Index)
         {
             Panels.RemoveAt(Index);
-            if (Parent != null && Parent.Visible && Parent.Pagination.IsItemVisible(Parent.MenuItems.IndexOf(this)))
-            {
-                Main.scaleformUI.CallFunction("REMOVE_PANEL", Parent.Pagination.GetScaleformIndex(Parent.MenuItems.IndexOf(this)), Index);
-            }
+            if (Parent != null && Parent.Visible)
+                Parent.SendItemToScaleform(Parent.MenuItems.IndexOf(this), true);
         }
 
         /// <summary>
@@ -751,18 +558,8 @@ namespace ScaleformUI.Menu
         {
             panel.SetParentItem(this);
             SidePanel = panel;
-            if (Parent != null && Parent.Visible && Parent.Pagination.IsItemVisible(Parent.MenuItems.IndexOf(this)))
-            {
-                switch (panel)
-                {
-                    case UIMissionDetailsPanel:
-                        UIMissionDetailsPanel mis = (UIMissionDetailsPanel)panel;
-                        Main.scaleformUI.CallFunction("ADD_SIDE_PANEL_TO_ITEM", Parent.Pagination.GetScaleformIndex(Parent.MenuItems.IndexOf(this)), 0, (int)mis.PanelSide, (int)mis._titleType, mis.Title, mis.TitleColor, mis.TextureDict, mis.TextureName);
-                        foreach (UIFreemodeDetailsItem _it in mis.Items)
-                            Main.scaleformUI.CallFunction("ADD_MISSION_DETAILS_DESC_ITEM", Parent.Pagination.GetScaleformIndex(Parent.MenuItems.IndexOf(this)), _it.Type, _it.TextLeft, _it.TextRight, (int)_it.Icon, _it.IconColor, _it.Tick);
-                        break;
-                }
-            }
+            if (Parent != null && Parent.Visible)
+                Parent.SendItemToScaleform(Parent.MenuItems.IndexOf(this), true);
         }
 
         /// <summary>
@@ -771,382 +568,14 @@ namespace ScaleformUI.Menu
         public virtual void RemoveSidePanel()
         {
             SidePanel = null;
-            if (Parent != null && Parent.Visible && Parent.Pagination.IsItemVisible(Parent.MenuItems.IndexOf(this)))
-            {
-                Main.scaleformUI.CallFunction("REMOVE_SIDE_PANEL_TO_ITEM", Parent.Pagination.GetScaleformIndex(Parent.MenuItems.IndexOf(this)));
-            }
+            if (Parent != null && Parent.Visible)
+                Parent.SendItemToScaleform(Parent.MenuItems.IndexOf(this), true);
         }
 
         /// <summary>
         /// Returns the current right badge.
         /// </summary>
         public virtual BadgeIcon RightBadge { get; private set; }
-
-        public static string GetSpriteDictionary(BadgeIcon icon)
-        {
-            switch (icon)
-            {
-                case BadgeIcon.MALE:
-                case BadgeIcon.FEMALE:
-                case BadgeIcon.AUDIO_MUTE:
-                case BadgeIcon.AUDIO_INACTIVE:
-                case BadgeIcon.AUDIO_VOL1:
-                case BadgeIcon.AUDIO_VOL2:
-                case BadgeIcon.AUDIO_VOL3:
-                    return "mpleaderboard";
-                case BadgeIcon.INV_ARM_WRESTLING:
-                case BadgeIcon.INV_BASEJUMP:
-                case BadgeIcon.INV_MISSION:
-                case BadgeIcon.INV_DARTS:
-                case BadgeIcon.INV_DEATHMATCH:
-                case BadgeIcon.INV_DRUG:
-                case BadgeIcon.INV_CASTLE:
-                case BadgeIcon.INV_GOLF:
-                case BadgeIcon.INV_BIKE:
-                case BadgeIcon.INV_BOAT:
-                case BadgeIcon.INV_ANCHOR:
-                case BadgeIcon.INV_CAR:
-                case BadgeIcon.INV_DOLLAR:
-                case BadgeIcon.INV_COKE:
-                case BadgeIcon.INV_KEY:
-                case BadgeIcon.INV_DATA:
-                case BadgeIcon.INV_HELI:
-                case BadgeIcon.INV_HEORIN:
-                case BadgeIcon.INV_KEYCARD:
-                case BadgeIcon.INV_METH:
-                case BadgeIcon.INV_BRIEFCASE:
-                case BadgeIcon.INV_LINK:
-                case BadgeIcon.INV_PERSON:
-                case BadgeIcon.INV_PLANE:
-                case BadgeIcon.INV_PLANE2:
-                case BadgeIcon.INV_QUESTIONMARK:
-                case BadgeIcon.INV_REMOTE:
-                case BadgeIcon.INV_SAFE:
-                case BadgeIcon.INV_STEER_WHEEL:
-                case BadgeIcon.INV_WEAPON:
-                case BadgeIcon.INV_WEED:
-                case BadgeIcon.INV_RACE_FLAG_PLANE:
-                case BadgeIcon.INV_RACE_FLAG_BICYCLE:
-                case BadgeIcon.INV_RACE_FLAG_BOAT_ANCHOR:
-                case BadgeIcon.INV_RACE_FLAG_PERSON:
-                case BadgeIcon.INV_RACE_FLAG_CAR:
-                case BadgeIcon.INV_RACE_FLAG_HELMET:
-                case BadgeIcon.INV_SHOOTING_RANGE:
-                case BadgeIcon.INV_SURVIVAL:
-                case BadgeIcon.INV_TEAM_DEATHMATCH:
-                case BadgeIcon.INV_TENNIS:
-                case BadgeIcon.INV_VEHICLE_DEATHMATCH:
-                    return "mpinventory";
-                case BadgeIcon.ADVERSARY:
-                case BadgeIcon.BASE_JUMPING:
-                case BadgeIcon.BRIEFCASE:
-                case BadgeIcon.MISSION_STAR:
-                case BadgeIcon.DEATHMATCH:
-                case BadgeIcon.CASTLE:
-                case BadgeIcon.TROPHY:
-                case BadgeIcon.RACE_FLAG:
-                case BadgeIcon.RACE_FLAG_PLANE:
-                case BadgeIcon.RACE_FLAG_BICYCLE:
-                case BadgeIcon.RACE_FLAG_PERSON:
-                case BadgeIcon.RACE_FLAG_CAR:
-                case BadgeIcon.RACE_FLAG_BOAT_ANCHOR:
-                case BadgeIcon.ROCKSTAR:
-                case BadgeIcon.STUNT:
-                case BadgeIcon.STUNT_PREMIUM:
-                case BadgeIcon.RACE_FLAG_STUNT_JUMP:
-                case BadgeIcon.SHIELD:
-                case BadgeIcon.TEAM_DEATHMATCH:
-                case BadgeIcon.VEHICLE_DEATHMATCH:
-                    return "commonmenutu";
-                case BadgeIcon.MP_AMMO_PICKUP:
-                case BadgeIcon.MP_AMMO:
-                case BadgeIcon.MP_CASH:
-                case BadgeIcon.MP_RP:
-                case BadgeIcon.MP_SPECTATING:
-                    return "mphud";
-                case BadgeIcon.SALE:
-                    return "mpshopsale";
-                case BadgeIcon.GLOBE_WHITE:
-                case BadgeIcon.GLOBE_RED:
-                case BadgeIcon.GLOBE_BLUE:
-                case BadgeIcon.GLOBE_YELLOW:
-                case BadgeIcon.GLOBE_GREEN:
-                case BadgeIcon.GLOBE_ORANGE:
-                    return "mprankbadge";
-                case BadgeIcon.COUNTRY_USA:
-                case BadgeIcon.COUNTRY_UK:
-                case BadgeIcon.COUNTRY_SWEDEN:
-                case BadgeIcon.COUNTRY_KOREA:
-                case BadgeIcon.COUNTRY_JAPAN:
-                case BadgeIcon.COUNTRY_ITALY:
-                case BadgeIcon.COUNTRY_GERMANY:
-                case BadgeIcon.COUNTRY_FRANCE:
-                case BadgeIcon.BRAND_ALBANY:
-                case BadgeIcon.BRAND_ANNIS:
-                case BadgeIcon.BRAND_BANSHEE:
-                case BadgeIcon.BRAND_BENEFACTOR:
-                case BadgeIcon.BRAND_BF:
-                case BadgeIcon.BRAND_BOLLOKAN:
-                case BadgeIcon.BRAND_BRAVADO:
-                case BadgeIcon.BRAND_BRUTE:
-                case BadgeIcon.BRAND_BUCKINGHAM:
-                case BadgeIcon.BRAND_CANIS:
-                case BadgeIcon.BRAND_CHARIOT:
-                case BadgeIcon.BRAND_CHEVAL:
-                case BadgeIcon.BRAND_CLASSIQUE:
-                case BadgeIcon.BRAND_COIL:
-                case BadgeIcon.BRAND_DECLASSE:
-                case BadgeIcon.BRAND_DEWBAUCHEE:
-                case BadgeIcon.BRAND_DILETTANTE:
-                case BadgeIcon.BRAND_DINKA:
-                case BadgeIcon.BRAND_DUNDREARY:
-                case BadgeIcon.BRAND_EMPORER:
-                case BadgeIcon.BRAND_ENUS:
-                case BadgeIcon.BRAND_FATHOM:
-                case BadgeIcon.BRAND_GALIVANTER:
-                case BadgeIcon.BRAND_GROTTI:
-                case BadgeIcon.BRAND_HIJAK:
-                case BadgeIcon.BRAND_HVY:
-                case BadgeIcon.BRAND_IMPONTE:
-                case BadgeIcon.BRAND_INVETERO:
-                case BadgeIcon.BRAND_JACKSHEEPE:
-                case BadgeIcon.BRAND_JOBUILT:
-                case BadgeIcon.BRAND_KARIN:
-                case BadgeIcon.BRAND_LAMPADATI:
-                case BadgeIcon.BRAND_MAIBATSU:
-                case BadgeIcon.BRAND_MAMMOTH:
-                case BadgeIcon.BRAND_MTL:
-                case BadgeIcon.BRAND_NAGASAKI:
-                case BadgeIcon.BRAND_OBEY:
-                case BadgeIcon.BRAND_OCELOT:
-                case BadgeIcon.BRAND_OVERFLOD:
-                case BadgeIcon.BRAND_PED:
-                case BadgeIcon.BRAND_PEGASSI:
-                case BadgeIcon.BRAND_PFISTER:
-                case BadgeIcon.BRAND_PRINCIPE:
-                case BadgeIcon.BRAND_PROGEN:
-                case BadgeIcon.BRAND_SCHYSTER:
-                case BadgeIcon.BRAND_SHITZU:
-                case BadgeIcon.BRAND_SPEEDOPHILE:
-                case BadgeIcon.BRAND_STANLEY:
-                case BadgeIcon.BRAND_TRUFFADE:
-                case BadgeIcon.BRAND_UBERMACHT:
-                case BadgeIcon.BRAND_VAPID:
-                case BadgeIcon.BRAND_VULCAR:
-                case BadgeIcon.BRAND_WEENY:
-                case BadgeIcon.BRAND_WESTERN:
-                case BadgeIcon.BRAND_WESTERNMOTORCYCLE:
-                case BadgeIcon.BRAND_WILLARD:
-                case BadgeIcon.BRAND_ZIRCONIUM:
-                    return "mpcarhud";
-                case BadgeIcon.BRAND_GROTTI2:
-                case BadgeIcon.BRAND_LCC:
-                case BadgeIcon.BRAND_PROGEN2:
-                case BadgeIcon.BRAND_RUNE:
-                    return "mpcarhud2";
-                case BadgeIcon.INFO:
-                    return "shared";
-                default:
-                    return "commonmenu";
-            }
-        }
-
-        /// <summary>
-        /// Get the sprite name for the given icon depending on the selected state of the item.
-        /// </summary>
-        /// <param name="icon"></param>
-        /// <param name="selected"></param>
-        /// <returns></returns>
-        static string GetSpriteName(BadgeIcon icon, bool selected)
-        {
-            switch (icon)
-            {
-
-                case BadgeIcon.AMMO: return selected ? "shop_ammo_icon_b" : "shop_ammo_icon_a";
-                case BadgeIcon.ARMOR: return selected ? "shop_armour_icon_b" : "shop_armour_icon_a";
-                case BadgeIcon.BARBER: return selected ? "shop_barber_icon_b" : "shop_barber_icon_a";
-                case BadgeIcon.BIKE: return selected ? "shop_garage_bike_icon_b" : "shop_garage_bike_icon_a";
-                case BadgeIcon.CAR: return selected ? "shop_garage_icon_b" : "shop_garage_icon_a";
-                case BadgeIcon.CASH: return "mp_specitem_cash";
-                case BadgeIcon.CLOTHING: return selected ? "shop_clothing_icon_b" : "shop_clothing_icon_a";
-                case BadgeIcon.COKE: return "mp_specitem_coke";
-                case BadgeIcon.CROWN: return "mp_hostcrown";
-                case BadgeIcon.FRANKLIN: return selected ? "shop_franklin_icon_b" : "shop_franklin_icon_a";
-                case BadgeIcon.GUN: return selected ? "shop_gunclub_icon_b" : "shop_gunclub_icon_a";
-                case BadgeIcon.HEALTH_HEART: return selected ? "shop_health_icon_b" : "shop_health_icon_a";
-                case BadgeIcon.HEROIN: return "mp_specitem_heroin";
-                case BadgeIcon.LOCK: return "shop_lock";
-                case BadgeIcon.MAKEUP_BRUSH: return selected ? "shop_makeup_icon_b" : "shop_makeup_icon_a";
-                case BadgeIcon.MASK: return selected ? "shop_mask_icon_b" : "shop_mask_icon_a";
-                case BadgeIcon.MEDAL_BRONZE: return "mp_medal_bronze";
-                case BadgeIcon.MEDAL_GOLD: return "mp_medal_gold";
-                case BadgeIcon.MEDAL_SILVER: return "mp_medal_silver";
-                case BadgeIcon.METH: return "mp_specitem_meth";
-                case BadgeIcon.MICHAEL: return selected ? "shop_michael_icon_b" : "shop_michael_icon_a";
-                case BadgeIcon.STAR: return "shop_new_star";
-                case BadgeIcon.TATTOO: return selected ? "shop_tattoos_icon_b" : "shop_tattoos_icon_a";
-                case BadgeIcon.TICK: return "shop_tick_icon";
-                case BadgeIcon.TREVOR: return selected ? "shop_trevor_icon_b" : "shop_trevor_icon_a";
-                case BadgeIcon.WARNING: return "mp_alerttriangle";
-                case BadgeIcon.WEED: return "mp_specitem_weed";
-                case BadgeIcon.MALE: return "leaderboard_male_icon";
-                case BadgeIcon.FEMALE: return "leaderboard_female_icon";
-                case BadgeIcon.LOCK_ARENA: return "shop_lock_arena";
-                case BadgeIcon.ADVERSARY: return "adversary";
-                case BadgeIcon.BASE_JUMPING: return "base_jumping";
-                case BadgeIcon.BRIEFCASE: return "capture_the_flag";
-                case BadgeIcon.MISSION_STAR: return "custom_mission";
-                case BadgeIcon.DEATHMATCH: return "deathmatch";
-                case BadgeIcon.CASTLE: return "gang_attack";
-                case BadgeIcon.TROPHY: return "last_team_standing";
-                case BadgeIcon.RACE_FLAG: return "race";
-                case BadgeIcon.RACE_FLAG_PLANE: return "race_air";
-                case BadgeIcon.RACE_FLAG_BICYCLE: return "race_bicycle";
-                case BadgeIcon.RACE_FLAG_PERSON: return "race_foot";
-                case BadgeIcon.RACE_FLAG_CAR: return "race_land";
-                case BadgeIcon.RACE_FLAG_BOAT_ANCHOR: return "race_water";
-                case BadgeIcon.ROCKSTAR: return "rockstar";
-                case BadgeIcon.STUNT: return "stunt";
-                case BadgeIcon.STUNT_PREMIUM: return "stunt_premium";
-                case BadgeIcon.RACE_FLAG_STUNT_JUMP: return "stunt_race";
-                case BadgeIcon.SHIELD: return "survival";
-                case BadgeIcon.TEAM_DEATHMATCH: return "team_deathmatch";
-                case BadgeIcon.VEHICLE_DEATHMATCH: return "vehicle_deathmatch";
-                case BadgeIcon.MP_AMMO_PICKUP: return "ammo_pickup";
-                case BadgeIcon.MP_AMMO: return "mp_anim_ammo";
-                case BadgeIcon.MP_CASH: return "mp_anim_cash";
-                case BadgeIcon.MP_RP: return "mp_anim_rp";
-                case BadgeIcon.MP_SPECTATING: return "spectating";
-                case BadgeIcon.SALE: return "saleicon";
-                case BadgeIcon.GLOBE_WHITE:
-                case BadgeIcon.GLOBE_RED:
-                case BadgeIcon.GLOBE_BLUE:
-                case BadgeIcon.GLOBE_YELLOW:
-                case BadgeIcon.GLOBE_GREEN:
-                case BadgeIcon.GLOBE_ORANGE:
-                    return "globe";
-                case BadgeIcon.INV_ARM_WRESTLING: return "arm_wrestling";
-                case BadgeIcon.INV_BASEJUMP: return "basejump";
-                case BadgeIcon.INV_MISSION: return "custom_mission";
-                case BadgeIcon.INV_DARTS: return "darts";
-                case BadgeIcon.INV_DEATHMATCH: return "deathmatch";
-                case BadgeIcon.INV_DRUG: return "drug_trafficking";
-                case BadgeIcon.INV_CASTLE: return "gang_attack";
-                case BadgeIcon.INV_GOLF: return "golf";
-                case BadgeIcon.INV_BIKE: return "mp_specitem_bike";
-                case BadgeIcon.INV_BOAT: return "mp_specitem_boat";
-                case BadgeIcon.INV_ANCHOR: return "mp_specitem_boatpickup";
-                case BadgeIcon.INV_CAR: return "mp_specitem_car";
-                case BadgeIcon.INV_DOLLAR: return "mp_specitem_cash";
-                case BadgeIcon.INV_COKE: return "mp_specitem_coke";
-                case BadgeIcon.INV_KEY: return "mp_specitem_cuffkeys";
-                case BadgeIcon.INV_DATA: return "mp_specitem_data";
-                case BadgeIcon.INV_HELI: return "mp_specitem_heli";
-                case BadgeIcon.INV_HEORIN: return "mp_specitem_heroin";
-                case BadgeIcon.INV_KEYCARD: return "mp_specitem_keycard";
-                case BadgeIcon.INV_METH: return "mp_specitem_meth";
-                case BadgeIcon.INV_BRIEFCASE: return "mp_specitem_package";
-                case BadgeIcon.INV_LINK: return "mp_specitem_partnericon";
-                case BadgeIcon.INV_PERSON: return "mp_specitem_ped";
-                case BadgeIcon.INV_PLANE: return "mp_specitem_plane";
-                case BadgeIcon.INV_PLANE2: return "mp_specitem_plane2";
-                case BadgeIcon.INV_QUESTIONMARK: return "mp_specitem_randomobject";
-                case BadgeIcon.INV_REMOTE: return "mp_specitem_remote";
-                case BadgeIcon.INV_SAFE: return "mp_specitem_safe";
-                case BadgeIcon.INV_STEER_WHEEL: return "mp_specitem_steer_wheel";
-                case BadgeIcon.INV_WEAPON: return "mp_specitem_weapons";
-                case BadgeIcon.INV_WEED: return "mp_specitem_weed";
-                case BadgeIcon.INV_RACE_FLAG_PLANE: return "race_air";
-                case BadgeIcon.INV_RACE_FLAG_BICYCLE: return "race_bike";
-                case BadgeIcon.INV_RACE_FLAG_BOAT_ANCHOR: return "race_boat";
-                case BadgeIcon.INV_RACE_FLAG_PERSON: return "race_foot";
-                case BadgeIcon.INV_RACE_FLAG_CAR: return "race_land";
-                case BadgeIcon.INV_RACE_FLAG_HELMET: return "race_offroad";
-                case BadgeIcon.INV_SHOOTING_RANGE: return "shooting_range";
-                case BadgeIcon.INV_SURVIVAL: return "survival";
-                case BadgeIcon.INV_TEAM_DEATHMATCH: return "team_deathmatch";
-                case BadgeIcon.INV_TENNIS: return "tennis";
-                case BadgeIcon.INV_VEHICLE_DEATHMATCH: return "vehicle_deathmatch";
-                case BadgeIcon.AUDIO_MUTE: return "leaderboard_audio_mute";
-                case BadgeIcon.AUDIO_INACTIVE: return "leaderboard_audio_inactive";
-                case BadgeIcon.AUDIO_VOL1: return "leaderboard_audio_1";
-                case BadgeIcon.AUDIO_VOL2: return "leaderboard_audio_2";
-                case BadgeIcon.AUDIO_VOL3: return "leaderboard_audio_3";
-                case BadgeIcon.COUNTRY_USA: return "vehicle_card_icons_flag_usa";
-                case BadgeIcon.COUNTRY_UK: return "vehicle_card_icons_flag_uk";
-                case BadgeIcon.COUNTRY_SWEDEN: return "vehicle_card_icons_flag_sweden";
-                case BadgeIcon.COUNTRY_KOREA: return "vehicle_card_icons_flag_korea";
-                case BadgeIcon.COUNTRY_JAPAN: return "vehicle_card_icons_flag_japan";
-                case BadgeIcon.COUNTRY_ITALY: return "vehicle_card_icons_flag_italy";
-                case BadgeIcon.COUNTRY_GERMANY: return "vehicle_card_icons_flag_germany";
-                case BadgeIcon.COUNTRY_FRANCE: return "vehicle_card_icons_flag_france";
-                case BadgeIcon.BRAND_ALBANY: return "albany";
-                case BadgeIcon.BRAND_ANNIS: return "annis";
-                case BadgeIcon.BRAND_BANSHEE: return "banshee";
-                case BadgeIcon.BRAND_BENEFACTOR: return "benefactor";
-                case BadgeIcon.BRAND_BF: return "bf";
-                case BadgeIcon.BRAND_BOLLOKAN: return "bollokan";
-                case BadgeIcon.BRAND_BRAVADO: return "bravado";
-                case BadgeIcon.BRAND_BRUTE: return "brute";
-                case BadgeIcon.BRAND_BUCKINGHAM: return "buckingham";
-                case BadgeIcon.BRAND_CANIS: return "canis";
-                case BadgeIcon.BRAND_CHARIOT: return "chariot";
-                case BadgeIcon.BRAND_CHEVAL: return "cheval";
-                case BadgeIcon.BRAND_CLASSIQUE: return "classique";
-                case BadgeIcon.BRAND_COIL: return "coil";
-                case BadgeIcon.BRAND_DECLASSE: return "declasse";
-                case BadgeIcon.BRAND_DEWBAUCHEE: return "dewbauchee";
-                case BadgeIcon.BRAND_DILETTANTE: return "dilettante";
-                case BadgeIcon.BRAND_DINKA: return "dinka";
-                case BadgeIcon.BRAND_DUNDREARY: return "dundreary";
-                case BadgeIcon.BRAND_EMPORER: return "emporer";
-                case BadgeIcon.BRAND_ENUS: return "enus";
-                case BadgeIcon.BRAND_FATHOM: return "fathom";
-                case BadgeIcon.BRAND_GALIVANTER: return "galivanter";
-                case BadgeIcon.BRAND_GROTTI: return "grotti";
-                case BadgeIcon.BRAND_HIJAK: return "hijak";
-                case BadgeIcon.BRAND_HVY: return "hvy";
-                case BadgeIcon.BRAND_IMPONTE: return "imponte";
-                case BadgeIcon.BRAND_INVETERO: return "invetero";
-                case BadgeIcon.BRAND_JACKSHEEPE: return "jacksheepe";
-                case BadgeIcon.BRAND_JOBUILT: return "jobuilt";
-                case BadgeIcon.BRAND_KARIN: return "karin";
-                case BadgeIcon.BRAND_LAMPADATI: return "lampadati";
-                case BadgeIcon.BRAND_MAIBATSU: return "maibatsu";
-                case BadgeIcon.BRAND_MAMMOTH: return "mammoth";
-                case BadgeIcon.BRAND_MTL: return "mtl";
-                case BadgeIcon.BRAND_NAGASAKI: return "nagasaki";
-                case BadgeIcon.BRAND_OBEY: return "obey";
-                case BadgeIcon.BRAND_OCELOT: return "ocelot";
-                case BadgeIcon.BRAND_OVERFLOD: return "overflod";
-                case BadgeIcon.BRAND_PED: return "ped";
-                case BadgeIcon.BRAND_PEGASSI: return "pegassi";
-                case BadgeIcon.BRAND_PFISTER: return "pfister";
-                case BadgeIcon.BRAND_PRINCIPE: return "principe";
-                case BadgeIcon.BRAND_PROGEN: return "progen";
-                case BadgeIcon.BRAND_SCHYSTER: return "schyster";
-                case BadgeIcon.BRAND_SHITZU: return "shitzu";
-                case BadgeIcon.BRAND_SPEEDOPHILE: return "speedophile";
-                case BadgeIcon.BRAND_STANLEY: return "stanley";
-                case BadgeIcon.BRAND_TRUFFADE: return "truffade";
-                case BadgeIcon.BRAND_UBERMACHT: return "ubermacht";
-                case BadgeIcon.BRAND_VAPID: return "vapid";
-                case BadgeIcon.BRAND_VULCAR: return "vulcar";
-                case BadgeIcon.BRAND_WEENY: return "weeny";
-                case BadgeIcon.BRAND_WESTERN: return "western";
-                case BadgeIcon.BRAND_WESTERNMOTORCYCLE: return "westernmotorcycle";
-                case BadgeIcon.BRAND_WILLARD: return "willard";
-                case BadgeIcon.BRAND_ZIRCONIUM: return "zirconium";
-                case BadgeIcon.BRAND_GROTTI2: return "grotti_2";
-                case BadgeIcon.BRAND_LCC: return "lcc";
-                case BadgeIcon.BRAND_PROGEN2: return "progen";
-                case BadgeIcon.BRAND_RUNE: return "rune";
-                case BadgeIcon.INFO: return "info_icon_32";
-                default:
-                    break;
-            }
-            return "";
-        }
 
         /// <summary>
         /// Returns the menu this item is in.
@@ -1157,5 +586,11 @@ namespace ScaleformUI.Menu
         /// Returns the lobby this item is in.
         /// </summary>
         public SettingsListColumn ParentColumn { get; internal set; }
+
+        internal virtual void TabItemActivate(UIMenu sender)
+        {
+            OnTabPressed?.Invoke(sender, this);
+        }
+
     }
 }

@@ -56,15 +56,13 @@ namespace ScaleformUI
                 throw new ArgumentNullException("The menu you're switching to cannot be null.");
             if (newMenu == currentMenu)
                 throw new Exception("You cannot switch a menu to itself.");
-            if (newMenu is UIMenu menu && menu.MenuItems.Count == 0)
-                throw new Exception("You cannot switch to an empty menu.");
+
             if (BreadcrumbsHandler.SwitchInProgress) return;
 
             BreadcrumbsHandler.SwitchInProgress = true;
 
             if (currentMenu is UIMenu old)
             {
-                await old.FadeOutMenu();
                 currentMenu.Visible = false;
                 if (newMenu is UIMenu newer)
                 {
@@ -72,28 +70,30 @@ namespace ScaleformUI
                     {
                         if (old._customTexture.Key != null && old._customTexture.Value != null)
                             newer.SetBannerType(old._customTexture);
-                        newer.Offset = old.Offset;
+                        newer.differentBanner = old._customTexture.Key != newer._customTexture.Key && old._customTexture.Value != newer._customTexture.Value;
+                        newer.MenuAlignment = old.MenuAlignment;
+                        newer.SetMenuOffset(old.Offset);
                         newer.AlternativeTitle = old.AlternativeTitle;
                         newer.MaxItemsOnScreen = old.MaxItemsOnScreen;
-                        newer.AnimationType = old.AnimationType;
-                        newer.BuildingAnimation = old.BuildingAnimation;
-                        newer.ScrollingType = old.ScrollingType;
                         newer.Glare = old.Glare;
-                        newer.EnableAnimation = old.EnableAnimation;
-                        newer.Enabled3DAnimations = old.Enabled3DAnimations;
-                        newer.fadingTime = old.fadingTime;
                         newer.SetMouse(old.MouseControlsEnabled, old.MouseEdgeEnabled, old.MouseWheelControlEnabled, old.ResetCursorOnOpen, old.leftClickEnabled);
                         newer.SubtitleColor = old.SubtitleColor;
                     }
-                    newer.CurrentSelection = newMenuCurrentSelection != 0 ? newMenuCurrentSelection : 0;
+                    if (newMenuCurrentSelection != 0)
+                    {
+                        var max = newer.MenuItems.Count;
+
+                        if(max >= newer.MaxItemsOnScreen)
+                            max = newer.MaxItemsOnScreen;
+
+                        newer._currentSelection = Math.Max(0, Math.Min(newMenuCurrentSelection, newer.MenuItems.Count - 1));
+                    }
                 }
                 else if (newMenu is RadialMenu rad)
                     rad.CurrentSegment = newMenuCurrentSelection != 0 ? newMenuCurrentSelection : 0;
                 else if (newMenu is UIRadioMenu radio)
                     radio.CurrentSelection = newMenuCurrentSelection != 0 ? newMenuCurrentSelection : 0;
             }
-
-
             newMenu.Visible = true;
             BreadcrumbsHandler.Forward(newMenu, data);
             BreadcrumbsHandler.SwitchInProgress = false;
@@ -151,6 +151,17 @@ namespace ScaleformUI
             Draw();
             ProcessControl();
             ProcessMouse();
+            ProcessMenuExtensionMethod();
+        }
+        private static void ProcessMenuExtensionMethod()
+        {
+            if (CurrentMenu != null && currentBase == null)
+            {
+                if (currentMenu is UIMenu menu)
+                {
+                    menu.CallExtensionMethod();
+                }
+            }
         }
 
         /// <summary>

@@ -5,7 +5,7 @@ namespace ScaleformUI.PauseMenu
     public delegate void SettingsSliderEvent(SettingsSliderItem item, int value);
     public class SettingsSliderItem : SettingsItem
     {
-        private int _value;
+        internal int _value;
         private SColor coloredBarColor = SColor.HUD_Freemode;
         public event SettingsSliderEvent OnBarChanged;
         public event SettingsSliderEvent OnSliderSelected;
@@ -16,13 +16,8 @@ namespace ScaleformUI.PauseMenu
             set
             {
                 _value = value;
-                if (Parent != null)
-                {
-                    int tab = Parent.Parent.Parent.Tabs.IndexOf(Parent.Parent);
-                    int leftItem = Parent.Parent.LeftItemList.IndexOf(Parent);
-                    int rightIndex = Parent.ItemList.IndexOf(this);
-                    Parent.Parent.Parent._pause.SetRightSettingsItemValue(tab, leftItem, rightIndex, _value);
-                }
+                if (ParentColumn != null && ParentColumn.visible)
+                    ParentColumn.UpdateSlot(ParentColumn.Items.IndexOf(this));
                 OnBarChanged?.Invoke(this, _value);
             }
         }
@@ -32,13 +27,8 @@ namespace ScaleformUI.PauseMenu
             set
             {
                 coloredBarColor = value;
-                if (Parent != null)
-                {
-                    int tab = Parent.Parent.Parent.Tabs.IndexOf(Parent.Parent);
-                    int leftItem = Parent.Parent.LeftItemList.IndexOf(Parent);
-                    int rightIndex = Parent.ItemList.IndexOf(this);
-                    Parent.Parent.Parent._pause.UpdateItemColoredBar(tab, leftItem, rightIndex, coloredBarColor);
-                }
+                if (ParentColumn != null && ParentColumn.visible)
+                    ParentColumn.UpdateSlot(ParentColumn.Items.IndexOf(this));
             }
         }
 

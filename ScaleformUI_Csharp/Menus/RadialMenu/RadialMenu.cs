@@ -24,11 +24,11 @@ namespace ScaleformUI.Radial
         public RadialSegment[] Segments { get; private set; }
         private PointF _offset = new PointF(0, 0);
 
-        public MenuOpenedEvent OnMenuOpen;
-        public MenuClosedEvent OnMenuClose;
-        public SegmentChanged OnSegmentHighlight;
-        public IndexChanged OnSegmentIndexChange;
-        public SegmentSelected OnSegmentSelect;
+        public event MenuOpenedEvent OnMenuOpen;
+        public event MenuClosedEvent OnMenuClose;
+        public event SegmentChanged OnSegmentHighlight;
+        public event IndexChanged OnSegmentIndexChange;
+        public event SegmentSelected OnSegmentSelect;
         private bool enable3D = true;
 
         public bool Enable3D
@@ -132,7 +132,7 @@ namespace ScaleformUI.Radial
             Main.radialMenu.CallFunction("LOAD_MENU", currentSelection, Segments[0].CurrentSelection, Segments[1].CurrentSelection, Segments[2].CurrentSelection, Segments[3].CurrentSelection, Segments[4].CurrentSelection, Segments[5].CurrentSelection, Segments[6].CurrentSelection, Segments[7].CurrentSelection);
         }
 
-        internal override async void ProcessControl(Keys key = Keys.None)
+        internal override async void ProcessControl()
         {
             Controls.Toggle(false);
             // block camera movements

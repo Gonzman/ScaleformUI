@@ -19,13 +19,13 @@ function TimerBarPool:AddBar(timerBar)
     self.Bars[timerBar.Handle] = timerBar
 end
 
-function TimerBarPool:RemoveBar(timerBar)
-    table.remove(self.Bars, timerBar.Handle)
+function TimerBarPool:RemoveBar(timerBar)    
+    self.Bars[timerBar.Handle] = nil
 end
 
 function TimerBarPool:Draw()
     local offset = 0
-    if  #ScaleformUI.Scaleforms.InstructionalButtons.ControlButtons > 0 or ScaleformUI.Scaleforms.InstructionalButtons.IsSaving then
+    if #ScaleformUI.Scaleforms.InstructionalButtons.ControlButtons > 0 or ScaleformUI.Scaleforms.InstructionalButtons.IsSaving then
         offset = 9
     end
     for k, v in pairs(self.Bars) do

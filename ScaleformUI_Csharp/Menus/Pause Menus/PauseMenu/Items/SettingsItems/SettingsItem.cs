@@ -5,14 +5,19 @@
         Basic,
         ListItem,
         ProgressBar,
-        MaskedProgressBar,
         CheckBox,
-        SliderBar
+        MaskedProgressBar = 4,
+        BlipType,
+        Separator,
+        SliderBar,
+        Empty,
+        Basic_tabbed = 10,
+        Progress_tabbed = 20
     }
 
     public delegate void SettingsItemSelected(SettingsItem item);
 
-    public class SettingsItem : BasicTabItem
+    public class SettingsItem : PauseMenuItem
     {
         private string rightLabel;
         private bool enabled = true;
@@ -24,20 +29,11 @@
             set
             {
                 enabled = value;
-                if (Parent != null && Parent.Parent != null && Parent.Parent.Parent != null && Parent.Parent.Parent.Visible)
-                {
-                    if (Parent.Selected)
-                    {
-                        var tab = Parent.Parent.Parent.Tabs.IndexOf(Parent.Parent);
-                        var it = Parent.Parent.LeftItemList.IndexOf(Parent);
-                        var rIt = Parent.ItemList.IndexOf(this);
-                        Parent.Parent.Parent._pause._pause.CallFunction("ENABLE_RIGHT_ITEM", tab, it, rIt, enabled);
-                    }
-                }
+                if (ParentColumn != null && ParentColumn.visible)
+                    ParentColumn.UpdateSlot(ParentColumn.Items.IndexOf(this));
             }
         }
         public bool Hovered { get; internal set; }
-        public bool Selected { get; internal set; }
         public SettingsItemType ItemType { get; set; }
 
         public string RightLabel
@@ -46,13 +42,8 @@
             set
             {
                 rightLabel = value;
-                if (Parent != null)
-                {
-                    int tab = Parent.Parent.Parent.Tabs.IndexOf(Parent.Parent);
-                    int leftItem = Parent.Parent.LeftItemList.IndexOf(Parent);
-                    int rightIndex = Parent.ItemList.IndexOf(this);
-                    Parent.Parent.Parent._pause.UpdateItemRightLabel(tab, leftItem, rightIndex, rightLabel);
-                }
+                if (ParentColumn != null && ParentColumn.visible)
+                    ParentColumn.UpdateSlot(ParentColumn.Items.IndexOf(this));
             }
         }
 

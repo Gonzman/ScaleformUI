@@ -1,28 +1,29 @@
-﻿using CitizenFX.Core;
-using ScaleformUI.LobbyMenu;
-using ScaleformUI.PauseMenu;
+﻿using ScaleformUI.PauseMenu;
+using ScaleformUI.PauseMenus.Elements.Columns;
 using ScaleformUI.PauseMenus.Elements.Items;
-using static CitizenFX.Core.Native.API;
 
 namespace ScaleformUI.PauseMenus.Elements.Panels
 {
     public class MinimapPanel
     {
         internal PauseMenuBase Parent { get; set; }
+        internal BaseTab ParentTab { get; set; }
+        public bool HidePedBlip { get; set; } = true;
         internal Vector2 mapPosition = new Vector2();
         internal float zoomDistance = 0;
         internal bool enabled;
         private bool turnedOn = false;
-        internal int localCoronaMapStage = 0;
+        private bool IsRadarVisible = !IsRadarHidden();
+        internal int localCoronaMapStage = -1;
 
         public MinimapRoute MinimapRoute;
         public List<FakeBlip> MinimapBlips { get; internal set; }
 
-        public MinimapPanel(PauseMenuBase parent)
+        public MinimapPanel(BaseTab parenttab)
         {
             MinimapBlips = new List<FakeBlip>();
             MinimapRoute = new MinimapRoute();
-            Parent = parent;
+            ParentTab = parenttab;
         }
 
         public bool Enabled
@@ -32,124 +33,120 @@ namespace ScaleformUI.PauseMenus.Elements.Panels
             {
                 if (Parent != null && Parent.Visible)
                 {
-                    if (Parent is MainView lobby)
+                    if(ParentTab is PlayerListTab plTab)
                     {
-                        if (lobby.listCol[lobby.FocusLevel].Type == "players")
+                        if(plTab.CurrentColumn is PlayerListColumn col)
                         {
-                            if (lobby.PlayersColumn.Items[lobby.PlayersColumn.CurrentSelection].KeepPanelVisible)
+                            if (col.CurrentItem.KeepPanelVisible)
                             {
                                 return;
                             }
-                        }
-                    }
-                    else if (Parent is TabView pause)
-                    {
-                        if (pause.Tabs[pause.Index] is PlayerListTab tab)
-                        {
-                            if (tab.listCol[tab.Focus].Type == "players")
-                            {
-                                if (tab.PlayersColumn.Items[tab.PlayersColumn.CurrentSelection].KeepPanelVisible)
-                                {
-                                    return;
-                                }
-                            }
-                        }
-                        else
-                        {
-                            return;
                         }
                     }
                 }
                 enabled = value;
                 if (enabled)
                 {
-                    localCoronaMapStage = 0;
+                    if (localCoronaMapStage == -1)
+                        localCoronaMapStage = 0;
                 }
                 else
                 {
                     localCoronaMapStage = -1;
                     if (turnedOn)
                     {
+                        IsRadarVisible = !IsRadarHidden();
                         DisplayRadar(false);
-                        SetMapFullScreen(false);
+                        RaceGalleryFullscreen(false);
                         turnedOn = false;
                     }
                 }
-                if (Parent != null && Parent.Visible)
+                if (Parent != null && Parent.Visible && ParentTab.Visible)
                 {
-                    if (Parent is MainView lobby)
+                    if (ParentTab is PlayerListTab plTab)
                     {
-                        lobby._pause._lobby.CallFunction("HIDE_MISSION_PANEL", !enabled);
-                    }
-                    else if (Parent is TabView pause)
-                    {
-                        pause._pause._pause.CallFunction("HIDE_PLAYERS_TAB_MISSION_PANEL", pause.Index, !enabled);
+                        if (plTab.CurrentColumn is PlayerListColumn col)
+                        {
+                            if (value)
+                            {
+                                col.CurrentItem.Dispose();
+                            }
+                            else
+                            {
+                                col.CurrentItem.CreateClonedPed();
+                            }
+                        }
+                        var rightCol = ParentTab.RightColumn;
+                        if (rightCol is MissionDetailsPanel panel)
+                            panel.ColumnVisible = !enabled && plTab.CurrentColumn is not PlayerListColumn;
                     }
                 }
             }
         }
 
-        internal void InitializeMapSize()
+         internal void InitializeMapSize()
         {
-            int iMaxNodesToCheck = 202;
-            Vector3 vNodeMax = new Vector3();
-            Vector3 vNodeMin = new Vector3();
+            float top = float.NegativeInfinity;
+            float bottom = float.PositiveInfinity;
+            float left = float.PositiveInfinity;
+            float right = float.NegativeInfinity;
 
-            for (int i = 0; i < iMaxNodesToCheck; i++)
+            foreach (var data in MinimapRoute.CheckPoints)
             {
-                Vector3 vectorNode = GetVectorToCheck(i);
-
-                if (MinimapBlips.Count > i)
-                {
-                    if (MinimapBlips[i].Position.LengthSquared() > vectorNode.LengthSquared())
-                    {
-                        vectorNode = MinimapBlips[i].Position;
-                    }
-                }
-
-                if (i == 0)
-                {
-
-                    vNodeMax = vectorNode;
-                    vNodeMin = vectorNode;
-                }
-                else
-                {
-                    if (vectorNode.X > vNodeMax.X)
-                        vNodeMax.X = vectorNode.X;
-                    if (vectorNode.X < vNodeMin.X)
-                        vNodeMin.X = vectorNode.X;
-                    if (vectorNode.Y > vNodeMax.Y)
-                        vNodeMax.Y = vectorNode.Y;
-                    if (vectorNode.Y < vNodeMin.Y)
-                        vNodeMin.Y = vectorNode.Y;
-                }
+                top = Math.Max(top, data.Position.Y);
+                bottom = Math.Min(bottom, data.Position.Y);
+                left = Math.Min(left, data.Position.X);
+                right = Math.Max(right, data.Position.X);
             }
+
+            top = Math.Max(top, MinimapRoute.StartPoint.Position.Y);
+            bottom = Math.Min(bottom, MinimapRoute.StartPoint.Position.Y);
+            left = Math.Min(left, MinimapRoute.StartPoint.Position.X);
+            right = Math.Max(right, MinimapRoute.StartPoint.Position.X);
+
+            top = Math.Max(top, MinimapRoute.EndPoint.Position.Y);
+            bottom = Math.Min(bottom, MinimapRoute.EndPoint.Position.Y);
+            left = Math.Min(left, MinimapRoute.EndPoint.Position.X);
+            right = Math.Max(right, MinimapRoute.EndPoint.Position.X);
+
+            Vector3 topLeft = new Vector3(left, top, 0);
+            Vector3 bottomRight = new Vector3(right, bottom, 0);
+
+            // Center of square area
+            mapPosition = new Vector2((topLeft.X + bottomRight.X) / 2, (topLeft.Y + bottomRight.Y) / 2);
 
             // Calculate our range and get the correct zoom.
-            mapPosition = new Vector2((vNodeMax.X + vNodeMin.X) / 2f, (vNodeMax.Y + vNodeMin.Y) / 2f);
-
-            LockMinimapPosition(mapPosition.X, mapPosition.Y);
-            LockMinimapAngle(0);
-
-            float DistanceX = vNodeMax.X - vNodeMin.X;
-            float DistanceY = vNodeMax.Y - vNodeMin.Y;
+            float DistanceX = Math.Abs(left - right);
+            float DistanceY = Math.Abs(top - bottom);
 
             if (DistanceX > DistanceY)
+            {
                 zoomDistance = DistanceX / 1.5f;
+            }
             else
-                zoomDistance = DistanceY / 1.5f;
+            {
+                zoomDistance = DistanceY / 2.0f;
+            }
+
+            RefreshMapPosition(mapPosition);
+            LockMinimapAngle(0);
+
+            //!! Draw Debug
+            // var blipArea = AddBlipForArea(mapPosition.X, mapPosition.Y, 0.0f, DistanceX, DistanceY);
+            // SetBlipAlpha(blipArea, 150);
+            // RaceGalleryNextBlipSprite(1);
+            // var blipTop = RaceGalleryAddBlip(topLeft.X, topLeft.Y, 0.0f);
+            // RaceGalleryNextBlipSprite(1);
+            // var blipBottom = RaceGalleryAddBlip(bottomRight.X, bottomRight.Y, 0.0f);
+            // ShowNumberOnBlip(blipTop, 1);
+            // ShowNumberOnBlip(blipBottom, 2);
         }
 
-        internal Vector3 GetVectorToCheck(int i)
+        public void RefreshMapPosition(Vector2 position)
         {
-            if (i == 0)
-                return MinimapRoute.StartPoint.Position;
-            else if (MinimapRoute.CheckPoints.Count > i)
-                return MinimapRoute.CheckPoints[i].Position;
-            else if (i == MinimapRoute.CheckPoints.Count)
-                return MinimapRoute.EndPoint.Position;
-            else return Vector3.Zero;
+            mapPosition = new Vector2(position);
+            if (ParentTab is GalleryTab g)
+                zoomDistance = g.bigPic ? 600 : 1200;
         }
 
         internal void SetupBlips()
@@ -176,14 +173,14 @@ namespace ScaleformUI.PauseMenus.Elements.Panels
                     break;
             }
         }
-        public void ProcessMap()
+        public async Task ProcessMap()
         {
             if (enabled)
             {
                 if (!turnedOn)
                 {
-                    DisplayRadar(true);
-                    SetMapFullScreen(true);
+                    DisplayRadar(IsRadarVisible);
+                    RaceGalleryFullscreen(true);
                     turnedOn = true;
                 }
             }
@@ -191,13 +188,15 @@ namespace ScaleformUI.PauseMenus.Elements.Panels
             {
                 if (turnedOn)
                 {
+                    IsRadarVisible = !IsRadarHidden();
                     DisplayRadar(false);
-                    SetMapFullScreen(false);
+                    RaceGalleryFullscreen(false);
                     turnedOn = false;
                     Dispose();
                 }
             }
-            SetPlayerBlipPositionThisFrame(-5000, -5000);
+            if(HidePedBlip)
+                SetPlayerBlipPositionThisFrame(-5000, -5000);
             RefreshZoom();
         }
 
@@ -238,8 +237,9 @@ namespace ScaleformUI.PauseMenus.Elements.Panels
         {
             localCoronaMapStage = 0;
             enabled = false;
-            N_0x2de6c5e2e996f178(1);
-            DisplayRadar(false);
+            N_0x2de6c5e2e996f178(0);
+            SetPoliceRadarBlips(true);
+            DisplayRadar(IsRadarVisible);
             RaceGalleryFullscreen(false);
             ClearRaceGalleryBlips();
             zoomDistance = 0;
@@ -253,6 +253,7 @@ namespace ScaleformUI.PauseMenus.Elements.Panels
             ClearGpsFlags();
             MinimapBlips.Clear();
             MinimapRoute = new MinimapRoute();
+            SetBigmapActive(false, false);
         }
 
         public void ClearMinimap()
@@ -267,6 +268,7 @@ namespace ScaleformUI.PauseMenus.Elements.Panels
             DeleteWaypoint();
             ClearGpsCustomRoute();
             ClearGpsFlags();
+            SetBigmapActive(false, false);
         }
     }
 }

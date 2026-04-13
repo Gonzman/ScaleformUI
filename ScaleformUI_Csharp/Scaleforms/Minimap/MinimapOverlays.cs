@@ -1,10 +1,29 @@
 ﻿using CitizenFX.Core;
+using CitizenFX.Core.Native;
+using CitizenFX.Core.UI;
 using ScaleformUI.Elements;
 using System.Drawing;
+using System.Runtime.Remoting.Contexts;
 using static CitizenFX.Core.Native.API;
 
 namespace ScaleformUI.Scaleforms
 {
+    public enum MouseEvent
+    {
+        MOUSE_DRAG_OUT = 0,
+        MOUSE_DRAG_OVER = 1,
+        MOUSE_DOWN = 2,
+        MOUSE_MOVE = 3,
+        MOUSE_UP = 4,
+        MOUSE_PRESS = 5,
+        MOUSE_RELEASE = 6,
+        MOUSE_RELEASE_OUTSIDE = 7,
+        MOUSE_ROLL_OUT = 8,
+        MOUSE_ROLL_OVER = 9,
+    }
+
+    public delegate void MinimapOverlayMouseEvent(MouseEvent mouseEvent);
+
     public class MinimapOverlay
     {
         internal int handle;
@@ -16,6 +35,7 @@ namespace ScaleformUI.Scaleforms
         internal SizeF size;
         internal float alpha;
         internal bool centered;
+        public event MinimapOverlayMouseEvent OnMouseEvent;
 
         public bool Visible
         {
@@ -80,6 +100,11 @@ namespace ScaleformUI.Scaleforms
         }
 
         public bool Centered { get => centered; set => centered = value; }
+        internal bool isArea = false;
+        internal void triggerMouseEvent(MouseEvent ev)
+        {
+            OnMouseEvent?.Invoke(ev);
+        }
 
         public MinimapOverlay() { }
         public MinimapOverlay(int handle, string txd, string txn, Vector2 pos, float r, SizeF size, int a, bool centered)
@@ -95,16 +120,74 @@ namespace ScaleformUI.Scaleforms
         }
     }
 
+    public class TextOverlay : MinimapOverlay
+    {
+        public string Text { get; set; }
+        public int FontSize { get; set; }
+        public int Alignment { get; set; }
+        public string Font { get; set; }
+        public bool Outline { get; set; }
+        public bool Shadow { get; set; }
+        public TextOverlay() { }
+		public TextOverlay(int handle, string text, Vector2 pos, int fontSize = 13, int alignment = 1, string font = "$Font2", bool outline = true, bool shadow = false)
+        {
+            this.handle = handle;
+            this.Text = text;
+            this.position = pos;
+            this.FontSize = fontSize;
+            this.Alignment = alignment;
+            this.Font = font;
+            this.Outline = outline;
+            this.Shadow = shadow;
+		}
+    }
+
     public static class MinimapOverlays
     {
         internal static List<MinimapOverlay> minimaps = new();
         internal static int overlay = 0;
+        internal static int minimapHandle = 0;
+        internal static int eventType = 0;
+        internal static int itemId = 0;
+        internal static int context = 0;
+        internal static int unused = 0;
+        internal static bool success;
 
         internal static async Task Load()
         {
-            overlay = AddMinimapOverlay("files/MINIMAP_LOADER.gfx");
-            while (!HasMinimapOverlayLoaded(overlay)) await BaseScript.Delay(0);
-            SetMinimapOverlayDisplay(overlay, 0f, 0f, 100f, 100f, 100f);
+            BaseScript.TriggerEvent("ScUI:AddMinimapOverlay", [ new Action<dynamic>(async handle => {
+                overlay = Convert.ToInt32(handle);
+                while (!HasMinimapOverlayLoaded(overlay)) await BaseScript.Delay(0);
+                SetMinimapOverlayDisplay(overlay, 0f, 0f, 100f, 100f, 100f);
+            })]);
+            BaseScript.TriggerEvent("ScUI:getMinimapHandle", [ new Action<dynamic>(handle => {
+                minimapHandle = Convert.ToInt32(handle);
+                return;
+            })]);
+            if(minimapHandle == 0)
+            {
+                var mn = RequestScaleformMovieInstance("minimap");
+                while (!HasScaleformMovieLoaded(mn))
+                    await BaseScript.Delay(0);
+                minimapHandle = mn;
+                SetBigmapActive(true, false);
+                await BaseScript.Delay(0);
+                SetBigmapActive(false, false);
+            }
+        }
+
+        internal static void Update()
+        {
+            success = API.GetScaleformMovieCursorSelection(minimapHandle, ref eventType, ref context, ref itemId, ref unused);
+            if (success)
+            {
+                if (context == 1000)
+                {
+                    MouseEvent ev = (MouseEvent)eventType;
+                    if (minimaps.Count > itemId)
+                        minimaps[itemId].triggerMouseEvent(ev);
+                }
+            }
         }
 
         private static async Task<MinimapOverlay> addOverlay(string method, string txd, string txn, float x, float y, float r, float w, float h, int a, bool centered)
@@ -173,12 +256,72 @@ namespace ScaleformUI.Scaleforms
             return await addOverlay("ADD_SCALED_OVERLAY", textureDict, textureName, x, y, rotation, xScale, yScale, alpha, centered);
         }
 
-        /// <summary>
-        /// Sets the selected overlay's color (argb)
-        /// </summary>
-        /// <param name="overlayId"></param>
-        /// <param name="color"></param>
-        public static void SetOverlayColor(int overlayId, SColor color)
+        public static async Task<MinimapOverlay> AddAreaOverlay(List<Vector3> coords, bool outline, SColor color)
+        {
+            List<Vector2> res = coords.ConvertAll(x => (Vector2)x);
+            IEnumerable<string> joined = res.Select(vec => $"{vec.X}:{vec.Y}");
+            string tobesent = string.Join(",", joined);
+
+            CallMinimapScaleformFunction(overlay, "ADD_AREA_OVERLAY");
+            ScaleformMovieMethodAddParamPlayerNameString(tobesent);
+            ScaleformMovieMethodAddParamBool(outline);
+            ScaleformMovieMethodAddParamInt(color.R);
+            ScaleformMovieMethodAddParamInt(color.G);
+            ScaleformMovieMethodAddParamInt(color.B);
+            ScaleformMovieMethodAddParamInt(color.A);
+            EndScaleformMovieMethod();
+
+            MinimapOverlay minOv = new MinimapOverlay(minimaps.Count + 1, "", "", new Vector2(0), 0, new SizeF(0,0), 255, false);
+            minimaps.Add(minOv);
+            return minOv;
+        }
+
+        public static TextOverlay AddTextOverlay(string text, Vector2 pos, int fontSize = 13, int alignment = 1, string font = "$Font2", bool outline = true, bool shadow = false)
+        {
+            CallMinimapScaleformFunction(overlay, "ADD_TEXT_OVERLAY");
+            AddTextEntry("MinimapOverlays_" + minimaps.Count, text);
+            BeginTextCommandScaleformString("MinimapOverlays_" + minimaps.Count);
+            EndTextCommandScaleformString_2();
+            ScaleformMovieMethodAddParamFloat(pos.X);
+            ScaleformMovieMethodAddParamFloat(pos.Y);
+            ScaleformMovieMethodAddParamInt(fontSize);
+            ScaleformMovieMethodAddParamInt(alignment);
+            ScaleformMovieMethodAddParamTextureNameString(font);
+            ScaleformMovieMethodAddParamBool(outline);
+            ScaleformMovieMethodAddParamBool(shadow);
+            EndScaleformMovieMethod();
+
+            var ov = new TextOverlay(minimaps.Count, text, pos, fontSize, alignment, font, outline, shadow);
+            minimaps.Add(ov);
+            return ov;
+		}
+
+        public static void UpdateTextOverlay(int handle, string text, Vector2 pos, int fontSize = 13, int alignment = 1, string font = "$Font2", bool outline = true, bool shadow = false)
+        {
+            if (overlay == 0) return;
+			CallMinimapScaleformFunction(overlay, "UPDATE_TEXT");
+			ScaleformMovieMethodAddParamInt(handle-1);
+			AddTextEntry("MinimapOverlays_" + minimaps.Count, text);
+			BeginTextCommandScaleformString("MinimapOverlays_" + minimaps.Count);
+			EndTextCommandScaleformString_2();
+			ScaleformMovieMethodAddParamFloat(pos.X);
+			ScaleformMovieMethodAddParamFloat(pos.Y);
+			ScaleformMovieMethodAddParamInt(fontSize);
+			ScaleformMovieMethodAddParamInt(alignment);
+			ScaleformMovieMethodAddParamTextureNameString(font);
+			ScaleformMovieMethodAddParamBool(outline);
+			ScaleformMovieMethodAddParamBool(shadow);
+			EndScaleformMovieMethod();
+			
+            minimaps[handle-1] = new TextOverlay(handle, text, pos, fontSize, alignment, font, outline, shadow);
+		}
+
+		/// <summary>
+		/// Sets the selected overlay's color (argb)
+		/// </summary>
+		/// <param name="overlayId"></param>
+		/// <param name="color"></param>
+		public static void SetOverlayColor(int overlayId, SColor color)
         {
             if (overlay == 0) return;
             CallMinimapScaleformFunction(overlay, "SET_OVERLAY_COLOR");
@@ -284,6 +427,11 @@ namespace ScaleformUI.Scaleforms
         public static void SetOverlayRotation(int overlayId, float rotation)
         {
             if (overlay == 0) return;
+            if (minimaps[overlayId - 1].isArea)
+            {
+                Debug.WriteLine("ScaleformUI - MinimapOverlays - method \"SetOverlayRotation\" is not supported on Areas due to their vector boundaries");
+                return;
+            }
             CallMinimapScaleformFunction(overlay, "UPDATE_OVERLAY_ROTATION");
             ScaleformMovieMethodAddParamInt(overlayId - 1);
             ScaleformMovieMethodAddParamFloat(rotation);
@@ -294,6 +442,11 @@ namespace ScaleformUI.Scaleforms
         private static void overlayPos(int overlayId, float x, float y)
         {
             if (overlay == 0) return;
+            if (minimaps[overlayId - 1].isArea)
+            {
+                Debug.WriteLine("ScaleformUI - MinimapOverlays - method \"SetOverlayPosition\" is not supported on Areas due to their vector boundaries");
+                return;
+            }
             CallMinimapScaleformFunction(overlay, "UPDATE_OVERLAY_POSITION");
             ScaleformMovieMethodAddParamInt(overlayId - 1);
             ScaleformMovieMethodAddParamFloat(x);
@@ -305,6 +458,7 @@ namespace ScaleformUI.Scaleforms
         private static void overlaySize(int overlayId, float w, float h)
         {
             if (overlay == 0) return;
+            Debug.WriteLine("ScaleformUI - MinimapOverlays - method \"SetOverlaySizeOrScale\" is not supported on Areas due to their vector boundaries");
             CallMinimapScaleformFunction(overlay, "UPDATE_OVERLAY_SIZE_OR_SCALE");
             ScaleformMovieMethodAddParamInt(overlayId - 1);
             ScaleformMovieMethodAddParamFloat(w);

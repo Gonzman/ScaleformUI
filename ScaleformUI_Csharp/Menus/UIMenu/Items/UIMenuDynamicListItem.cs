@@ -1,4 +1,11 @@
-﻿namespace ScaleformUI.Menu
+﻿using ScaleformUI.Elements;
+using ScaleformUI.LobbyMenu;
+using ScaleformUI.PauseMenu;
+using System;
+using System.Reflection;
+using System.Threading.Tasks;
+
+namespace ScaleformUI.Menu
 {
     public enum ChangeDirection
     {
@@ -17,12 +24,41 @@
             set
             {
                 currentListItem = value;
-                if (Parent is not null && Parent.Visible && Parent.Pagination.IsItemVisible(Parent.MenuItems.IndexOf(this)))
-                {
-                    Main.scaleformUI.CallFunction("UPDATE_LISTITEM_LIST", Parent.Pagination.GetScaleformIndex(Parent.MenuItems.IndexOf(this)), currentListItem, 0);
-                }
+                if (Parent != null && Parent.Visible)
+                    Parent.SendItemToScaleform(Parent.MenuItems.IndexOf(this), true);
+                if (ParentColumn != null && ParentColumn.visible)
+                    ParentColumn.SendItemToScaleform(ParentColumn.Items.IndexOf(this), true);
             }
         }
+
+
+        public override bool Enabled
+        {
+            get => base.Enabled;
+            set
+            {
+                base.Enabled = value;
+                if (Parent is not null && Parent.Visible)
+                    Parent.SendItemToScaleform(Parent.MenuItems.IndexOf(this), true);
+                if (ParentColumn != null && ParentColumn.visible)
+                    ParentColumn.SendItemToScaleform(ParentColumn.Items.IndexOf(this), true);
+            }
+        }
+
+        public override bool Selected
+        {
+            get => base.Selected;
+            set
+            {
+                base.Selected = value;
+                if (Parent is not null && Parent.Visible)
+                    Parent.SendItemToScaleform(Parent.MenuItems.IndexOf(this), true);
+                if (ParentColumn != null && ParentColumn.visible)
+                    ParentColumn.SendItemToScaleform(ParentColumn.Items.IndexOf(this), true);
+            }
+        }
+
+
         public DynamicListItemChangeCallback Callback { get; set; }
 
         /// <summary>
@@ -43,6 +79,12 @@
             _itemId = 1;
             currentListItem = startingItem;
             Callback = changeCallback;
+        }
+
+        internal UIMenuDynamicListItem(string text, string description, string startingItem) : base(text, description)
+        {
+            _itemId = 1;
+            currentListItem = startingItem;
         }
 
         public override void SetRightBadge(BadgeIcon badge)

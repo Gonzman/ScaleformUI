@@ -20,8 +20,9 @@ function TabView.New(title, subtitle, sideTop, sideMiddle, sideBottom)
         SideTop = sideTop or "",
         SideMid = sideMiddle or "",
         SideBot = sideBottom or "",
-        _headerPicture = {},
-        _crewPicture = {},
+        TabsColor = 117,
+        _headerPicture = {txd = "", txn = ""},
+        _crewPicture = {txd = "", txn = ""},
         Tabs = {},
         index = 1,
         ParentPool = nil,
@@ -38,6 +39,27 @@ function TabView.New(title, subtitle, sideTop, sideMiddle, sideBottom)
         setHeaderDynamicWidth = false,
         _firstDrawTick = false,
         timer = 100,
+        changed = false,
+        ShowBlur = true,
+        IsCorona = false,
+        _showStoreBackground = false,
+        _storeBackgroundAnimationSpeed = 240, -- milliseconds
+        coronaTab = nil,
+        hoveredColumn = 0,
+        tabArrowsHovered = false,
+        sm_uDisableInputDuration = 250,   -- milliseconds.
+        FRONTEND_ANALOGUE_THRESHOLD = 80, -- out of 128
+        BUTTON_PRESSED_DOWN_INTERVAL = 250,
+        BUTTON_PRESSED_REFIRE_ATTRITION = 45,
+        BUTTON_PRESSED_REFIRE_MINIMUM = 100,
+        s_iLastRefireTimeUp = 250,
+        s_iLastRefireTimeDn = 250,
+        s_pressedDownTimer = GetGameTimer(),
+        s_lastGameFrame = 0,
+        iPreviousXAxis = 0.0,
+        iPreviousYAxis = 0.0,
+        iPreviousXAxisR = 0.0,
+        iPreviousYAxisR = 0.0,
         InstructionalButtons = {
             InstructionalButton.New(GetLabelText("HUD_INPUT2"), -1, 176, 176, -1),
             InstructionalButton.New(GetLabelText("HUD_INPUT3"), -1, 177, 177, -1),
@@ -51,27 +73,12 @@ function TabView.New(title, subtitle, sideTop, sideMiddle, sideBottom)
         end,
         OnPauseMenuFocusChanged = function(menu, tab, focusLevel)
         end,
-        OnLeftItemChange = function(menu, leftItem, index)
+        OnColumnItemChange = function(menu, tab, column, index)
         end,
-        OnRightItemChange = function(menu, rightItem, index)
-        end,
-        OnLeftItemSelect = function(menu, leftItem, index)
-        end,
-        OnRightItemSelect = function(menu, rightItem, index)
+        OnColumnItemSelect = function(menu, tab, column, index)
         end
     }
     return setmetatable(_data, TabView)
-end
-
-function TabView:LeftItemIndex(index)
-    if index ~= nil then
-        self.Tabs[self.index].LeftItemList[self.leftItemIndex]:Selected(false)
-        self.leftItemIndex = index
-        self.Tabs[self.index].LeftItemList[self.leftItemIndex]:Selected(true)
-        self.OnLeftItemChange(self, self.Tabs[self.index].LeftItemList[self.leftItemIndex], self.leftItemIndex)
-    else
-        return self.leftItemIndex
-    end
 end
 
 function TabView:SetHeaderDynamicWidth(value)
@@ -82,20 +89,23 @@ function TabView:SetHeaderDynamicWidth(value)
     end
 end
 
-function TabView:RightItemIndex(index)
-    if index ~= nil then
-        self.rightItemIndex = index
-        self.OnRightItemChange(self, self.Tabs[self.index].LeftItemList[self.leftItemIndex].ItemList
-            [self.rightItemIndex], self.rightItemIndex)
-    else
-        return self.rightItemIndex
-    end
-end
-
 function TabView:FocusLevel(index)
     if index ~= nil then
-        self.focusLevel = index
-        ScaleformUI.Scaleforms._pauseMenu:SetFocus(index)
+        local dir = 0
+        if index < self.focusLevel then
+            dir = -1
+        elseif index > self.focusLevel then
+            dir = 1
+        else
+            dir = 0
+        end
+        self.focusLevel = self.focusLevel + dir
+        ScaleformUI.Scaleforms._pauseMenu:SetFocus(dir)
+        if dir > 0 and #self.Tabs > 0 and self.focusLevel == 1 then
+            self.Tabs[self.index]:Focus()
+        elseif (dir < 0 and #self.Tabs > 0 and self.focusLevel == 0) then
+            self.Tabs[self.index]:UnFocus()
+        end
         self.OnPauseMenuFocusChanged(self, self.Tabs[self.index], index)
     else
         return self.focusLevel
@@ -106,13 +116,40 @@ function TabView:Index(idx)
     if idx ~= nil then
         self.Tabs[self.index].Visible = false
         self.index = idx
+        if self.index > #self.Tabs then
+            self.index = 1
+        end
+        if self.index < 1 then
+            self.index = #self.Tabs
+        end
         self.Tabs[self.index].Visible = true
         if self:Visible() then
-            ScaleformUI.Scaleforms._pauseMenu:SelectTab(idx-1)
+            self:BuildPauseMenu()
+            ScaleformUI.Scaleforms._pauseMenu:SelectTab(self.index - 1)
         end
         self.OnPauseMenuTabChanged(self, self.Tabs[self.index], self.index)
     else
         return self.index
+    end
+end
+
+function TabView:ShowStoreBackground(bool)
+    if bool == nil then
+        return self._showStoreBackground
+    else
+        self._showStoreBackground = bool
+        ScaleformUI.Scaleforms._pauseMenu.BGEnabled = self._showStoreBackground
+    end
+end
+
+function TabView:StoreBackgroundAnimationSpeed(speed)
+    if speed == nil then
+        return self._storeBackgroundAnimationSpeed
+    else
+        self._storeBackgroundAnimationSpeed = speed
+        if self:Visible() then
+            ScaleformUI.Scaleforms._pauseMenu._pauseBG:CallFunction("ANIMATE_BACKGROUND", speed)
+        end
     end
 end
 
@@ -123,35 +160,41 @@ function TabView:Visible(visible)
         if visible == true then
             if not IsPauseMenuActive() then
                 PlaySoundFrontend(self.SoundId, "Hit_In", "PLAYER_SWITCH_CUSTOM_SOUNDSET", true)
-                ActivateFrontendMenu(`FE_MENU_VERSION_CORONA`, true, 0)
-                self.OnPauseMenuOpen(self)
-                AnimpostfxPlay("PauseMenuIn", 800, true)
+                ActivateFrontendMenu(`FE_MENU_VERSION_CORONA`, true, -1)
+                if self.ShowBlur then
+                    self:doScreenBlur()
+                end
                 self._firstDrawTick = true
                 ScaleformUI.Scaleforms.InstructionalButtons:SetInstructionalButtons(self.InstructionalButtons)
                 SetPlayerControl(PlayerId(), false, 0)
                 MenuHandler._currentPauseMenu = self
-                MenuHandler.ableToDraw = true;
+                MenuHandler.ableToDraw = true
+                self._isBuilding = true
+                self.Tabs[self.index].Visible = true
+                self:ShowHeader()
                 self:BuildPauseMenu()
+                self.OnPauseMenuOpen(self)
+                if self.IsCorona then
+                    ScaleformUI.Scaleforms._pauseMenu.BGEnabled = self._showStoreBackground
+                    ScaleformUI.Scaleforms._pauseMenu._pauseBG:CallFunction("ANIMATE_BACKGROUND", self._storeBackgroundAnimationSpeed)
+                    self:FocusLevel(1)
+                end
             end
         else
-            for k,tab in pairs (self.Tabs) do
-                local type, subtype = tab()
-                if subtype == "PlayerListTab" then
-                    tab.Minimap:Dispose()
-                end
+            if self.Tabs[self.index].Minimap ~= nil then
+                self.Tabs[self.index].Minimap:Dispose()
             end
             MenuHandler.ableToDraw = false
             MenuHandler._currentPauseMenu = nil
             ScaleformUI.Scaleforms._pauseMenu:Dispose()
             ScaleformUI.Scaleforms.InstructionalButtons:ClearButtonList()
-            AnimpostfxStop("PauseMenuIn")
-            AnimpostfxPlay("PauseMenuOut", 800, false)
+            if self.ShowBlur or AnimpostfxIsRunning("PauseMenuIn") then
+                AnimpostfxStop("PauseMenuIn")
+                AnimpostfxPlay("PauseMenuOut", 0, false)
+            end
             self.OnPauseMenuClose(self)
             SetPlayerControl(PlayerId(), true, 0)
-            if IsPauseMenuActive() then
-                PlaySoundFrontend(self.SoundId, "Hit_Out", "PLAYER_SWITCH_CUSTOM_SOUNDSET", true)
-                ActivateFrontendMenu(`FE_MENU_VERSION_CORONA`, false, 0)
-            end
+            PlaySoundFrontend(self.SoundId, "Hit_Out", "PLAYER_SWITCH_CUSTOM_SOUNDSET", true)
             SetFrontendActive(false)
         end
     else
@@ -159,13 +202,20 @@ function TabView:Visible(visible)
     end
 end
 
-function TabView:AddTab(item)
-    item.Base.Parent = self
-    local type, subtype = item()
-    if subtype == "PlayerListTab" then
-        item.Minimap = MinimapPanel.New(self)
+function TabView:doScreenBlur()
+    while (AnimpostfxIsRunning("PauseMenuOut")) do
+        Wait(0)
+        AnimpostfxStop("PauseMenuOut")
     end
-    self.Tabs[#self.Tabs + 1] = item
+    AnimpostfxPlay("PauseMenuIn", 0, true)
+end
+
+function TabView:AddTab(tab)
+    tab.Parent = self
+    if tab.Minimap ~= nil then
+        tab.Minimap.Parent = self
+    end
+    self.Tabs[#self.Tabs + 1] = tab
 end
 
 function TabView:HeaderPicture(Txd, Txn)
@@ -197,13 +247,34 @@ function TabView:ShowHeader()
         ScaleformUI.Scaleforms._pauseMenu:SetHeaderTitle(self.Title)
     else
         ScaleformUI.Scaleforms._pauseMenu:ShiftCoronaDescription(true, false)
-        ScaleformUI.Scaleforms._pauseMenu:SetHeaderTitle(self.Title, self.Subtitle)
+        ScaleformUI.Scaleforms._pauseMenu:SetHeaderTitle(self.Title, self.Subtitle .. "\n\n\n\n\n\n\n\n\n\n\n")
     end
-    if (self:HeaderPicture() ~= nil) then
+    if (self:HeaderPicture() ~= nil and not self:HeaderPicture().txd:IsNullOrEmpty()) then
         ScaleformUI.Scaleforms._pauseMenu:SetHeaderCharImg(self:HeaderPicture().txd, self:HeaderPicture().txn, true)
     end
-    if (self:CrewPicture() ~= nil) then
+    if (self:CrewPicture() ~= nil and not self:CrewPicture().txd:IsNullOrEmpty()) then
         ScaleformUI.Scaleforms._pauseMenu:SetHeaderSecondaryImg(self:CrewPicture().txd, self:CrewPicture().txn, true)
+    end
+    if not self.IsCorona then
+        ScaleformUI.Scaleforms._pauseMenu._pause:CallFunction("ENABLE_DYNAMIC_WIDTH", self:SetHeaderDynamicWidth())
+        for k, tab in pairs(self.Tabs) do
+            ScaleformUI.Scaleforms._pauseMenu:AddPauseMenuTab(tab.Title, 0, tab.TabColor)
+        end
+    else
+        if self.coronaTab == nil then return end
+        if self.coronaTab.LeftColumn ~= nil then
+            ScaleformUI.Scaleforms._pauseMenu:AddPauseMenuTab(self.coronaTab.LeftColumn.Label, 2, self.coronaTab.LeftColumn.Color)
+        end
+        if self.coronaTab.CenterColumn ~= nil then
+            ScaleformUI.Scaleforms._pauseMenu:AddPauseMenuTab(self.coronaTab.CenterColumn.Label, 2,
+                self.coronaTab.CenterColumn.Color)
+        end
+        if self.coronaTab.RightColumn ~= nil then
+            ScaleformUI.Scaleforms._pauseMenu:AddPauseMenuTab(self.coronaTab.RightColumn.Label, 2, self.coronaTab.RightColumn
+                .Color)
+        end
+        ScaleformUI.Scaleforms._pauseMenu._header:CallFunction("SET_ALL_HIGHLIGHTS", true, self.TabsColor)
+        ScaleformUI.Scaleforms._pauseMenu._header:CallFunction("ENABLE_DYNAMIC_WIDTH", false)
     end
     ScaleformUI.Scaleforms._pauseMenu:SetHeaderDetails(self.SideTop, self.SideMid, self.SideBot)
     ScaleformUI.Scaleforms._pauseMenu._pause:CallFunction("ENABLE_DYNAMIC_WIDTH", self:SetHeaderDynamicWidth())
@@ -211,349 +282,57 @@ function TabView:ShowHeader()
 end
 
 function TabView:BuildPauseMenu()
+    while (not ScaleformUI.Scaleforms._pauseMenu:IsLoaded()) do Wait(0) end
+    if not HasStreamedTextureDictLoaded("commonmenu") then
+        RequestStreamedTextureDict("commonmenu", true)
+        while not HasStreamedTextureDictLoaded("commonmenu") do Wait(0) end
+    end
     self._isBuilding = true
     ScaleformUI.Scaleforms._pauseMenu.BGEnabled = false
-    self:ShowHeader()
-    for k, tab in pairs(self.Tabs) do
-        local tabIndex = k - 1
-        local type, subtype = tab()
-        if subtype == "TextTab" then
-            ScaleformUI.Scaleforms._pauseMenu:AddPauseMenuTab(tab.Base.Title, 1, tab.Base.Type, tab.Base._color)
-            if not tostring(tab.TextTitle):IsNullOrEmpty() then
-                ScaleformUI.Scaleforms._pauseMenu:AddRightTitle(tabIndex, 0, tab.TextTitle)
-            end
-            for j, item in pairs(tab.LabelsList) do
-                ScaleformUI.Scaleforms._pauseMenu:AddRightListLabel(tabIndex, 0, item.Label, item.LabelFont.FontName, item.LabelFont.FontID)
-            end
-            if not (tab.BGTextureDict:IsNullOrEmpty() and tab.BGTextureName:IsNullOrEmpty()) then
-                ScaleformUI.Scaleforms._pauseMenu._pause:CallFunction("UPDATE_BASE_TAB_BACKGROUND", tabIndex, tab.BGTextureDict, tab.BGTextureName)
-            end
-            if not (tab.RightTextureDict:IsNullOrEmpty() and tab.RightTextureName:IsNullOrEmpty()) then
-                ScaleformUI.Scaleforms._pauseMenu._pause:CallFunction("SET_BASE_TAB_RIGHT_PICTURE", tabIndex, tab.RightTextureDict, tab.RightTextureName)
-            end
-        elseif subtype == "SubmenuTab" then
-            ScaleformUI.Scaleforms._pauseMenu:AddPauseMenuTab(tab.Base.Title, 1, tab.Base.Type, tab.Base._color)
-            for j, item in pairs(tab.LeftItemList) do
-                local itemIndex = j - 1
-                ScaleformUI.Scaleforms._pauseMenu:AddLeftItem(tabIndex, item.ItemType, item._formatLeftLabel, item.MainColor,
-                    item.HighlightColor, item:Enabled())
-                ScaleformUI.Scaleforms._pauseMenu._pause:CallFunction("SET_LEFT_ITEM_LABEL_FONT", tabIndex, itemIndex, item._labelFont.FontName, item._labelFont.FontID)
-
-                if item.RightTitle ~= nil and not item.RightTitle:IsNullOrEmpty() then
-                    if (item.ItemType == LeftItemType.Keymap) then
-                        ScaleformUI.Scaleforms._pauseMenu:AddKeymapTitle(tabIndex, itemIndex, item.RightTitle,
-                            item.KeymapRightLabel_1, item.KeymapRightLabel_2)
-                    else
-                        ScaleformUI.Scaleforms._pauseMenu:AddRightTitle(tabIndex, itemIndex, item.RightTitle)
-                    end
-                end
-
-                for l, ii in pairs(item.ItemList) do
-                    local __type, __subtype = ii()
-                    if __subtype == "StatsTabItem" then
-                        if (ii.Type == StatItemType.Basic) then
-                            ScaleformUI.Scaleforms._pauseMenu:AddRightStatItemLabel(tabIndex, itemIndex, ii.Label,
-                                ii._rightLabel, ii.LabelFont, ii.RightLabelFont)
-                        elseif (ii.Type == StatItemType.ColoredBar) then
-                            ScaleformUI.Scaleforms._pauseMenu:AddRightStatItemColorBar(tabIndex, itemIndex, ii.Label,
-                                ii._value, ii._coloredBarColor, ii.LabelFont)
-                        end
-                    elseif __subtype == "SettingsItem" then
-                        if ii.ItemType == SettingsItemType.Basic then
-                            ScaleformUI.Scaleforms._pauseMenu:AddRightSettingsBaseItem(tabIndex, itemIndex, ii.Label,
-                                ii._rightLabel, ii:Enabled())
-                        elseif ii.ItemType == SettingsItemType.ListItem then
-                            ScaleformUI.Scaleforms._pauseMenu:AddRightSettingsListItem(tabIndex, itemIndex, ii.Label,
-                                ii.ListItems, ii._itemIndex, ii:Enabled())
-                        elseif ii.ItemType == SettingsItemType.ProgressBar then
-                            ScaleformUI.Scaleforms._pauseMenu:AddRightSettingsProgressItem(tabIndex, itemIndex, ii.Label,
-                                ii.MaxValue, ii._coloredBarColor, ii._value, ii:Enabled())
-                        elseif ii.ItemType == SettingsItemType.MaskedProgressBar then
-                            ScaleformUI.Scaleforms._pauseMenu:AddRightSettingsProgressItemAlt(tabIndex, itemIndex,
-                                ii.Label, ii.MaxValue, ii._coloredBarColor, ii._value, ii:Enabled())
-                        elseif ii.ItemType == SettingsItemType.CheckBox then
-                            ScaleformUI.Scaleforms._pauseMenu:AddRightSettingsCheckboxItem(tabIndex, itemIndex, ii.Label,
-                                ii.CheckBoxStyle, ii._isChecked, ii:Enabled())
-                        elseif ii.ItemType == SettingsItemType.SliderBar then
-                            ScaleformUI.Scaleforms._pauseMenu:AddRightSettingsSliderItem(tabIndex, itemIndex, ii.Label,
-                                ii.MaxValue, ii._coloredBarColor, ii._value, ii:Enabled())
-                        end
-                    elseif __subtype == "KeymapItem" then
-                        if IsUsingKeyboard(2) then
-                            ScaleformUI.Scaleforms._pauseMenu:AddKeymapItem(tabIndex, itemIndex, ii.Label,
-                                ii.PrimaryKeyboard, ii.SecondaryKeyboard)
-                        else
-                            ScaleformUI.Scaleforms._pauseMenu:AddKeymapItem(tabIndex, itemIndex, ii.Label,
-                                ii.PrimaryGamepad, ii.SecondaryGamepad)
-                        end
-                        self:UpdateKeymapItems()
-                    else
-                        ScaleformUI.Scaleforms._pauseMenu:AddRightListLabel(tabIndex, itemIndex, ii.Label, ii.LabelFont.FontName, ii.LabelFont.FontID)
-                    end
-                end
-                if item.ItemType == LeftItemType.Info or item.ItemType == LeftItemType.Statistics or item.ItemType == LeftItemType.Settings then
-                    if not (item.TextureDict:IsNullOrEmpty() and item.TextureName:IsNullOrEmpty()) then
-                        ScaleformUI.Scaleforms._pauseMenu._pause:CallFunction("UPDATE_LEFT_ITEM_RIGHT_BACKGROUND", tabIndex, itemIndex, item.TextureDict, item.TextureName, item.LeftItemBGType);
-                    end
-                end
-            end
-        elseif subtype == "PlayerListTab" then
-            ScaleformUI.Scaleforms._pauseMenu:AddPauseMenuTab(tab.Base.Title, 1, tab.Base.Type, tab.Base._color)
-            local count = #tab.listCol
-            if count == 1 then
-                ScaleformUI.Scaleforms._pauseMenu._pause:CallFunction("CREATE_PLAYERS_TAB_COLUMNS", tabIndex, tab.listCol[1].Type)
-                ScaleformUI.Scaleforms._pauseMenu._pause:CallFunction("SET_PLAYERS_TAB_COLUMN_MAXITEMS", tabIndex, 0, tab.listCol[1].Pagination:ItemsPerPage())
-            elseif count == 2 then
-                ScaleformUI.Scaleforms._pauseMenu._pause:CallFunction("CREATE_PLAYERS_TAB_COLUMNS", tabIndex, tab.listCol[1].Type, tab.listCol[2].Type)
-                ScaleformUI.Scaleforms._pauseMenu._pause:CallFunction("SET_PLAYERS_TAB_COLUMN_MAXITEMS", tabIndex, 0, tab.listCol[1].Pagination:ItemsPerPage())
-                ScaleformUI.Scaleforms._pauseMenu._pause:CallFunction("SET_PLAYERS_TAB_COLUMN_MAXITEMS", tabIndex, 1, tab.listCol[2].Pagination:ItemsPerPage())
-            elseif count == 3 then
-                ScaleformUI.Scaleforms._pauseMenu._pause:CallFunction("CREATE_PLAYERS_TAB_COLUMNS", tabIndex, tab.listCol[1].Type, tab.listCol[2].Type, tab.listCol[3].Type)
-                ScaleformUI.Scaleforms._pauseMenu._pause:CallFunction("SET_PLAYERS_TAB_COLUMN_MAXITEMS", tabIndex, 0, tab.listCol[1].Pagination:ItemsPerPage())
-                ScaleformUI.Scaleforms._pauseMenu._pause:CallFunction("SET_PLAYERS_TAB_COLUMN_MAXITEMS", tabIndex, 1, tab.listCol[2].Pagination:ItemsPerPage())
-                ScaleformUI.Scaleforms._pauseMenu._pause:CallFunction("SET_PLAYERS_TAB_COLUMN_MAXITEMS", tabIndex, 2, tab.listCol[3].Pagination:ItemsPerPage())
-            end
-            ScaleformUI.Scaleforms._pauseMenu._pause:CallFunction("SET_PLAYERS_TAB_NEWSTYLE", tabIndex, tab._newStyle)
-            for i,col in pairs(tab.listCol) do
-                col.Parent = self
-                col.ParentTab = tabIndex
-                if col.Type == "settings" then
-                    self:buildSettings(tab, tabIndex)
-                elseif col.Type == "players" then
-                    self:buildPlayers(tab, tabIndex)
-                elseif col.Type == "missions" then
-                    self:buildMissions(tab, tabIndex)
-                elseif col.Type == "store" then
-                    self:buildStore(tab, tabIndex)
-                elseif col.Type == "panel" then
-                    ScaleformUI.Scaleforms._pauseMenu._pause:CallFunction("ADD_PLAYERS_TAB_MISSION_PANEL_PICTURE", tabIndex, tab.MissionPanel.TextureDict, tab.MissionPanel.TextureName)
-                    ScaleformUI.Scaleforms._pauseMenu._pause:CallFunction("SET_PLAYERS_TAB_MISSION_PANEL_TITLE", tabIndex, tab.MissionPanel:Title())
-                    if #tab.MissionPanel.Items > 0 then
-                        for j,item in pairs(tab.MissionPanel.Items) do
-                            ScaleformUI.Scaleforms._pauseMenu._pause:CallFunction("ADD_PLAYERS_TAB_MISSION_PANEL_ITEM", tabIndex, item.Type, item.TextLeft,
-                            item.TextRight, item.Icon or 0, item.IconColor or 0, item.Tick, item._labelFont.FontName, item._labelFont.FontID, item._rightLabelFont.FontName, item._rightLabelFont.FontID)
-                        end
-                    end
-                end
-            end
-            while (tab.SettingsColumn ~= nil and tab.SettingsColumn._isBuilding) or (tab.PlayerColumn ~= nil and tab.PlayerColumn._isBuilding) or (tab.MissionsColumn ~= nil and tab.MissionsColumn._isBuilding) do
-                Citizen.Wait(0)
-            end
-            tab:updateFocus(1)
-        end
-    end
+    local tab = self.Tabs[self.index]
+    ScaleformUI.Scaleforms._pauseMenu._pause:CallFunction("LOAD_CHILD_PAGE", tab._identifier)
+    tab:Populate()
+    tab:ShowColumns()
     self._isBuilding = false
-end
-
-function TabView:buildSettings(tab, tabIndex)
-    Citizen.CreateThread(function()
-        tab.SettingsColumn._isBuilding = true
-        local i = 1
-        local max = tab.SettingsColumn.Pagination:ItemsPerPage()
-        if #tab.SettingsColumn.Items < max then
-            max = #tab.SettingsColumn.Items
-        end
-        tab.SettingsColumn.Pagination:MinItem(tab.SettingsColumn.Pagination:CurrentPageStartIndex())
-
-        if tab.SettingsColumn.scrollingType == MenuScrollingType.CLASSIC and tab.SettingsColumn.Pagination:TotalPages() > 1 then
-            local missingItems = tab.SettingsColumn.Pagination:GetMissingItems()
-            if missingItems > 0 then
-                tab.SettingsColumn.Pagination:ScaleformIndex(tab.SettingsColumn.Pagination:GetPageIndexFromMenuIndex(tab.SettingsColumn.Pagination:CurrentPageEndIndex()) + missingItems - 1)
-                tab.SettingsColumn.Pagination.minItem = tab.SettingsColumn.Pagination:CurrentPageStartIndex() - missingItems
-            end
-        end
-
-        tab.SettingsColumn.Pagination:MaxItem(tab.SettingsColumn.Pagination:CurrentPageEndIndex())
-
-        while i <= max do
-            Citizen.Wait(0)
-            if not self:Visible() then return end
-            tab.SettingsColumn:_itemCreation(tab.SettingsColumn.Pagination:CurrentPage(), i, false, true)
-            i = i + 1
-        end
-
-        tab.SettingsColumn:CurrentSelection(1)
-        tab.SettingsColumn.Pagination:ScaleformIndex(tab.SettingsColumn.Pagination:GetScaleformIndex(tab.SettingsColumn:CurrentSelection()))
-        tab.SettingsColumn.Items[tab.SettingsColumn:CurrentSelection()]:Selected(false)
-
-        ScaleformUI.Scaleforms._pauseMenu._pause:CallFunction("SET_PLAYERS_TAB_SETTINGS_SELECTION", tabIndex, tab.SettingsColumn.Pagination:GetScaleformIndex(tab.SettingsColumn.Pagination:CurrentMenuIndex()))
-        ScaleformUI.Scaleforms._pauseMenu._pause:CallFunction("SET_PLAYERS_TAB_SETTINGS_QTTY", tabIndex, tab.SettingsColumn:CurrentSelection(), #tab.SettingsColumn.Items)
-
-        local Item = tab.SettingsColumn.Items[tab.SettingsColumn:CurrentSelection()]
-        local _, subtype = Item()
-        if subtype == "UIMenuSeparatorItem" then
-            if (tab.SettingsColumn.Items[tab.SettingsColumn:CurrentSelection()].Jumpable) then
-                tab.SettingsColumn:GoDown()
-            end
-        end
-
-        tab.SettingsColumn._isBuilding = false
-    end)
-end
-
-function TabView:buildPlayers(tab, tabIndex)
-    Citizen.CreateThread(function()
-        tab.PlayersColumn._isBuilding = true
-        local i = 1
-        local max = tab.PlayersColumn.Pagination:ItemsPerPage()
-        if #tab.PlayersColumn.Items < max then
-            max = #tab.PlayersColumn.Items
-        end
-        tab.PlayersColumn.Pagination:MinItem(tab.PlayersColumn.Pagination:CurrentPageStartIndex())
-
-        if tab.PlayersColumn.scrollingType == MenuScrollingType.CLASSIC and tab.PlayersColumn.Pagination:TotalPages() > 1 then
-            local missingItems = tab.PlayersColumn.Pagination:GetMissingItems()
-            if missingItems > 0 then
-                tab.PlayersColumn.Pagination:ScaleformIndex(tab.PlayersColumn.Pagination:GetPageIndexFromMenuIndex(tab.PlayersColumn.Pagination:CurrentPageEndIndex()) + missingItems - 1)
-                tab.PlayersColumn.Pagination.minItem = tab.PlayersColumn.Pagination:CurrentPageStartIndex() - missingItems
-            end
-        end
-
-        tab.PlayersColumn.Pagination:MaxItem(tab.PlayersColumn.Pagination:CurrentPageEndIndex())
-
-        while i <= max do
-            Citizen.Wait(0)
-            if not self:Visible() then return end
-            tab.PlayersColumn:_itemCreation(tab.PlayersColumn.Pagination:CurrentPage(), i, false, true)
-            i = i + 1
-        end
-
-        tab.PlayersColumn:CurrentSelection(1)
-        tab.PlayersColumn.Pagination:ScaleformIndex(tab.PlayersColumn.Pagination:GetScaleformIndex(tab.PlayersColumn:CurrentSelection()))
-        tab.PlayersColumn.Items[tab.PlayersColumn:CurrentSelection()]:Selected(false)
-
-        ScaleformUI.Scaleforms._pauseMenu._pause:CallFunction("SET_PLAYERS_TAB_PLAYERS_SELECTION", tabIndex, tab.PlayersColumn.Pagination:GetScaleformIndex(tab.PlayersColumn.Pagination:CurrentMenuIndex()))
-        ScaleformUI.Scaleforms._pauseMenu._pause:CallFunction("SET_PLAYERS_TAB_PLAYERS_QTTY", tabIndex, tab.PlayersColumn:CurrentSelection(), #tab.PlayersColumn.Items)
-
-        tab.PlayersColumn._isBuilding = false
-    end)
-end
-
-function TabView:buildMissions(tab, tabIndex)
-    Citizen.CreateThread(function()
-        tab.MissionsColumn._isBuilding = true
-        local i = 1
-        local max = tab.MissionsColumn.Pagination:ItemsPerPage()
-        if #tab.MissionsColumn.Items < max then
-            max = #tab.MissionsColumn.Items
-        end
-        tab.MissionsColumn.Pagination:MinItem(tab.MissionsColumn.Pagination:CurrentPageStartIndex())
-
-        if tab.MissionsColumn.scrollingType == MenuScrollingType.CLASSIC and tab.MissionsColumn.Pagination:TotalPages() > 1 then
-            local missingItems = tab.MissionsColumn.Pagination:GetMissingItems()
-            if missingItems > 0 then
-                tab.MissionsColumn.Pagination:ScaleformIndex(tab.MissionsColumn.Pagination:GetPageIndexFromMenuIndex(tab.MissionsColumn.Pagination:CurrentPageEndIndex()) + missingItems - 1)
-                tab.MissionsColumn.Pagination.minItem = tab.MissionsColumn.Pagination:CurrentPageStartIndex() - missingItems
-            end
-        end
-
-        tab.MissionsColumn.Pagination:MaxItem(tab.MissionsColumn.Pagination:CurrentPageEndIndex())
-
-        while i <= max do
-            Citizen.Wait(0)
-            if not self:Visible() then return end
-            tab.MissionsColumn:_itemCreation(tab.MissionsColumn.Pagination:CurrentPage(), i, false, true)
-            i = i + 1
-        end
-
-        tab.MissionsColumn:CurrentSelection(1)
-        tab.MissionsColumn.Pagination:ScaleformIndex(tab.MissionsColumn.Pagination:GetScaleformIndex(tab.MissionsColumn:CurrentSelection()))
-        tab.MissionsColumn.Items[tab.MissionsColumn:CurrentSelection()]:Selected(false)
-
-        ScaleformUI.Scaleforms._pauseMenu._pause:CallFunction("SET_PLAYERS_TAB_MISSIONS_SELECTION", tabIndex, tab.MissionsColumn.Pagination:GetScaleformIndex(tab.MissionsColumn.Pagination:CurrentMenuIndex()))
-        ScaleformUI.Scaleforms._pauseMenu._pause:CallFunction("SET_PLAYERS_TAB_MISSIONS_QTTY", tabIndex, tab.MissionsColumn:CurrentSelection(), #tab.MissionsColumn.Items)
-
-        tab.MissionsColumn._isBuilding = false
-    end)
-end
-
-function TabView:buildStore(tab, tabIndex)
-    Citizen.CreateThread(function()
-        tab.StoreColumn._isBuilding = true
-        local i = 1
-        local max = tab.StoreColumn.Pagination:ItemsPerPage()
-        if #tab.StoreColumn.Items < max then
-            max = #tab.StoreColumn.Items
-        end
-        tab.StoreColumn.Pagination:MinItem(tab.StoreColumn.Pagination:CurrentPageStartIndex())
-
-        if tab.StoreColumn.scrollingType == MenuScrollingType.CLASSIC and tab.StoreColumn.Pagination:TotalPages() > 1 then
-            local missingItems = tab.StoreColumn.Pagination:GetMissingItems()
-            if missingItems > 0 then
-                tab.StoreColumn.Pagination:ScaleformIndex(tab.StoreColumn.Pagination:GetPageIndexFromMenuIndex(tab.StoreColumn.Pagination:CurrentPageEndIndex()) + missingItems - 1)
-                tab.StoreColumn.Pagination.minItem = tab.StoreColumn.Pagination:CurrentPageStartIndex() - missingItems
-            end
-        end
-
-        tab.StoreColumn.Pagination:MaxItem(tab.StoreColumn.Pagination:CurrentPageEndIndex())
-
-        while i <= max do
-            Citizen.Wait(0)
-            if not self:Visible() then return end
-            tab.StoreColumn:_itemCreation(tab.StoreColumn.Pagination:CurrentPage(), i, false, true)
-            i = i + 1
-        end
-
-        tab.StoreColumn:CurrentSelection(1)
-        tab.StoreColumn.Pagination:ScaleformIndex(tab.StoreColumn.Pagination:GetScaleformIndex(tab.StoreColumn:CurrentSelection()))
-        tab.StoreColumn.Items[tab.StoreColumn:CurrentSelection()]:Selected(false)
-
-        ScaleformUI.Scaleforms._pauseMenu._pause:CallFunction("SET_PLAYERS_TAB_STORE_SELECTION", tabIndex, tab.StoreColumn.Pagination:GetScaleformIndex(tab.StoreColumn.Pagination:CurrentMenuIndex()))
-        ScaleformUI.Scaleforms._pauseMenu._pause:CallFunction("SET_PLAYERS_TAB_STORE_QTTY", tabIndex, tab.StoreColumn:CurrentSelection(), #tab.StoreColumn.Items)
-
-        tab.StoreColumn._isBuilding = false
-    end)
 end
 
 function TabView:UpdateKeymapItems()
     if not IsUsingKeyboard(2) then
         if not self.controller then
             self.controller = true
-            for j, tab in pairs(self.Tabs) do
-                local type, subtype = tab()
-                if subtype == "SubmenuTab" then
-                    for k, lItem in pairs(tab.LeftItemList) do
-                        local idx = k - 1
-                        if lItem.ItemType == LeftItemType.Keymap then
-                            for i = 1, #lItem.ItemList, 1 do
-                                local item = lItem.ItemList[i]
-                                ScaleformUI.Scaleforms._pauseMenu:UpdateKeymap(j - 1, idx, i - 1, item.PrimaryGamepad,
-                                    item.SecondaryGamepad)
-                            end
-                        end
-                    end
-                end
-            end
+            self.changed = true
         end
     else
         if self.controller then
             self.controller = false
-            for j, tab in pairs(self.Tabs) do
-                local type, subtype = tab()
-                if subtype == "SubmenuTab" then
-                    for k, lItem in pairs(tab.LeftItemList) do
-                        local idx = k - 1
-                        if lItem.ItemType == LeftItemType.Keymap then
-                            for i = 1, #lItem.ItemList, 1 do
-                                local item = lItem.ItemList[i]
-                                ScaleformUI.Scaleforms._pauseMenu:UpdateKeymap(j - 1, idx, i - 1, item.PrimaryKeyboard,
-                                    item.SecondaryKeyboard)
-                            end
-                        end
-                    end
+            self.changed = true
+        end
+    end
+
+    if self.changed then
+        local tab = self.Tabs[self.index]
+        local t, st = tab()
+        if st == "SubmenuTab" then
+            if tab.currentItemType == 4 then
+                for k, v in pairs(tab.CenterColumn.Items) do
+                    tab.CenterColumn:UpdateItem(k)
                 end
             end
         end
+        self.changed = false
     end
 end
 
+function TabView:CurrentTab()
+    return self.Tabs[self.index]
+end
+
 function TabView:Draw()
-    if not self:Visible() or self.TemporarilyHidden or self._isBuilding then
+    if not self:Visible() or self.TemporarilyHidden then
         return
     end
     local tab = self.Tabs[self.index]
-    local type, subtype = tab()
-    if subtype == "PlayerListTab" then
+    if tab.Minimap ~= nil then
         tab.Minimap:MaintainMap()
     end
     DisableControlAction(0, 199, true)
@@ -563,440 +342,45 @@ function TabView:Draw()
     DisableControlAction(2, 199, true)
     DisableControlAction(2, 200, true)
     ScaleformUI.Scaleforms._pauseMenu:Draw(false)
+    ScaleformUI.Scaleforms._pauseMenu._header:CallFunction("SHOW_ARROWS")
     self:UpdateKeymapItems()
+    Citizen.CreateThread(function()
+        self:GetHoveredColumn()
+    end)
 end
 
-function TabView:Select()
-    if self:FocusLevel() == 0 then
-        self:FocusLevel(self:FocusLevel() + 1)
-        local tab = self.Tabs[self.index]
-        local cur_tab, cur_sub_tab = tab()
-        if cur_sub_tab == "PlayerListTab" then
-            local selection = tab:Focus()
-            if tab._newStyle then
-                selection = 1
-            end
-            if tab.listCol[selection].Type == "settings" then
-                tab.SettingsColumn.Items[tab.SettingsColumn:CurrentSelection()]:Selected(true)
-            elseif tab.listCol[selection].Type == "players" then
-                local it = tab.PlayersColumn.Items[tab.PlayersColumn:CurrentSelection()]
-                it:Selected(true)
-                if it:KeepPanelVisible() then
-                    it:AddPedToPauseMenu()
-                end
-            elseif tab.listCol[selection].Type == "missions" then
-                tab.MissionsColumn.Items[tab.MissionsColumn:CurrentSelection()]:Selected(true)
-            elseif tab.listCol[selection].Type == "store" then
-                tab.StoreColumn.Items[tab.StoreColumn:CurrentSelection()]:Selected(true)
-            end
-            for k,v in pairs(tab.listCol) do
-                if v.Type == "players" then
-                    SetPauseMenuPedLighting(self:FocusLevel() ~= 0)
-                end
-            end
-        elseif cut_sub_tab == "SubmenuTab" then
-            self.Tabs[self.index].LeftItemList[self.leftItemIndex]:Selected(true)
-        end
-        --[[ check if all disabled ]]
-        local allDisabled = true
-        for _, v in ipairs(self.Tabs[self.index].LeftItemList) do
-            if v:Enabled() then
-                allDisabled = false
-                break
-            end
-        end
-        if allDisabled then return end
-        --[[ end check all disabled ]]
-        --
-        while (not self.Tabs[self.index].LeftItemList[self.leftItemIndex]:Enabled()) do
-            Citizen.Wait(0)
-            self:LeftItemIndex(self.leftItemIndex + 1)
-            ScaleformUI.Scaleforms._pauseMenu._pause:CallFunction("SELECT_LEFT_ITEM_INDEX", self.leftItemIndex - 1)
-        end
-    elseif self:FocusLevel() == 1 then
-        local tab = self.Tabs[self.index]
-        local cur_tab, cur_sub_tab = tab()
-        if cur_sub_tab == "SubmenuTab" then
-            local leftItem = tab.LeftItemList[self.leftItemIndex]
-            if not leftItem:Enabled() then
-                PlaySoundFrontend(-1, "ERROR", "HUD_FRONTEND_DEFAULT_SOUNDSET", true)
-                return
-            end
-            if leftItem.ItemType == LeftItemType.Settings then
-                self:FocusLevel(2)
-                --[[ check if all disabled ]]
-                local allDisabled = true
-                for _, v in ipairs(self.Tabs[self.index].LeftItemList) do
-                    if v:Enabled() then
-                        allDisabled = false
-                        break
-                    end
-                end
-                if allDisabled then return end
-                PlaySoundFrontend(-1, "SELECT", "HUD_FRONTEND_DEFAULT_SOUNDSET", true)
-                --[[ end check all disabled ]]
-                --
-                while (not self.Tabs[self.index].LeftItemList[self.leftItemIndex]:Enabled()) do
-                    Citizen.Wait(0)
-                    self.rightItemIndex = self.rightItemIndex + 1
-                    ScaleformUI.Scaleforms._pauseMenu._pause:CallFunction("SELECT_RIGHT_ITEM_INDEX",
-                        self.rightItemIndex - 1)
-                end
-            end
-        elseif cur_sub_tab == "PlayerListTab" then
-            if tab.listCol[tab:Focus()].Type == "settings" then
-                local _item = tab.SettingsColumn.Items[tab.SettingsColumn:CurrentSelection()]
-                if not _item:Enabled() then
-                    PlaySoundFrontend(-1, "ERROR", "HUD_FRONTEND_DEFAULT_SOUNDSET", true)
-                    return
-                end
-                local _, subtype = _item()
-                if subtype == "UIMenuCheckboxItem" then
-                    _item:Checked(not _item:Checked())
-                    _item.OnCheckboxChanged(self, _item, _item:Checked())
-                elseif subtype == "UIMenuListItem" then
-                    _item.OnListSelected(self, _item, _item._Index)
-                elseif subtype == "UIMenuDynamicListItem" then
-                    _item.OnListSelected(self, _item, _item._currentItem)
-                elseif subtype == "UIMenuSliderItem" then
-                    _item.OnSliderSelected(self, _item, _item._Index)
-                elseif subtype == "UIMenuProgressItem" then
-                    _item.OnProgressSelected(self, _item, _item._Index)
-                elseif subtype == "UIMenuStatsItem" then
-                    _item.OnStatsSelected(self, _item, _item._Index)
-                else
-                    _item:Activated(self, _item)
-                end
-                ScaleformUI.Scaleforms._pauseMenu._pause:CallFunction("SET_INPUT_EVENT", 16)
-            elseif tab.listCol[tab:Focus()].Type == "missions" then
-                tab.MissionsColumn.Items[tab.MissionsColumn:CurrentSelection()].Activated(tab.MissionsColumn.Items[tab.MissionsColumn:CurrentSelection()])
-            end
-        end
-    elseif self:FocusLevel() == 2 then
-        ScaleformUI.Scaleforms._pauseMenu._pause:CallFunction("SET_INPUT_EVENT", 16)
-        local leftItem = self.Tabs[self.index].LeftItemList[self.leftItemIndex]
-        if leftItem.ItemType == LeftItemType.Settings then
-            local rightItem = leftItem.ItemList[self.rightItemIndex]
-            if not rightItem:Enabled() then
-                PlaySoundFrontend(-1, "ERROR", "HUD_FRONTEND_DEFAULT_SOUNDSET", true)
-                return
-            end
-            --[[ to add real functions ]]
-            --
-            if rightItem.ItemType == SettingsItemType.ListItem then
-                rightItem.OnListSelected(rightItem, rightItem:ItemIndex(),
-                    tostring(rightItem.ListItems[rightItem:ItemIndex()]))
-            elseif rightItem.ItemType == SettingsItemType.CheckBox then
-                rightItem:Checked(not rightItem:Checked())
-            elseif rightItem.ItemType == SettingsItemType.MaskedProgressBar or rightItem.ItemType == SettingsItemType.ProgressBar then
-                rightItem.OnProgressSelected(rightItem, rightItem:Value())
-            elseif rightItem.ItemType == SettingsItemType.SliderBar then
-                rightItem.OnSliderSelected(rightItem, rightItem:Value())
-            else
-                rightItem.OnActivated(rightItem, IndexOf(leftItem.ItemList, rightItem))
-            end
-            self.OnRightItemSelect(self, rightItem, self.rightItemIndex)
-        end
-    end
+
+function TabView:GetHoveredColumn()
+    self.hoveredColumn = ScaleformUI.Scaleforms._pauseMenu._pause:CallFunctionAsyncReturnInt("GET_HOVERED_COLUMN")
 end
 
 function TabView:GoBack()
-    if self:FocusLevel() > 0 then
-        local tab = self.Tabs[self.index]
-        local _, subT = tab()
-        if subT ~= "PlayerListTab" then
-            if subT ~= "TextTab" then
-                self:FocusLevel(self:FocusLevel() - 1)
-            end
-            tab.LeftItemList[self.leftItemIndex]:Selected(self:FocusLevel() == 1)
-        elseif subT == "PlayerListTab" then
-            if tab._newStyle then
-                self:FocusLevel(self:FocusLevel() - 1)
-                SetPauseMenuPedLighting(self:FocusLevel() ~= 0)
-                tab.listCol[tab:Focus()].Items[tab.listCol[tab:Focus()]:CurrentSelection()]:Selected(false)
-            else
-                if self:FocusLevel() == 1 then
-                    tab.listCol[tab:Focus()].Items[tab.listCol[tab:Focus()]:CurrentSelection()]:Selected(false)
-                    if tab:Focus() == 1 then
-                        self:FocusLevel(self:FocusLevel() - 1)
-                        return
-                    end
-                    tab:updateFocus(tab:Focus() - 1)
+    PlaySoundFrontend(-1, "BACK","HUD_FRONTEND_DEFAULT_SOUNDSET", false)
+    if self.IsCorona then
+        if self:CurrentTab().CurrentColumnIndex > 0 then
+            self:CurrentTab():GoBack()
+        else
+            if self:CanPlayerCloseMenu() then
+                if self:CurrentTab()._identifier == "Page_Multi" then
+                    self:CurrentTab().Minimap:Enabled(false)
                 end
+                self:Visible(false)
             end
         end
     else
-        if self:CanPlayerCloseMenu() then
-            self:Visible(false)
-        end
-    end
-end
-
-function TabView:GoUp()
-    local tab = self.Tabs[self.index]
-    local _, subT = tab()
-    if subT == "PlayerListTab" then
-        tab.listCol[tab:Focus()]:GoUp()
-        return
-    end
-    
-    local retVal = ScaleformUI.Scaleforms._pauseMenu._pause:CallFunctionAsyncReturnInt("SET_INPUT_EVENT", 8)
-    if retVal ~= -1 then
-        if self:FocusLevel() == 1 then
-            self:LeftItemIndex(retVal + 1)
-        elseif self:FocusLevel() == 2 then
-            self:RightItemIndex(retVal + 1)
-        end
-    end
-end
-
-function TabView:GoDown()
-    local tab = self.Tabs[self.index]
-    local _, subT = tab()
-    if subT == "PlayerListTab" then
-        tab.listCol[tab:Focus()]:GoDown()
-        return
-    end
-    local retVal = ScaleformUI.Scaleforms._pauseMenu._pause:CallFunctionAsyncReturnInt("SET_INPUT_EVENT", 9)
-    if retVal ~= -1 then
-        if self:FocusLevel() == 1 then
-            self:LeftItemIndex(retVal + 1)
-        elseif self:FocusLevel() == 2 then
-            self:RightItemIndex(retVal + 1)
-        end
-    end
-end
-
-function TabView:GoLeft()
-    local retVal = ScaleformUI.Scaleforms._pauseMenu._pause:CallFunctionAsyncReturnInt("SET_INPUT_EVENT", 10)
-
-    if self:FocusLevel() == 0 then
-        ClearPedInPauseMenu()
-        ScaleformUI.Scaleforms._pauseMenu:HeaderGoLeft()
-        local tab = self.Tabs[self.index]
-        local _, subT = tab()
-        if subT == "SubmenuTab" then
-            tab.LeftItemList[self.leftItemIndex]:Selected(self:FocusLevel() == 1)
-        end
-        self:Index(retVal + 1)
-        tab = self.Tabs[self.index]
-        _, subT = tab()
-        if subT == "PlayerListTab" then
-            for k,v in pairs(tab.listCol) do
-                if v.Type == "settings" then
-                    tab.SettingsColumn.Items[tab.SettingsColumn:CurrentSelection()]:Selected(false)
-                elseif v.Type == "missions" then
-                    tab.MissionsColumn.Items[tab.MissionsColumn:CurrentSelection()]:Selected(false)
-                elseif v.Type == "store" then
-                    tab.StoreColumn.Items[tab.StoreColumn:CurrentSelection()]:Selected(false)
-                elseif v.Type == "players" then
-                    tab.PlayersColumn.Items[tab.PlayersColumn:CurrentSelection()]:Selected(false)
-                    if k == 1 or tab.PlayersColumn.Items[tab.PlayersColumn:CurrentSelection()]:KeepPanelVisible() then
-                        if tab.PlayersColumn.Items[tab.PlayersColumn:CurrentSelection()].ClonePed ~= 0 then
-                            tab.PlayersColumn.Items[tab.PlayersColumn:CurrentSelection()]:AddPedToPauseMenu()
-                        else
-                            ClearPedInPauseMenu()
-                        end
-                    else
-                        ClearPedInPauseMenu()
-                    end
-                else
-                    ClearPedInPauseMenu()
+        if self:FocusLevel() > 0 then
+            if self:FocusLevel() == 1 and self:CurrentTab().CurrentColumnIndex == 0 then
+                self:CurrentTab():UnFocus()
+                self:FocusLevel(0)
+                if self:CurrentTab()._identifier == "Page_Multi" then
+                    self:CurrentTab().Minimap:Enabled(false)
                 end
+            else
+                self:CurrentTab():GoBack()
             end
-        end
-        self.OnPauseMenuTabChanged(self, tab, self.index)
-    elseif self:FocusLevel() == 1 then
-        local tab = self.Tabs[self.index]
-        local _, subT = tab()
-        if subT == "PlayerListTab" then
-            if tab.listCol[tab:Focus()].Type == "settings" then
-                local Item = tab.SettingsColumn.Items[tab.SettingsColumn:CurrentSelection()]
-                if not Item:Enabled() then
-                    if tab._newStyle then
-                        Item:Selected(false)
-                        tab:updateFocus(tab:Focus() - 1)
-                    else
-                        PlaySoundFrontend(-1, "ERROR", "HUD_FRONTEND_DEFAULT_SOUNDSET", true)
-                    end
-                    return
-                end
-                local type, subtype = Item()
-                if subtype == "UIMenuListItem" then
-                    Item:Index(retVal)
-                    Item.OnListChanged(self, Item, Item._Index)
-                elseif subtype == "UIMenuSliderItem" then
-                    Item:Index(retVal)
-                    Item.OnSliderChanged(self, Item, Item._Index)
-                elseif subtype == "UIMenuProgressItem" then
-                    Item:Index(retVal)
-                    Item.OnProgressChanged(self, Item, Item:Index())
-                elseif subtype == "UIMenuStatsItem" then
-                    Item:Index(retVal)
-                    Item.OnStatsChanged(self, Item, Item._Index)
-                else
-                    if tab._newStyle then
-                        tab.SettingsColumn.Items[tab.SettingsColumn:CurrentSelection()]:Selected(false)
-                        tab:updateFocus(tab:Focus() - 1)
-                    end
-                end
-            elseif tab.listCol[tab:Focus()].Type == "missions" then
-                if tab._newStyle then
-                    tab.MissionsColumn.Items[tab.MissionsColumn:CurrentSelection()]:Selected(false)
-                    tab:updateFocus(tab:Focus() - 1)
-                end
-            elseif tab.listCol[tab:Focus()].Type == "store" then
-                if tab._newStyle then
-                    tab.StoreColumn.Items[tab.StoreColumn:CurrentSelection()]:Selected(false)
-                    tab:updateFocus(tab:Focus() - 1)
-                end
-            elseif tab.listCol[tab:Focus()].Type == "players" then
-                if tab._newStyle then
-                    tab.PlayersColumn.Items[tab.PlayersColumn:CurrentSelection()]:Selected(false)
-                    tab:updateFocus(tab:Focus() - 1)
-                else
-                    if tab.PlayersColumn.Items[tab.PlayersColumn:CurrentSelection()].ClonePed ~= 0 then
-                        tab.PlayersColumn.Items[tab.PlayersColumn:CurrentSelection()]:AddPedToPauseMenu()
-                    end
-                end
-            elseif tab.listCol[tab:Focus()].Type == "panel" then
-                if tab._newStyle then
-                    tab:updateFocus(tab:Focus() - 1)
-                end
-            end
-        end
-    elseif self:FocusLevel() == 2 then
-        local rightItem = self.Tabs[self.index].LeftItemList[self.leftItemIndex].ItemList[self.rightItemIndex]
-        local sub_item, sub_item_type = rightItem()
-
-        if sub_item_type == "SettingsItem" then
-            if rightItem.ItemType == SettingsItemType.ListItem then
-                rightItem:ItemIndex(retVal)
-                rightItem.OnListChanged(rightItem, rightItem:ItemIndex(),
-                    tostring(rightItem.ListItems[rightItem:ItemIndex()]))
-            elseif rightItem.ItemType == SettingsItemType.SliderBar then
-                rightItem:Value(retVal)
-                rightItem.OnBarChanged(rightItem, rightItem:Value())
-            elseif rightItem.ItemType == SettingsItemType.ProgressBar or rightItem.ItemType == SettingsItemType.MaskedProgressBar then
-                rightItem:Value(retVal)
-                rightItem.OnBarChanged(rightItem, rightItem:Value())
-            end
-        end
-    end
-end
-
-function TabView:GoRight()
-    local retVal = ScaleformUI.Scaleforms._pauseMenu._pause:CallFunctionAsyncReturnInt("SET_INPUT_EVENT", 11)
-
-    if self:FocusLevel() == 0 then
-        ClearPedInPauseMenu()
-        ScaleformUI.Scaleforms._pauseMenu:HeaderGoRight()
-        local tab = self.Tabs[self.index]
-        local _, subT = tab()
-        if subT == "SubmenuTab" then
-            tab.LeftItemList[self.leftItemIndex]:Selected(self:FocusLevel() == 1)
-        end
-        self:Index(retVal + 1)
-        tab = self.Tabs[self.index]
-        _, subT = tab()
-        if subT == "PlayerListTab" then
-            for k,v in pairs(tab.listCol) do
-                if v.Type == "settings" then
-                    tab.SettingsColumn.Items[tab.SettingsColumn:CurrentSelection()]:Selected(false)
-                elseif v.Type == "missions" then
-                    tab.MissionsColumn.Items[tab.MissionsColumn:CurrentSelection()]:Selected(false)
-                elseif v.Type == "store" then
-                    tab.StoreColumn.Items[tab.StoreColumn:CurrentSelection()]:Selected(false)
-                elseif v.Type == "players" then
-                    tab.PlayersColumn.Items[tab.PlayersColumn:CurrentSelection()]:Selected(false)
-                    if k == 1 or tab.PlayersColumn.Items[tab.PlayersColumn:CurrentSelection()]:KeepPanelVisible() then
-                        if tab.PlayersColumn.Items[tab.PlayersColumn:CurrentSelection()].ClonePed ~= 0 then
-                            tab.PlayersColumn.Items[tab.PlayersColumn:CurrentSelection()]:AddPedToPauseMenu()
-                        else
-                            ClearPedInPauseMenu()
-                        end
-                    else
-                        ClearPedInPauseMenu()
-                    end
-                else
-                    ClearPedInPauseMenu()
-                end
-            end
-        end
-        self.OnPauseMenuTabChanged(self, tab, self.index)
-    elseif self:FocusLevel() == 1 then
-        local tab = self.Tabs[self.index]
-        local _, subT = tab()
-        if subT == "PlayerListTab" then
-            if tab.listCol[tab:Focus()].Type == "settings" then
-                local Item = tab.SettingsColumn.Items[tab.SettingsColumn:CurrentSelection()]
-                if not Item:Enabled() then
-                    if tab._newStyle then
-                        Item:Selected(false)
-                        tab:updateFocus(tab:Focus() + 1)
-                    else
-                        PlaySoundFrontend(-1, "ERROR", "HUD_FRONTEND_DEFAULT_SOUNDSET", true)
-                    end
-                    return
-                end
-                local type, subtype = Item()
-                if subtype == "UIMenuListItem" then
-                    Item:Index(retVal)
-                    Item.OnListChanged(self, Item, Item._Index)
-                elseif subtype == "UIMenuSliderItem" then
-                    Item:Index(retVal)
-                    Item.OnSliderChanged(self, Item, Item._Index)
-                elseif subtype == "UIMenuProgressItem" then
-                    Item:Index(retVal)
-                    Item.OnProgressChanged(self, Item, Item:Index())
-                elseif subtype == "UIMenuStatsItem" then
-                    Item:Index(retVal)
-                    Item.OnStatsChanged(self, Item, Item._Index)
-                else
-                    if tab._newStyle then
-                        tab.SettingsColumn.Items[tab.SettingsColumn:CurrentSelection()]:Selected(false)
-                        tab:updateFocus(tab:Focus() + 1)
-                    end
-                end
-            elseif tab.listCol[tab:Focus()].Type == "missions" then
-                if tab._newStyle then
-                    tab.MissionsColumn.Items[tab.MissionsColumn:CurrentSelection()]:Selected(false)
-                    tab:updateFocus(tab:Focus() + 1)
-                end
-            elseif tab.listCol[tab:Focus()].Type == "store" then
-                if tab._newStyle then
-                    tab.StoreColumn.Items[tab.StoreColumn:CurrentSelection()]:Selected(false)
-                    tab:updateFocus(tab:Focus() + 1)
-                end
-            elseif tab.listCol[tab:Focus()].Type == "players" then
-                if tab._newStyle then
-                    tab.PlayersColumn.Items[tab.PlayersColumn:CurrentSelection()]:Selected(false)
-                    tab:updateFocus(tab:Focus() + 1)
-                else
-                    if tab.PlayersColumn.Items[tab.PlayersColumn:CurrentSelection()].ClonePed ~= 0 then
-                        tab.PlayersColumn.Items[tab.PlayersColumn:CurrentSelection()]:AddPedToPauseMenu()
-                    end
-                end
-            elseif tab.listCol[tab:Focus()].Type == "panel" then
-                if tab._newStyle then
-                    tab:updateFocus(tab:Focus() + 1)
-                end
-            end
-        end
-    elseif self:FocusLevel() == 2 then
-        local rightItem = self.Tabs[self.index].LeftItemList[self.leftItemIndex].ItemList[self.rightItemIndex]
-        local sub_item, sub_item_type = rightItem()
-        if sub_item_type == "SettingsItem" then
-            if rightItem.ItemType == SettingsItemType.ListItem then
-                rightItem:ItemIndex(retVal)
-                rightItem.OnListChanged(rightItem, rightItem:ItemIndex(),
-                    tostring(rightItem.ListItems[rightItem:ItemIndex()]))
-            elseif rightItem.ItemType == SettingsItemType.SliderBar then
-                rightItem:Value(retVal)
-                rightItem.OnBarChanged(rightItem, rightItem:Value())
-            elseif rightItem.ItemType == SettingsItemType.ProgressBar or rightItem.ItemType == SettingsItemType.MaskedProgressBar then
-                rightItem:Value(retVal)
-                rightItem.OnBarChanged(rightItem, rightItem:Value())
+        else
+            if self:CanPlayerCloseMenu() then
+                self:Visible(false)
             end
         end
     end
@@ -1016,252 +400,383 @@ function TabView:ProcessMouse()
         local successHeader, event_type_h, context_h, item_id_h
         local successPause, event_type, context, item_id
 
-        successHeader, event_type_h, context_h, item_id_h = GetScaleformMovieCursorSelection(ScaleformUI.Scaleforms._pauseMenu._header.handle)
+        successHeader, event_type_h, context_h, item_id_h = GetScaleformMovieCursorSelection(ScaleformUI.Scaleforms
+            ._pauseMenu._header.handle)
         if successHeader then
             if event_type_h == 5 then
                 if context_h == -1 then
-                    self:FocusLevel(1)
+                    self:CurrentTab():UnFocus()
+                    self:FocusLevel(0)
+                    ScaleformUI.Scaleforms._pauseMenu:SelectTab(item_id_h)
                     self:Index(item_id_h + 1)
-                    PlaySoundFrontend(-1, "SELECT", "HUD_FRONTEND_DEFAULT_SOUNDSET", true)
-                    local tab = self.Tabs[self.index]
-                    local _, subT = tab()
-                    if subT == "PlayerListTab" then
-                        tab:updateFocus(tab._focus)
-                        if tab.PlayersColumn ~= nil then
-                            if tab.PlayersColumn.Items[tab.PlayersColumn:CurrentSelection()].ClonePed ~= nil and tab.PlayersColumn.Items[tab.PlayersColumn:CurrentSelection()].ClonePed ~= 0 then
-                                tab.PlayersColumn.Items[tab.PlayersColumn:CurrentSelection()]:AddPedToPauseMenu()
-                            else
-                                ClearPedInPauseMenu()
-                            end
-                        end
-                    else
-                        ClearPedInPauseMenu()
-                    end
-                    local allDisabled = true
-                    for k,v in pairs(tab.LeftItemList) do
-                        if v:Enabled() then allDisabled = false break end
-                    end
-                    if not allDisabled then
-                        while not tab.LeftItemList[self.leftItemIndex]:Enabled() do
-                            Citizen.Wait(0)
-                            self:LeftItemIndex(self:LeftItemIndex() + 1)
-                            ScaleformUI.Scaleforms._pauseMenu._pause:CallFunction("SELECT_LEFT_ITEM_INDEX", self.leftItemIndex-1)
-                        end
-                    end
+                    self:CurrentTab():Focus()
+                    self:FocusLevel(1)
+                    PlaySoundFrontend(-1, "SELECT","HUD_FRONTEND_DEFAULT_SOUNDSET", false)
                 end
+            elseif event_type_h == 6 then
+                if context_h == 1000 then
+                    self:FocusLevel(0)
+                    self:CurrentTab():UnFocus()
+                    if item_id == -1 then
+                        self:Index(self:Index() - 1)
+                    elseif item_id == 1 then
+                        self:Index(self:Index() + 1)
+                    end
+                    self:CurrentTab():Focus()
+                    self:FocusLevel(1)
+                end
+            elseif event_type_h == 8 then
+                self.tabArrowsHovered = false
+            elseif event_type_h == 9 then
+                self.tabArrowsHovered = true
             end
         end
 
-        successPause, event_type, context, item_id = GetScaleformMovieCursorSelection(ScaleformUI.Scaleforms._pauseMenu._pause.handle)
-        if successPause then
-            local tab = self.Tabs[self.index]
-            local _, subT = tab()
-            if event_type == 5 then
-                if self:FocusLevel() == 1 and subT == "PlayerListTab" then
-                    local foc = tab:Focus()
-                    local curSel = 1
-                    if tab._newStyle then
-                        curSel = tab.listCol[foc]:CurrentSelection()
-                    end
-                    if context+1 ~= foc then
-                        tab.listCol[foc].Items[tab.listCol[foc]:CurrentSelection()]:Selected(false)
-                        tab:updateFocus(context+1, true)
-                        tab.listCol[context+1]:CurrentSelection(tab.listCol[context+1].Pagination:GetMenuIndexFromScaleformIndex(item_id-1))
-                        tab.listCol[context+1].OnIndexChanged(tab.listCol[context+1]:CurrentSelection())
-                        if curSel ~= tab.listCol[context+1]:CurrentSelection() then
-                            PlaySoundFrontend(-1, "NAV_UP_DOWN", "HUD_FRONTEND_DEFAULT_SOUNDSET", true)
-                        end
-                    else
-                        tab.listCol[foc]:CurrentSelection(tab.listCol[context+1].Pagination:GetMenuIndexFromScaleformIndex(item_id-1))
-                    end
-                    if foc == tab:Focus() and curSel == tab.listCol[context+1]:CurrentSelection() then
-                        self:Select()
-                    end
-                    return
-                end
-                if context == 0 then
-                    self:FocusLevel(1)
-                    if subT ~= "PlayerListTab" then
-                        if #tab.LeftItemList == 0 then return end
-                        if not tab.LeftItemList[self.leftItemList] then return end
-                        local allDisabled = true
-                        for k,v in pairs(tab.LeftItemList) do
-                            if v:Enabled() then allDisabled = false break end
-                        end
-                        if not allDisabled then
-                            while not tab.LeftItemList[self.leftItemList]:Enabled() do
-                                Citizen.Wait(0)
-                                self:LeftItemIndex(self.leftItemIndex + 1)
-                                ScaleformUI.Scaleforms._pauseMenu._pause:CallFunction("SELECT_LEFT_ITEM_INDEX", self.leftItemIndex-1)
-                            end
-                        end
-                    end
-                elseif context == 1 then
-                        if self:FocusLevel() ~= 1 then
-                            if not tab.LeftItemList[item_id + 1]:Enabled() then
-                                PlaySoundFrontend(-1, "ERROR", "HUD_FRONTEND_DEFAULT_SOUNDSET", true)
-                                return
-                            end
-                            tab.LeftItemList[self.leftItemIndex]:Selected(false)
-                            self:LeftItemIndex(item_id + 1)
-                            tab.LeftItemList[self.leftItemIndex]:Selected(true)
-                            self:FocusLevel(1)
-                            PlaySoundFrontend(-1, "SELECT", "HUD_FRONTEND_DEFAULT_SOUNDSET", true)
-                        elseif self:FocusLevel() == 1 then
-                            if not tab.LeftItemList[item_id + 1]:Enabled() then
-                                PlaySoundFrontend(-1, "ERROR", "HUD_FRONTEND_DEFAULT_SOUNDSET", true)
-                                return
-                            end
-                            if tab.LeftItemList[self.leftItemIndex].ItemType == LeftItemType.Settings then
-                                self:FocusLevel(2)
-                                ScaleformUI.Scaleforms._pauseMenu._pause:CallFunction("SELECT_RIGHT_ITEM_INDEX", 0)
-                                self:RightItemIndex(1)
-                            end
-                            tab.LeftItemList[self.leftItemIndex]:Selected(false)
-                            self:LeftItemIndex(item_id + 1)
-                            tab.LeftItemList[self.leftItemIndex]:Selected(true)
-                            PlaySoundFrontend(-1, "SELECT", "HUD_FRONTEND_DEFAULT_SOUNDSET", true)
-                        end
-                        ScaleformUI.Scaleforms._pauseMenu._pause:CallFunction("SELECT_LEFT_ITEM_INDEX", item_id)
-                        tab.LeftItemList[self.leftItemIndex].OnActivated(tab.LeftItemList[self.leftItemIndex],
-                            self.leftItemIndex)
-                        self.OnLeftItemSelect(self, tab.LeftItemList[self.leftItemIndex], self.leftItemIndex)
-                    PlaySoundFrontend(-1, "SELECT", "HUD_FRONTEND_DEFAULT_SOUNDSET", true)
-                elseif context == 2 then
-                    local rightItem = tab.LeftItemList[self.leftItemIndex].ItemList[item_id + 1]
-                    if not rightItem:Enabled() then
-                        PlaySoundFrontend(-1, "ERROR", "HUD_FRONTEND_DEFAULT_SOUNDSET", true)
-                        return
-                    end
-                    if self:FocusLevel() ~= 2 then
-                        self:FocusLevel(2)
-                    end
-                    if rightItem:Selected() then
-                        if rightItem.ItemType == SettingsItemType.ListItem then
-                            rightItem.OnListSelected(rightItem, rightItem:ItemIndex(),
-                                tostring(rightItem.ListItems[rightItem:ItemIndex()]))
-                        elseif rightItem.ItemType == SettingsItemType.CheckBox then
-                            rightItem:Checked(not rightItem:Checked())
-                        elseif rightItem.ItemType == SettingsItemType.MaskedProgressBar or rightItem.ItemType == SettingsItemType.ProgressBar then
-                            rightItem.OnProgressSelected(rightItem, rightItem:Value())
-                        elseif rightItem.ItemType == SettingsItemType.SliderBar then
-                            rightItem.OnSliderSelected(rightItem, rightItem:Value())
-                        else
-                            rightItem.OnActivated(rightItem,
-                                IndexOf(tab.LeftItemList[self.leftItemIndex].ItemList, rightItem))
-                        end
-                        self.OnRightItemSelect(self, rightItem, self.rightItemIndex)
-                        return
-                    end
-                    tab.LeftItemList[self.leftItemIndex].ItemList[self.rightItemIndex]:Selected(false)
-                    self:RightItemIndex(item_id + 1)
-                    ScaleformUI.Scaleforms._pauseMenu._pause:CallFunction("SELECT_RIGHT_ITEM_INDEX", item_id)
-                    tab.LeftItemList[self.leftItemIndex].ItemList[self.rightItemIndex]:Selected(true)
-                    PlaySoundFrontend(-1, "SELECT", "HUD_FRONTEND_DEFAULT_SOUNDSET", true)
-                end
-            elseif event_type == 9 then
-                if subT == "PlayerListTab" then
-                    local idx = tab.listCol[context+1].Pagination:GetMenuIndexFromScaleformIndex(item_id-1)
-                    tab.listCol[context+1].Items[idx]:Hovered(true)
-                else
-                    if context == 1 then
-                        for i, item in ipairs(tab.LeftItemList) do
-                            item:Hovered(item:Enabled() and i == item_id + 1)
-                        end
-                    elseif context == 2 then
-                        for i, item in ipairs(tab.LeftItemList[self.leftItemIndex].ItemList) do
-                            item:Hovered(item:Enabled() and i == item_id + 1)
-                        end
-                    end
-                end
-            elseif event_type == 8 or event_type == 0 then
-                if subT == "PlayerListTab" then
-                    local idx = tab.listCol[context+1].Pagination:GetMenuIndexFromScaleformIndex(item_id-1)
-                    tab.listCol[context+1].Items[idx]:Hovered(false)
-                end
+        successPause, event_type, context, item_id = GetScaleformMovieCursorSelection(ScaleformUI.Scaleforms._pauseMenu
+            ._pause.handle)
+        if successPause and not self.tabArrowsHovered then
+            if event_type == 5 and self:FocusLevel() == 0 and not self.tabArrowsHovered then
+                self:FocusLevel(1)
+                return
             end
+            self:CurrentTab():MouseEvent(event_type, context, item_id + 1)
+        end
+        if not successPause and not successHeader and self:FocusLevel() == 0 and event_type == 5 then
+            self:FocusLevel(1)
         end
     end)
 end
 
-function TabView:ProcessControl()
-    if not self:Visible() or self.TemporarilyHidden then
-        return
+function TabView:CheckInput(input, bPlaySound, OverrideFlags, bCheckForButtonJustPressed)
+    local bOnlyCheckForDown = false
+    local interval = 0
+
+    if input == eFRONTEND_INPUT.FRONTEND_INPUT_UP then
+        interval = self.s_iLastRefireTimeUp
+    elseif input == eFRONTEND_INPUT.FRONTEND_INPUT_DOWN then
+        interval = self.s_iLastRefireTimeDn
+    else
+        interval = self.BUTTON_PRESSED_DOWN_INTERVAL
     end
-    EnableControlAction(2, 177, true)
-    if (IsControlJustPressed(2, 172)) then
-        Citizen.CreateThread(function()
-            self:GoUp()
-        end)
+
+    if self.s_lastGameFrame ~= GetFrameCount() and GetGameTimer() > (self.s_pressedDownTimer + interval) then
+        bOnlyCheckForDown = true
     end
-    if (IsControlJustPressed(2, 173)) then
-        Citizen.CreateThread(function()
-            self:GoDown()
-        end)
+
+    local bInputTriggered = false
+    local iXAxis = 0
+    local iYAxis = 0
+    local iYAxisR = 0
+    local iXAxisR = 0
+
+    local c_ignoreDpad = OverrideFlags & CHECK_INPUT_OVERRIDE_FLAG.CHECK_INPUT_OVERRIDE_FLAG_IGNORE_D_PAD ~= 0
+
+    if OverrideFlags & CHECK_INPUT_OVERRIDE_FLAG.CHECK_INPUT_OVERRIDE_FLAG_IGNORE_ANALOGUE_STICKS == 0 then
+        iXAxis = GetDisabledControlNormal(2, 195) * 128.0
+        iYAxis = GetDisabledControlNormal(2, 196) * 128.0
+        iYAxisR = GetDisabledControlNormal(2, 198) * 128.0
+        iXAxisR = GetDisabledControlNormal(2, 197) * 128.0
     end
-    if (IsControlJustPressed(2, 174)) then
-        Citizen.CreateThread(function()
-            self:GoLeft()
-        end)
-    end
-    if (IsControlJustPressed(2, 175)) then
-        Citizen.CreateThread(function()
-            self:GoRight()
-        end)
-    end
-    if (IsControlJustPressed(2, 205) or (IsUsingKeyboard(2) and IsControlJustPressed(2, 192) and IsControlPressed(2, 21))) then
-        Citizen.CreateThread(function()
-            if (self:FocusLevel() ~= 0) then
-                self:FocusLevel(0)
+
+    -- Input-specific logic
+    if input == eFRONTEND_INPUT.FRONTEND_INPUT_UP then
+        if iXAxis > -self.FRONTEND_ANALOGUE_THRESHOLD and iXAxis < self.FRONTEND_ANALOGUE_THRESHOLD then
+            if bOnlyCheckForDown then
+                if iYAxis < -self.FRONTEND_ANALOGUE_THRESHOLD or (IsDisabledControlPressed(2, 188) and not c_ignoreDpad) then
+                    bInputTriggered = true
+                end
+            else
+                if (self.iPreviousYAxis > -self.FRONTEND_ANALOGUE_THRESHOLD and iYAxis < -self.FRONTEND_ANALOGUE_THRESHOLD)
+                    or (IsDisabledControlJustPressed(2, 188) and not c_ignoreDpad) then
+                    bInputTriggered = true
+                end
             end
-            self:GoLeft()
-        end)
-    end
-    if (IsControlJustPressed(2, 206) or (IsUsingKeyboard(2) and IsControlJustPressed(2, 192))) then
-        Citizen.CreateThread(function()
-            if (self:FocusLevel() ~= 0) then
-                self:FocusLevel(0)
+        end
+
+        if self.s_lastGameFrame ~= GetFrameCount() then
+            if iYAxis < -self.FRONTEND_ANALOGUE_THRESHOLD or (IsDisabledControlPressed(2, 188) and not c_ignoreDpad) then
+                if bInputTriggered then
+                    self.s_iLastRefireTimeUp = math.max(self.s_iLastRefireTimeUp - self.BUTTON_PRESSED_REFIRE_ATTRITION,
+                        self.BUTTON_PRESSED_REFIRE_MINIMUM)
+                end
+            else
+                self.s_iLastRefireTimeUp = self.BUTTON_PRESSED_DOWN_INTERVAL
             end
-            self:GoRight()
-        end)
-    end
-    if (IsControlJustPressed(2, 201)) then
-        Citizen.CreateThread(function()
-            self:Select()
-        end)
-    end
-    if (IsControlJustReleased(2, 177)) then
-        Citizen.CreateThread(function()
-            self:GoBack()
-        end)
-    end
+        end
+    elseif input == eFRONTEND_INPUT.FRONTEND_INPUT_DOWN then
+        if (iXAxis > -self.FRONTEND_ANALOGUE_THRESHOLD and iXAxis < self.FRONTEND_ANALOGUE_THRESHOLD) then
+            if (bOnlyCheckForDown) then
+                if (iYAxis > self.FRONTEND_ANALOGUE_THRESHOLD or (IsDisabledControlPressed(2, 187) and not c_ignoreDpad)) then
+                    bInputTriggered = true
+                end
+            else
+                if ((self.iPreviousYAxis < self.FRONTEND_ANALOGUE_THRESHOLD and iYAxis > self.FRONTEND_ANALOGUE_THRESHOLD) or (IsDisabledControlJustPressed(2, 187) and not c_ignoreDpad)) then
+                    bInputTriggered = true
+                end
+            end
+            if self.s_lastGameFrame ~= GetFrameCount() then
+                -- can't just do bInputTriggered because we may be waiting for an up
+                if (iYAxis > self.FRONTEND_ANALOGUE_THRESHOLD or (IsDisabledControlPressed(2, 187) and not c_ignoreDpad)) then
+                    if (bInputTriggered) then
+                        self.s_iLastRefireTimeDn = math.max(
+                            self.s_iLastRefireTimeDn - self.BUTTON_PRESSED_REFIRE_ATTRITION,
+                            self.BUTTON_PRESSED_REFIRE_MINIMUM)
+                    end
+                else
+                    self.s_iLastRefireTimeDn = self.BUTTON_PRESSED_DOWN_INTERVAL
+                end
+            end
+        end
+    elseif input == eFRONTEND_INPUT.FRONTEND_INPUT_LEFT then
+        if iYAxis > -self.FRONTEND_ANALOGUE_THRESHOLD and iYAxis < self.FRONTEND_ANALOGUE_THRESHOLD then
+            if bOnlyCheckForDown then
+                if iXAxis < -self.FRONTEND_ANALOGUE_THRESHOLD or (IsDisabledControlPressed(2, 189) and not c_ignoreDpad) then
+                    bInputTriggered = true
+                end
+            else
+                if (self.iPreviousXAxis > -self.FRONTEND_ANALOGUE_THRESHOLD and iXAxis < -self.FRONTEND_ANALOGUE_THRESHOLD)
+                    or (IsDisabledControlJustPressed(2, 189) and not c_ignoreDpad) then
+                    bInputTriggered = true
+                end
+            end
+        end
+    elseif input == eFRONTEND_INPUT.FRONTEND_INPUT_RIGHT then
+        if iYAxis > -self.FRONTEND_ANALOGUE_THRESHOLD and iYAxis < self.FRONTEND_ANALOGUE_THRESHOLD then
+            if bOnlyCheckForDown then
+                if iXAxis > self.FRONTEND_ANALOGUE_THRESHOLD or (IsDisabledControlPressed(2, 190) and not c_ignoreDpad) then
+                    bInputTriggered = true
+                end
+            else
+                if (self.iPreviousXAxis < self.FRONTEND_ANALOGUE_THRESHOLD and iXAxis > self.FRONTEND_ANALOGUE_THRESHOLD)
+                    or (IsDisabledControlJustPressed(2, 190) and not c_ignoreDpad) then
+                    bInputTriggered = true
+                end
+            end
+        end
+    elseif input == eFRONTEND_INPUT.FRONTEND_INPUT_RUP then
+        if bOnlyCheckForDown then
+            if iYAxisR < -self.FRONTEND_ANALOGUE_THRESHOLD then
+                bInputTriggered = true
+            end
+        else
+            if self.iPreviousYAxisR > -self.FRONTEND_ANALOGUE_THRESHOLD and iYAxisR < -self.FRONTEND_ANALOGUE_THRESHOLD then
+                bInputTriggered = true
+            end
+        end
+    elseif input == eFRONTEND_INPUT.FRONTEND_INPUT_RDOWN then
+        if bOnlyCheckForDown then
+            if iYAxisR > self.FRONTEND_ANALOGUE_THRESHOLD then
+                bInputTriggered = true
+            end
+        else
+            if self.iPreviousYAxisR < self.FRONTEND_ANALOGUE_THRESHOLD and iYAxisR > self.FRONTEND_ANALOGUE_THRESHOLD then
+                bInputTriggered = true
+            end
+        end
+    elseif input == eFRONTEND_INPUT.FRONTEND_INPUT_RLEFT then
+        if bOnlyCheckForDown then
+            if iXAxisR < -self.FRONTEND_ANALOGUE_THRESHOLD then
+                bInputTriggered = true
+            end
+        else
+            if self.iPreviousXAxisR > -self.FRONTEND_ANALOGUE_THRESHOLD and iXAxisR < -self.FRONTEND_ANALOGUE_THRESHOLD then
+                bInputTriggered = true
+            end
+        end
+    elseif input == eFRONTEND_INPUT.FRONTEND_INPUT_RRIGHT then
+        if bOnlyCheckForDown then
+            if iXAxisR > self.FRONTEND_ANALOGUE_THRESHOLD then
+                bInputTriggered = true
+            end
+        else
+            if self.iPreviousXAxisR < self.FRONTEND_ANALOGUE_THRESHOLD and iXAxisR > self.FRONTEND_ANALOGUE_THRESHOLD then
+                bInputTriggered = true
+            end
+        end
+    elseif input == eFRONTEND_INPUT.FRONTEND_INPUT_ACCEPT then
+        local bAcceptHasBeenPressed = false
 
-    if (IsControlJustPressed(2, 241) or IsDisabledControlJustPressed(2, 241)) then
-        Citizen.CreateThread(function()
-            ScaleformUI.Scaleforms._pauseMenu:SendScrollEvent(-1)
-        end)
-    end
-    if (IsControlJustPressed(2, 242) or IsDisabledControlJustPressed(2, 242)) then
-        Citizen.CreateThread(function()
-            ScaleformUI.Scaleforms._pauseMenu:SendScrollEvent(1)
-        end)
-    end
+        if bCheckForButtonJustPressed then
+            if IsDisabledControlJustPressed(2, 201) then
+                bAcceptHasBeenPressed = true
+            end
+        else
+            if IsDisabledControlJustReleased(2, 201) then
+                bAcceptHasBeenPressed = true
+            end
+        end
 
-
-    if (IsControlPressed(2, 3) and not IsUsingKeyboard(2)) then
-        if (GlobalGameTimer - self._timer > 175) then
-            Citizen.CreateThread(function()
-                ScaleformUI.Scaleforms._pauseMenu:SendScrollEvent(-1)
-            end)
-            self._timer = GlobalGameTimer
+        if bAcceptHasBeenPressed then
+            bInputTriggered = true
+        end
+    elseif input == eFRONTEND_INPUT.FRONTEND_INPUT_X then
+        if IsDisabledControlJustReleased(2, 203) then
+            bInputTriggered = true
+        end
+    elseif input == eFRONTEND_INPUT.FRONTEND_INPUT_Y then
+        if IsDisabledControlJustReleased(2, 204) then
+            bInputTriggered = true
+        end
+    elseif input == eFRONTEND_INPUT.FRONTEND_INPUT_BACK then
+        if bCheckForButtonJustPressed then
+            if IsDisabledControlJustPressed(2, 202) then
+                bInputTriggered = true
+            end
+        else
+            if IsDisabledControlJustReleased(2, 202) then
+                bInputTriggered = true
+            end
+        end
+    elseif input == eFRONTEND_INPUT.FRONTEND_INPUT_CURSOR_BACK then
+        if bCheckForButtonJustPressed then
+            if IsDisabledControlJustPressed(0, 238) then
+                bInputTriggered = true
+            end
+        else
+            if IsDisabledControlJustReleased(0, 238) then
+                bInputTriggered = true
+            end
+        end
+    elseif input == eFRONTEND_INPUT.FRONTEND_INPUT_START then
+        if IsDisabledControlJustReleased(0, 199) then
+            bInputTriggered = true
+        elseif IsDisabledControlJustReleased(0, 200) then
+            bInputTriggered = true
+        end
+    elseif input == eFRONTEND_INPUT.FRONTEND_INPUT_SPECIAL_UP then
+        if iYAxisR < -self.FRONTEND_ANALOGUE_THRESHOLD then
+            bInputTriggered = true
+        end
+    elseif input == eFRONTEND_INPUT.FRONTEND_INPUT_SPECIAL_DOWN then
+        if iYAxisR > self.FRONTEND_ANALOGUE_THRESHOLD then
+            bInputTriggered = true
+        end
+    elseif input == eFRONTEND_INPUT.FRONTEND_INPUT_RT_SPECIAL or input == eFRONTEND_INPUT.FRONTEND_INPUT_RT then
+        if IsDisabledControlJustPressed(2, 208) then
+            bInputTriggered = true
+        end
+    elseif input == eFRONTEND_INPUT.FRONTEND_INPUT_LT_SPECIAL or input == eFRONTEND_INPUT.FRONTEND_INPUT_LT then
+        if IsDisabledControlJustPressed(2, 207) then
+            bInputTriggered = true
+        end
+    elseif input == eFRONTEND_INPUT.FRONTEND_INPUT_LB then
+        if IsDisabledControlJustPressed(2, 205) then
+            bInputTriggered = true
+        end
+    elseif input == eFRONTEND_INPUT.FRONTEND_INPUT_RB then
+        if IsDisabledControlJustPressed(2, 206) then
+            bInputTriggered = true
+        end
+    elseif input == eFRONTEND_INPUT.FRONTEND_INPUT_RSTICK_LEFT then
+        if iXAxisR > self.FRONTEND_ANALOGUE_THRESHOLD then
+            bInputTriggered = true
+        end
+    elseif input == eFRONTEND_INPUT.FRONTEND_INPUT_RSTICK_RIGHT then
+        if iXAxisR < -self.FRONTEND_ANALOGUE_THRESHOLD then
+            bInputTriggered = true
+        end
+    elseif input == eFRONTEND_INPUT.FRONTEND_INPUT_SELECT then
+        if IsDisabledControlJustReleased(2, 217) then
+            bInputTriggered = true
+        end
+    elseif input == eFRONTEND_INPUT.FRONTEND_INPUT_R3 then
+        if IsDisabledControlJustReleased(2, 231) then
+            bInputTriggered = true
+        end
+    elseif input == eFRONTEND_INPUT.FRONTEND_INPUT_L3 then
+        if IsDisabledControlJustReleased(2, 230) then
+            bInputTriggered = true
+        end
+    elseif input == eFRONTEND_INPUT.FRONTEND_INPUT_CURSOR_ACCEPT then
+        if IsDisabledControlJustReleased(2, 237) then
+            bInputTriggered = true
         end
     end
-    if (IsControlPressed(2, 4) and not IsUsingKeyboard(2)) then
-        if (GlobalGameTimer - self._timer > 175) then
-            Citizen.CreateThread(function()
-                ScaleformUI.Scaleforms._pauseMenu:SendScrollEvent(1)
-            end)
-            self._timer = GlobalGameTimer
+
+    if bInputTriggered then
+        if self.s_lastGameFrame ~= GetFrameCount() then
+            self.s_pressedDownTimer = GetGameTimer()
+            self.s_lastGameFrame = GetFrameCount()
+            self.iPreviousXAxis = iXAxis
+            self.iPreviousYAxis = iYAxis
+            self.iPreviousXAxisR = iXAxisR
+            self.iPreviousYAxisR = iYAxisR
+        end
+
+        -- Sound playing logic commented out
+        -- if bPlaySound then
+        --     PlayInputSound(input)
+        -- end
+    end
+
+    return bInputTriggered
+end
+
+function TabView:ProcessControl()
+    if not self:Visible() or self.TemporarilyHidden or self._isBuilding then
+        return
+    end
+
+    if (self:CheckInput(eFRONTEND_INPUT.FRONTEND_INPUT_UP, false, CHECK_INPUT_OVERRIDE_FLAG.CHECK_INPUT_OVERRIDE_FLAG_NONE, false)) then
+        self:CurrentTab():GoUp()
+    elseif (self:CheckInput(eFRONTEND_INPUT.FRONTEND_INPUT_DOWN, false, CHECK_INPUT_OVERRIDE_FLAG.CHECK_INPUT_OVERRIDE_FLAG_NONE, false)) then
+        self:CurrentTab():GoDown()
+    elseif (self:CheckInput(eFRONTEND_INPUT.FRONTEND_INPUT_LEFT, false, CHECK_INPUT_OVERRIDE_FLAG.CHECK_INPUT_OVERRIDE_FLAG_NONE, false)) then
+        if (self:FocusLevel() == 0 and not IsCorona) then
+            self:Index(self.index - 1)
+        else
+            self:CurrentTab():GoLeft()
+        end
+    elseif (self:CheckInput(eFRONTEND_INPUT.FRONTEND_INPUT_RIGHT, false, CHECK_INPUT_OVERRIDE_FLAG.CHECK_INPUT_OVERRIDE_FLAG_NONE, false)) then
+        if (self:FocusLevel() == 0 and not IsCorona) then
+            self:Index(self.index + 1)
+        else
+            self:CurrentTab():GoRight()
+        end
+    elseif (self:CheckInput(eFRONTEND_INPUT.FRONTEND_INPUT_LB, false, CHECK_INPUT_OVERRIDE_FLAG.CHECK_INPUT_OVERRIDE_FLAG_NONE, false)
+            or (IsDisabledControlJustPressed(2, 192) and IsControlPressed(2, 21) and IsUsingKeyboard(2))) then
+        if (IsCorona or #self.Tabs == 1) then return end
+        if (self:FocusLevel() > 0) then
+            self:FocusLevel(0)
+        end
+        self:Index(self.index - 1)
+    elseif (self:CheckInput(eFRONTEND_INPUT.FRONTEND_INPUT_RB, false, CHECK_INPUT_OVERRIDE_FLAG.CHECK_INPUT_OVERRIDE_FLAG_NONE, false)
+            or (IsDisabledControlJustPressed(2, 192) and IsUsingKeyboard(2))) then
+        if (IsCorona or #self.Tabs == 1) then return end
+        if (self:FocusLevel() > 0) then
+            self:FocusLevel(0)
+        end
+        self:Index(self.index + 1)
+    elseif (self:CheckInput(eFRONTEND_INPUT.FRONTEND_INPUT_ACCEPT, false, CHECK_INPUT_OVERRIDE_FLAG.CHECK_INPUT_OVERRIDE_FLAG_NONE, false) or (self:CheckInput(eFRONTEND_INPUT.FRONTEND_INPUT_CURSOR_ACCEPT, false, CHECK_INPUT_OVERRIDE_FLAG.CHECK_INPUT_OVERRIDE_FLAG_NONE, false) and self.focusLevel == 0)) then
+        if (self.focusLevel == 0) then
+            self:CurrentTab():Focus()
+            self:FocusLevel(1)
+        else
+            self:CurrentTab():Select()
+        end
+    elseif (self:CheckInput(eFRONTEND_INPUT.FRONTEND_INPUT_BACK, false, CHECK_INPUT_OVERRIDE_FLAG.CHECK_INPUT_OVERRIDE_FLAG_NONE, false) or self:CheckInput(eFRONTEND_INPUT.FRONTEND_INPUT_CURSOR_BACK, false, CHECK_INPUT_OVERRIDE_FLAG.CHECK_INPUT_OVERRIDE_FLAG_NONE, false)) then
+        self:GoBack()
+    elseif (self:CheckInput(eFRONTEND_INPUT.FRONTEND_INPUT_RUP, false, CHECK_INPUT_OVERRIDE_FLAG.CHECK_INPUT_OVERRIDE_FLAG_NONE, true)) then
+        if (not self:CurrentTab().Focused) then return end
+        if (self:CurrentTab()._identifier == "Page_Simple") then
+            self:CurrentTab():MouseEvent(10, 0, -1)
+            ScaleformUI.Scaleforms._pauseMenu._pause:CallFunction("SET_COLUMN_INPUT_EVENT", 0, 8)
+        elseif (self:CurrentTab()._identifier == "Page_Info") then
+            if (self:CurrentTab().currentItemType == 1 or self:CurrentTab().currentItemType == 2) then
+                PlaySoundFrontend(-1, "NAV_UP_DOWN", "HUD_FRONTEND_DEFAULT_SOUNDSET", true)
+                ScaleformUI.Scaleforms._pauseMenu._pause:CallFunction("SET_COLUMN_INPUT_EVENT", 1, 8)
+            end
+        end
+    elseif (self:CheckInput(eFRONTEND_INPUT.FRONTEND_INPUT_RDOWN, false, CHECK_INPUT_OVERRIDE_FLAG.CHECK_INPUT_OVERRIDE_FLAG_NONE, true)) then
+        if (not self:CurrentTab().Focused) then return end
+        if (self:CurrentTab()._identifier == "Page_Simple") then
+            self:CurrentTab().MouseEvent(11, 0, -1)
+            ScaleformUI.Scaleforms._pauseMenu._pause:CallFunction("SET_COLUMN_INPUT_EVENT", 0, 9)
+        elseif (self:CurrentTab()._identifier == "Page_Info") then
+            if (self:CurrentTab().currentItemType == 1 or self:CurrentTab().currentItemType == 2) then
+                PlaySoundFrontend(-1, "NAV_UP_DOWN", "HUD_FRONTEND_DEFAULT_SOUNDSET", true)
+                ScaleformUI.Scaleforms._pauseMenu._pause:CallFunction("SET_COLUMN_INPUT_EVENT", 1, 9)
+            end
         end
     end
 end

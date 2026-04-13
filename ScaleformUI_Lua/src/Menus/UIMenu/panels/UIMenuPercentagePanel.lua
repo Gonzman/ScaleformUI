@@ -21,7 +21,7 @@ function UIMenuPercentagePanel.New(title, minText, maxText, initialValue)
         Min = minText or "0%",
         Max = maxText or "100%",
         Title = title or "Opacity",
-        Percentage = initialValue or 0.0,
+        _percentage = initialValue or 0.0,
         ParentItem = nil, -- required
         OnPercentagePanelChange = function(item, panel, value)
         end
@@ -31,21 +31,22 @@ end
 
 function UIMenuPercentagePanel:Percentage(value)
     if value ~= nil then
-        self.Percentage = value
+        self._percentage = value
         if self.ParentItem ~= nil and self.ParentItem:SetParentMenu() ~= nil and self.ParentItem:SetParentMenu():Visible() then
             local it = IndexOf(self.ParentItem:SetParentMenu().Items, self.ParentItem)
-            local van = IndexOf(self.ParentItem.Panels, self)
-            ScaleformUI.Scaleforms._ui:CallFunction("SET_PERCENT_PANEL_RETURN_VALUE", it, van, value)
+            self.ParentItem:SetParentMenu():SendPanelsToItemScaleform(it, true)
+            self.OnPercentagePanelChanged(self.ParentItem, self, self._percentage)
+            self.ParentItem:SetParentMenu().OnPercentagePanelChange(self.ParentItem, self, self._percentage)
         end
     else
-        return self.Percentage
+        return self._percentage
     end
 end
 
 ---SetParentItem
 ---@param Item table
 function UIMenuPercentagePanel:SetParentItem(Item) -- required
-    if not Item() == nil then
+    if Item ~= nil then
         self.ParentItem = Item
     else
         return self.ParentItem

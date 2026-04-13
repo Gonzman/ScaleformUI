@@ -1,77 +1,137 @@
 ﻿using CitizenFX.Core;
+using CitizenFX.Core.Native;
+using ScaleformUI.Elements;
 using ScaleformUI.Menu;
+using ScaleformUI.Menus;
 using ScaleformUI.PauseMenus;
+using ScaleformUI.PauseMenus.Elements;
 using ScaleformUI.PauseMenus.Elements.Items;
 using ScaleformUI.PauseMenus.Elements.Panels;
 using ScaleformUI.Scaleforms;
+using System.Reflection.Emit;
 using static CitizenFX.Core.Native.API;
+using static CitizenFX.Core.UI.Screen;
 
 namespace ScaleformUI.PauseMenu
 {
     public delegate void PauseMenuOpenEvent(TabView menu);
     public delegate void PauseMenuCloseEvent(TabView menu);
-    public delegate void PauseMenuTabChanged(TabView menu, BaseTab tab, int tabIndex);
+    public delegate void PauseMenuTabChanged(TabView menu, BaseTab tab, int i);
     public delegate void PauseMenuFocusChanged(TabView menu, BaseTab tab, int focusLevel);
-    public delegate void LeftItemSelect(TabView menu, TabLeftItem item, int leftItemIndex);
-    public delegate void RightItemSelect(TabView menu, SettingsItem item, int leftItemIndex, int rightItemIndex);
+    public delegate void ColumnItemEvent(TabView menu, BaseTab tab, PM_COLUMNS column, int index);
+
+    internal enum eFRONTEND_INPUT
+    {
+        FRONTEND_INPUT_UP = 0,
+        FRONTEND_INPUT_DOWN,
+        FRONTEND_INPUT_LEFT,
+        FRONTEND_INPUT_RIGHT,
+        FRONTEND_INPUT_RDOWN,
+        FRONTEND_INPUT_RLEFT,
+        FRONTEND_INPUT_RRIGHT,
+        FRONTEND_INPUT_RUP,
+        FRONTEND_INPUT_ACCEPT,
+        FRONTEND_INPUT_X,
+        FRONTEND_INPUT_Y,
+        FRONTEND_INPUT_BACK,
+        FRONTEND_INPUT_START,
+        FRONTEND_INPUT_SPECIAL_UP,
+        FRONTEND_INPUT_SPECIAL_DOWN,
+        FRONTEND_INPUT_RSTICK_LEFT,
+        FRONTEND_INPUT_RSTICK_RIGHT,
+        FRONTEND_INPUT_LT,
+        FRONTEND_INPUT_RT,
+        FRONTEND_INPUT_LB,
+        FRONTEND_INPUT_RB,
+        FRONTEND_INPUT_LT_SPECIAL,
+        FRONTEND_INPUT_RT_SPECIAL,
+        FRONTEND_INPUT_SELECT,
+        FRONTEND_INPUT_R3,
+        // Used for pointing devices (mouse button, touch pad etc).
+        FRONTEND_INPUT_CURSOR_ACCEPT,
+        FRONTEND_INPUT_CURSOR_BACK,
+        FRONTEND_INPUT_L3,
+        FRONTEND_INPUT_MAX
+    };
+
 
     public class TabView : PauseMenuBase
     {
         /*
         ShowCursorThisFrame();
         */
-        public string AUDIO_LIBRARY = "HUD_FRONTEND_DEFAULT_SOUNDSET";
-
-        public string AUDIO_UPDOWN = "NAV_UP_DOWN";
-        public string AUDIO_LEFTRIGHT = "NAV_LEFT_RIGHT";
-        public string AUDIO_SELECT = "SELECT";
-        public string AUDIO_BACK = "BACK";
-        public string AUDIO_ERROR = "ERROR";
+        public static string AUDIO_LIBRARY = "HUD_FRONTEND_DEFAULT_SOUNDSET";
+        public static string AUDIO_UPDOWN = "NAV_UP_DOWN";
+        public static string AUDIO_LEFTRIGHT = "NAV_LEFT_RIGHT";
+        public static string AUDIO_SELECT = "SELECT";
+        public static string AUDIO_BACK = "BACK";
+        public static string AUDIO_ERROR = "ERROR";
         private bool isBuilding = false;
         public string Title { get; set; }
         public string SubTitle { get; set; }
         public string SideStringTop { get; set; }
         public string SideStringMiddle { get; set; }
         public string SideStringBottom { get; set; }
-        public Tuple<string, string> HeaderPicture { internal get; set; }
+        public bool ShowStoreBackground { internal get; set; }
+        public int StoreBackgroundAnimationSpeed { internal get; set; } = 240; // should be expressed in ms
+        public HudColor TabsColor { get; set; } = HudColor.HUD_COLOUR_PAUSE_BG;
+        public bool ShowBlur = true;
+        public Tuple<string, string> HeaderPicture
+        {
+            internal get => headerPicture;
+            set
+            {
+                headerPicture = value;
+                if (Visible)
+                    _pause.SetHeaderCharImg(HeaderPicture.Item1, HeaderPicture.Item2, true);
+
+            }
+        }
         public Tuple<string, string> CrewPicture { internal get; set; }
         public bool SetHeaderDynamicWidth { get; set; }
         public List<BaseTab> Tabs { get; set; }
         private int index;
-        private bool _firstDrawTick = false;
-        private int timer = 100;
+        internal int hoveredColumn;
+        internal PlayerListTab coronaTab;
+        // thanks R*
+        private int sm_uDisableInputDuration = 250; // milliseconds.
+        private int  FRONTEND_ANALOGUE_THRESHOLD = 80;  // out of 128
+        private int  BUTTON_PRESSED_DOWN_INTERVAL = 250;
+        private int  BUTTON_PRESSED_REFIRE_ATTRITION = 45;
+        private int  BUTTON_PRESSED_REFIRE_MINIMUM = 100;
+        private int s_iLastRefireTimeUp = 250;
+        private int s_iLastRefireTimeDn = 250;
+        private int s_pressedDownTimer = GetGameTimer();
+        private int s_lastGameFrame = 0;
 
-        public int LeftItemIndex
+        [Flags]
+        enum CHECK_INPUT_OVERRIDE_FLAG : byte
         {
-            get => leftItemIndex;
-            set
-            {
-                Tabs[Index].LeftItemList[leftItemIndex].Selected = false;
-                leftItemIndex = value;
-                Tabs[Index].LeftItemList[leftItemIndex].Selected = true;
-                SendPauseMenuLeftItemChange();
-            }
+            CHECK_INPUT_OVERRIDE_FLAG_NONE = 0,
+            CHECK_INPUT_OVERRIDE_FLAG_WARNING_MESSAGE = (1 << 0),
+            CHECK_INPUT_OVERRIDE_FLAG_STORAGE_DEVICE = (1 << 1),
+            CHECK_INPUT_OVERRIDE_FLAG_RESTART_SAVED_GAME_STATE = (1 << 2),
+            CHECK_INPUT_OVERRIDE_FLAG_IGNORE_ANALOGUE_STICKS = (1 << 3),
+            CHECK_INPUT_OVERRIDE_FLAG_IGNORE_D_PAD = (1 << 4)
         }
-        public int RightItemIndex
-        {
-            get => rightItemIndex;
-            set
-            {
-                rightItemIndex = value;
-                SendPauseMenuRightItemChange();
-            }
-        }
+
+
         public int FocusLevel
         {
             get => focusLevel;
             set
             {
-                focusLevel = value;
-                if (_pause is not null)
-                    _pause.SetFocus(value);
+                var dir = value == focusLevel ? 0 : value < focusLevel ? -1 : 1;
+                focusLevel += dir;
+                _pause?.SetFocus(dir);
+                if (dir > 0 && Tabs.Count > 0 && focusLevel == 1)
+                    Tabs[Index].Focus();
+                else if (dir < 0 && focusLevel == 0)
+                    Tabs[Index].UnFocus();
                 SendPauseMenuFocusChange();
             }
         }
+
         public bool TemporarilyHidden { get; set; }
         public bool HideTabs { get; set; }
         public bool DisplayHeader = true;
@@ -84,10 +144,9 @@ namespace ScaleformUI.PauseMenu
         public event PauseMenuCloseEvent OnPauseMenuClose;
         public event PauseMenuTabChanged OnPauseMenuTabChanged;
         public event PauseMenuFocusChanged OnPauseMenuFocusChanged;
-        public event LeftItemSelect OnLeftItemChange;
-        public event LeftItemSelect OnLeftItemSelect;
-        public event RightItemSelect OnRightItemChange;
-        public event RightItemSelect OnRightItemSelect;
+        public event ColumnItemEvent OnColumnItemChange;
+        public event ColumnItemEvent OnColumnItemSelect;
+        public bool IsCorona { get; internal set; }
 
         public TabView(string title) : this(title, "", "", "", "")
         {
@@ -127,32 +186,38 @@ namespace ScaleformUI.PauseMenu
                 Game.IsPaused = value;
                 if (value)
                 {
-                    ActivateFrontendMenu((uint)Game.GenerateHash("FE_MENU_VERSION_CORONA"), true, 1);
-                    doScreenBlur();
+                    ActivateFrontendMenu((uint)Game.GenerateHash("FE_MENU_VERSION_CORONA"), true, -1);
+                    if (ShowBlur)
+                        doScreenBlur();
                     Main.InstructionalButtons.SetInstructionalButtons(InstructionalButtons);
                     SetPlayerControl(Game.Player.Handle, false, 0);
-                    _firstDrawTick = true;
+                    isBuilding = true;
+                    Tabs[0].Visible = true;
                     MenuHandler.currentBase = this;
+                    ShowHeader();
                     BuildPauseMenu();
                     SendPauseMenuOpen();
+                    if (IsCorona)
+                    {
+                        FocusLevel = 1;
+                        Main.PauseMenu.BGEnabled = ShowStoreBackground;
+                        Main.PauseMenu._pauseBG.CallFunction("ANIMATE_BACKGROUND", StoreBackgroundAnimationSpeed);
+                    }
                 }
                 else
                 {
-                    foreach (BaseTab tab in Tabs)
+                    Tabs[Index].Minimap?.Dispose();
+                    if (ShowBlur || AnimpostfxIsRunning("PauseMenuIn"))
                     {
-                        if (tab is PlayerListTab t)
-                        {
-                            t.Minimap?.Dispose();
-                        }
+                        AnimpostfxStop("PauseMenuIn");
+                        AnimpostfxPlay("PauseMenuOut", 0, false);
                     }
-                    _pause.Dispose();
-                    AnimpostfxStop("PauseMenuIn");
-                    AnimpostfxPlay("PauseMenuOut", 800, false);
                     SendPauseMenuClose();
                     SetPlayerControl(Game.Player.Handle, true, 0);
                     MenuHandler.currentBase = null;
-                    ActivateFrontendMenu((uint)Game.GenerateHash("FE_MENU_VERSION_CORONA"), false, 1);
                     Main.InstructionalButtons.ClearButtonList();
+                    _pause.Dispose();
+                    SetFrontendActive(false);
                 }
             }
         }
@@ -164,7 +229,7 @@ namespace ScaleformUI.PauseMenu
                 await BaseScript.Delay(0);
                 AnimpostfxStop("PauseMenuOut");
             }
-            AnimpostfxPlay("PauseMenuIn", 800, true);
+            AnimpostfxPlay("PauseMenuIn", 0, true);
         }
 
         public int Index
@@ -173,419 +238,105 @@ namespace ScaleformUI.PauseMenu
             {
                 Tabs[Index].Visible = false;
                 index = value;
+                if (index > Tabs.Count - 1)
+                    index = 0;
+                if (index < 0)
+                    index = Tabs.Count - 1;
                 Tabs[Index].Visible = true;
+                if (Visible)
+                {
+                    BuildPauseMenu();
+                    _pause.SelectTab(index);
+                }
                 SendPauseMenuTabChange();
             }
         }
 
-        public void AddTab(BaseTab item)
+        public void AddTab(BaseTab tab)
         {
-            if (item is PlayerListTab t)
-            {
-                t.Minimap = new MinimapPanel(this);
-            }
-            item.Parent = this;
-            Tabs.Add(item);
+            if(tab.Minimap != null)
+                tab.Minimap.Parent = this;
+            tab.Parent = this;
+            Tabs.Add(tab);
         }
 
         private bool _visible;
-        private int focusLevel;
-        private int rightItemIndex;
-        private int leftItemIndex;
+        internal int focusLevel;
         private int _timer;
-        public async void ShowHeader()
+        public void ShowHeader()
         {
             if (String.IsNullOrEmpty(SubTitle) || String.IsNullOrWhiteSpace(SubTitle))
                 _pause.SetHeaderTitle(Title);
             else
             {
                 _pause.ShiftCoronaDescription(true, false);
-                _pause.SetHeaderTitle(Title, SubTitle);
+                _pause.SetHeaderTitle(Title, SubTitle + "\n\n\n\n\n\n\n\n\n\n\n");
             }
-            if (HeaderPicture != null)
+            if (HeaderPicture != null && !string.IsNullOrEmpty(HeaderPicture.Item1) && !string.IsNullOrEmpty(HeaderPicture.Item2))
                 _pause.SetHeaderCharImg(HeaderPicture.Item1, HeaderPicture.Item2, true);
+            else
+                _pause.SetHeaderCharImg("CHAR_DEFAULT", "CHAR_DEFAULT", true);
             if (CrewPicture != null)
                 _pause.SetHeaderSecondaryImg(CrewPicture.Item1, CrewPicture.Item2, true);
             _pause.SetHeaderDetails(SideStringTop, SideStringMiddle, SideStringBottom);
-            _pause._header.CallFunction("ENABLE_DYNAMIC_WIDTH", SetHeaderDynamicWidth);
+
+            if (!IsCorona)
+            {
+                _pause._header.CallFunction("ENABLE_DYNAMIC_WIDTH", SetHeaderDynamicWidth);
+                foreach (BaseTab tab in Tabs)
+                    _pause.AddPauseMenuTab(tab.Title, 0, tab.TabColor);
+            }
+            else
+            {
+                if (coronaTab.LeftColumn != null)
+                    _pause.AddPauseMenuTab(coronaTab.LeftColumn.Label, 2, coronaTab.LeftColumn.Color);
+                if (coronaTab.CenterColumn != null)
+                    _pause.AddPauseMenuTab(coronaTab.CenterColumn.Label, 2, coronaTab.CenterColumn.Color);
+                if (coronaTab.RightColumn != null)
+                    _pause.AddPauseMenuTab(coronaTab.RightColumn.Label, 2, coronaTab.RightColumn.Color);
+                _pause._header.CallFunction("SET_ALL_HIGHLIGHTS", true, (int)TabsColor);
+                _pause._header.CallFunction("ENABLE_DYNAMIC_WIDTH", false);
+            }
             _loaded = true;
         }
 
-        public async void BuildPauseMenu()
+        public void BuildPauseMenu()
         {
             isBuilding = true;
-            ShowHeader();
-            RequestStreamedTextureDict("commonmenu", true);
-            for (int i = 0; i < Tabs.Count; i++)
-            {
-                BaseTab tab = Tabs[i];
-                switch (tab._type)
-                {
-                    case 0:
-                        {
-                            TextTab simpleTab = (TextTab)tab;
-                            _pause.AddPauseMenuTab(simpleTab.Title, 0, simpleTab._type, simpleTab.TabColor);
-                            if (!string.IsNullOrWhiteSpace(simpleTab.TextTitle))
-                                _pause.AddRightTitle(i, 0, simpleTab.TextTitle);
-                            for (int j = 0; j < simpleTab.LabelsList.Count; j++)
-                            {
-                                BasicTabItem it = simpleTab.LabelsList[j];
-                                _pause.AddRightListLabel(i, 0, it.Label, it.LabelFont.FontName, it.LabelFont.FontID);
-                            }
-                            if (!(string.IsNullOrWhiteSpace(simpleTab.BGTextureDict) && string.IsNullOrWhiteSpace(simpleTab.BGTextureName)))
-                                _pause._pause.CallFunction("UPDATE_BASE_TAB_BACKGROUND", i, simpleTab.BGTextureDict, simpleTab.BGTextureName);
-                            if (!(string.IsNullOrWhiteSpace(simpleTab.RightTextureDict) && string.IsNullOrWhiteSpace(simpleTab.RightTextureName)))
-                                _pause._pause.CallFunction("SET_BASE_TAB_RIGHT_PICTURE", i, simpleTab.RightTextureDict, simpleTab.RightTextureName);
-                        }
-                        break;
-                    case 1:
-                        {
-                            SubmenuTab submenu = (SubmenuTab)tab;
-                            _pause.AddPauseMenuTab(submenu.Title, 1, submenu._type, submenu.TabColor);
-                            for (int j = 0; j < submenu.LeftItemList.Count; j++)
-                            {
-                                TabLeftItem item = submenu.LeftItemList[j];
-                                int itemIndex = tab.LeftItemList.IndexOf(item);
-                                _pause.AddLeftItem(i, (int)item.ItemType, item._formatLeftLabel, item.MainColor, item.HighlightColor, item.Enabled);
-
-                                _pause._pause.CallFunction("SET_LEFT_ITEM_LABEL_FONT", i, itemIndex, item._labelFont.FontName, item._labelFont.FontID);
-                                //_pause._pause.CallFunction("SET_LEFT_ITEM_RIGHT_LABEL_FONT", i, itemIndex, item._labelFont.FontName, item._labelFont.FontID);
-
-                                if (!string.IsNullOrWhiteSpace(item.RightTitle))
-                                {
-                                    if (item.ItemType == LeftItemType.Keymap)
-                                        _pause.AddKeymapTitle(i, itemIndex, item.RightTitle, item.KeymapRightLabel_1, item.KeymapRightLabel_2);
-                                    else
-                                        _pause.AddRightTitle(i, itemIndex, item.RightTitle);
-                                }
-
-
-                                for (int k = 0; k < item.ItemList.Count; k++)
-                                {
-                                    BasicTabItem ii = item.ItemList[k];
-                                    switch (ii)
-                                    {
-                                        default:
-                                            {
-                                                _pause.AddRightListLabel(i, itemIndex, ii.Label, ii.LabelFont.FontName, ii.LabelFont.FontID);
-                                            }
-                                            break;
-                                        case StatsTabItem:
-                                            {
-                                                StatsTabItem sti = ii as StatsTabItem;
-                                                switch (sti.Type)
-                                                {
-                                                    case StatItemType.Basic:
-                                                        _pause.AddRightStatItemLabel(i, itemIndex, sti.Label, sti.RightLabel, sti.LabelFont, sti.rightLabelFont);
-                                                        break;
-                                                    case StatItemType.ColoredBar:
-                                                        _pause.AddRightStatItemColorBar(i, itemIndex, sti.Label, sti.Value, sti.ColoredBarColor, sti.labelFont);
-                                                        break;
-                                                }
-                                            }
-                                            break;
-                                        case SettingsItem:
-                                            {
-                                                SettingsItem sti = ii as SettingsItem;
-                                                switch (sti.ItemType)
-                                                {
-                                                    case SettingsItemType.Basic:
-                                                        _pause.AddRightSettingsBaseItem(i, itemIndex, sti.Label, sti.RightLabel, sti.Enabled);
-                                                        break;
-                                                    case SettingsItemType.ListItem:
-                                                        SettingsListItem lis = (SettingsListItem)sti;
-                                                        _pause.AddRightSettingsListItem(i, itemIndex, lis.Label, lis.ListItems, lis.ItemIndex, lis.Enabled);
-                                                        break;
-                                                    case SettingsItemType.ProgressBar:
-                                                        SettingsProgressItem prog = (SettingsProgressItem)sti;
-                                                        _pause.AddRightSettingsProgressItem(i, itemIndex, prog.Label, prog.MaxValue, prog.ColoredBarColor, prog.Value, prog.Enabled);
-                                                        break;
-                                                    case SettingsItemType.MaskedProgressBar:
-                                                        SettingsProgressItem prog_alt = (SettingsProgressItem)sti;
-                                                        _pause.AddRightSettingsProgressItemAlt(i, itemIndex, sti.Label, prog_alt.MaxValue, prog_alt.ColoredBarColor, prog_alt.Value, prog_alt.Enabled);
-                                                        break;
-                                                    case SettingsItemType.CheckBox:
-                                                        SettingsCheckboxItem check = (SettingsCheckboxItem)sti;
-                                                        _pause.AddRightSettingsCheckboxItem(i, itemIndex, check.Label, check.CheckBoxStyle, check.IsChecked, check.Enabled);
-                                                        break;
-                                                    case SettingsItemType.SliderBar:
-                                                        SettingsSliderItem slid = (SettingsSliderItem)sti;
-                                                        _pause.AddRightSettingsSliderItem(i, itemIndex, slid.Label, slid.MaxValue, slid.ColoredBarColor, slid.Value, slid.Enabled);
-                                                        break;
-                                                }
-                                            }
-                                            break;
-                                        case KeymapItem:
-                                            KeymapItem ki = ii as KeymapItem;
-                                            if (IsUsingKeyboard(2))
-                                                _pause.AddKeymapItem(i, itemIndex, ki.Label, ki.PrimaryKeyboard, ki.SecondaryKeyboard);
-                                            else
-                                                _pause.AddKeymapItem(i, itemIndex, ki.Label, ki.PrimaryGamepad, ki.SecondaryGamepad);
-                                            UpdateKeymapItems();
-                                            break;
-                                    }
-                                }
-
-                                if (item.ItemType == LeftItemType.Info || item.ItemType == LeftItemType.Statistics || item.ItemType == LeftItemType.Settings)
-                                {
-                                    if (!(string.IsNullOrWhiteSpace(item.TextureDict) && string.IsNullOrWhiteSpace(item.TextureName)))
-                                        _pause._pause.CallFunction("UPDATE_LEFT_ITEM_RIGHT_BACKGROUND", i, itemIndex, item.TextureDict, item.TextureName, (int)item.LeftItemBGType);
-                                }
-
-                            }
-                        }
-                        break;
-                    case 2:
-                        {
-                            PlayerListTab plTab = (PlayerListTab)tab;
-                            _pause.AddPauseMenuTab(plTab.Title, 1, plTab._type, plTab.TabColor);
-                            switch (plTab.listCol.Count)
-                            {
-                                case 1:
-                                    _pause._pause.CallFunction("CREATE_PLAYERS_TAB_COLUMNS", i, plTab.listCol[0].Type);
-                                    _pause._pause.CallFunction("SET_PLAYERS_TAB_COLUMN_MAXITEMS", i, 0, plTab.listCol[0]._maxItems);
-                                    break;
-                                case 2:
-                                    _pause._pause.CallFunction("CREATE_PLAYERS_TAB_COLUMNS", i, plTab.listCol[0].Type, plTab.listCol[1].Type);
-                                    _pause._pause.CallFunction("SET_PLAYERS_TAB_COLUMN_MAXITEMS", i, 0, plTab.listCol[0]._maxItems);
-                                    _pause._pause.CallFunction("SET_PLAYERS_TAB_COLUMN_MAXITEMS", i, 1, plTab.listCol[1]._maxItems);
-                                    break;
-                                case 3:
-                                    _pause._pause.CallFunction("CREATE_PLAYERS_TAB_COLUMNS", i, plTab.listCol[0].Type, plTab.listCol[1].Type, plTab.listCol[2].Type);
-                                    _pause._pause.CallFunction("SET_PLAYERS_TAB_COLUMN_MAXITEMS", i, 0, plTab.listCol[0]._maxItems);
-                                    _pause._pause.CallFunction("SET_PLAYERS_TAB_COLUMN_MAXITEMS", i, 1, plTab.listCol[1]._maxItems);
-                                    _pause._pause.CallFunction("SET_PLAYERS_TAB_COLUMN_MAXITEMS", i, 2, plTab.listCol[2]._maxItems);
-                                    break;
-                            }
-                            _pause._pause.CallFunction("SET_PLAYERS_TAB_NEWSTYLE", i, plTab._newStyle);
-                            if (plTab.listCol.Any(x => x.Type == "settings"))
-                            {
-                                plTab.SettingsColumn.Parent = this;
-                                plTab.SettingsColumn.ParentTab = Tabs.IndexOf(plTab);
-                                buildSettings(plTab);
-                            }
-                            if (plTab.listCol.Any(x => x.Type == "players"))
-                            {
-                                plTab.PlayersColumn.Parent = this;
-                                plTab.PlayersColumn.ParentTab = Tabs.IndexOf(plTab);
-                                buildPlayers(plTab);
-                            }
-                            if (plTab.listCol.Any(x => x.Type == "missions"))
-                            {
-                                plTab.MissionsColumn.Parent = this;
-                                plTab.MissionsColumn.ParentTab = Tabs.IndexOf(plTab);
-                                buildMissions(plTab);
-                            }
-                            if (plTab.listCol.Any(x => x.Type == "store"))
-                            {
-                                plTab.StoreColumn.Parent = this;
-                                plTab.StoreColumn.ParentTab = Tabs.IndexOf(plTab);
-                                buildStore(plTab);
-                            }
-                            if (plTab.listCol.Any(x => x.Type == "panel"))
-                            {
-                                plTab.MissionPanel.Parent = this;
-                                plTab.MissionPanel.ParentTab = Tabs.IndexOf(plTab);
-                                _pause._pause.CallFunction("ADD_PLAYERS_TAB_MISSION_PANEL_PICTURE", i, plTab.MissionPanel.TextureDict, plTab.MissionPanel.TextureName);
-                                _pause._pause.CallFunction("SET_PLAYERS_TAB_MISSION_PANEL_TITLE", i, plTab.MissionPanel.Title);
-                                if (plTab.MissionPanel.Items.Count > 0)
-                                {
-                                    for (int j = 0; j < plTab.MissionPanel.Items.Count; j++)
-                                    {
-                                        UIFreemodeDetailsItem item = plTab.MissionPanel.Items[j];
-                                        _pause._pause.CallFunction("ADD_PLAYERS_TAB_MISSION_PANEL_ITEM", i, item.Type, item.TextLeft, item.TextRight, (int)item.Icon, item.IconColor, item.Tick, item._labelFont.FontName, item._labelFont.FontID, item._rightLabelFont.FontName, item._rightLabelFont.FontID);
-                                    }
-                                }
-                            }
-                        }
-                        break;
-                }
-            }
+            if (!HasStreamedTextureDictLoaded("commonmenu"))
+                RequestStreamedTextureDict("commonmenu", true);
+            BaseTab tab = Tabs[Index];
+            _pause._pause.CallFunction("LOAD_CHILD_PAGE", tab._identifier);
+            tab.Populate();
+            tab.ShowColumns();
             isBuilding = false;
         }
 
-        bool canBuild = true;
-        internal async void buildSettings(PlayerListTab tab)
-        {
-            int i = 0;
-            int tab_id = Tabs.IndexOf(tab);
-            int max = tab.SettingsColumn.Pagination.ItemsPerPage;
-            if (tab.SettingsColumn.Items.Count < max)
-                max = tab.SettingsColumn.Items.Count;
-
-            tab.SettingsColumn.Pagination.MinItem = tab.SettingsColumn.Pagination.CurrentPageStartIndex;
-            if (tab.SettingsColumn.Pagination.scrollType == ScrollingType.CLASSIC && tab.SettingsColumn.Pagination.TotalPages > 1)
-            {
-                int missingItems = tab.SettingsColumn.Pagination.GetMissingItems();
-                if (missingItems > 0)
-                {
-                    tab.SettingsColumn.Pagination.ScaleformIndex = tab.SettingsColumn.Pagination.GetPageIndexFromMenuIndex(tab.SettingsColumn.Pagination.CurrentPageEndIndex) + missingItems;
-                    tab.SettingsColumn.Pagination.MinItem = tab.SettingsColumn.Pagination.CurrentPageStartIndex - missingItems;
-                }
-            }
-            tab.SettingsColumn.Pagination.MaxItem = tab.SettingsColumn.Pagination.CurrentPageEndIndex;
-
-            while (i < max)
-            {
-                await BaseScript.Delay(0);
-                if (!Visible) return;
-                tab.SettingsColumn._itemCreation(tab.SettingsColumn.Pagination.CurrentPage, i, false, true);
-                i++;
-            }
-            tab.SettingsColumn.CurrentSelection = 0;
-            tab.SettingsColumn.Pagination.ScaleformIndex = tab.SettingsColumn.Pagination.GetScaleformIndex(tab.SettingsColumn.CurrentSelection);
-            tab.SettingsColumn.Items[0].Selected = false;
-            _pause._pause.CallFunction("SET_PLAYERS_TAB_SETTINGS_SELECTION", tab_id, tab.SettingsColumn.Pagination.ScaleformIndex);
-            _pause._pause.CallFunction("SET_PLAYERS_TAB_SETTINGS_QTTY", tab_id, tab.SettingsColumn.CurrentSelection + 1, tab.SettingsColumn.Items.Count);
-            tab.SettingsColumn.isBuilding = false;
-        }
-
-        internal async void buildPlayers(PlayerListTab tab)
-        {
-            int i = 0;
-            int tab_id = Tabs.IndexOf(tab);
-            int max = tab.PlayersColumn.Pagination.ItemsPerPage;
-            if (tab.PlayersColumn.Items.Count < max)
-                max = tab.PlayersColumn.Items.Count;
-
-            tab.PlayersColumn.Pagination.MinItem = tab.PlayersColumn.Pagination.CurrentPageStartIndex;
-            if (tab.PlayersColumn.Pagination.scrollType == ScrollingType.CLASSIC && tab.PlayersColumn.Pagination.TotalPages > 1)
-            {
-                int missingItems = tab.PlayersColumn.Pagination.GetMissingItems();
-                if (missingItems > 0)
-                {
-                    tab.PlayersColumn.Pagination.ScaleformIndex = tab.PlayersColumn.Pagination.GetPageIndexFromMenuIndex(tab.PlayersColumn.Pagination.CurrentPageEndIndex) + missingItems;
-                    tab.PlayersColumn.Pagination.MinItem = tab.PlayersColumn.Pagination.CurrentPageStartIndex - missingItems;
-                }
-            }
-            tab.PlayersColumn.Pagination.MaxItem = tab.PlayersColumn.Pagination.CurrentPageEndIndex;
-
-            while (i < max)
-            {
-                await BaseScript.Delay(0);
-                if (!Visible) return;
-                tab.PlayersColumn._itemCreation(tab.PlayersColumn.Pagination.CurrentPage, i, false, true);
-                i++;
-            }
-            tab.PlayersColumn.CurrentSelection = 0;
-            tab.PlayersColumn.Pagination.ScaleformIndex = tab.PlayersColumn.Pagination.GetScaleformIndex(tab.PlayersColumn.CurrentSelection);
-            tab.PlayersColumn.Items[0].Selected = false;
-            _pause._pause.CallFunction("SET_PLAYERS_TAB_PLAYERS_SELECTION", tab_id, tab.PlayersColumn.Pagination.ScaleformIndex);
-            _pause._pause.CallFunction("SET_PLAYERS_TAB_PLAYERS_QTTY", tab_id, tab.PlayersColumn.CurrentSelection + 1, tab.PlayersColumn.Items.Count);
-            tab.PlayersColumn.isBuilding = false;
-        }
-
-        internal async void buildMissions(PlayerListTab tab)
-        {
-            int i = 0;
-            int tab_id = Tabs.IndexOf(tab);
-            int max = tab.MissionsColumn.Pagination.ItemsPerPage;
-            if (tab.MissionsColumn.Items.Count < max)
-                max = tab.MissionsColumn.Items.Count;
-
-            tab.MissionsColumn.Pagination.MinItem = tab.MissionsColumn.Pagination.CurrentPageStartIndex;
-            if (tab.MissionsColumn.Pagination.scrollType == ScrollingType.CLASSIC && tab.MissionsColumn.Pagination.TotalPages > 1)
-            {
-                int missingItems = tab.MissionsColumn.Pagination.GetMissingItems();
-                if (missingItems > 0)
-                {
-                    tab.MissionsColumn.Pagination.ScaleformIndex = tab.MissionsColumn.Pagination.GetPageIndexFromMenuIndex(tab.MissionsColumn.Pagination.CurrentPageEndIndex) + missingItems;
-                    tab.MissionsColumn.Pagination.MinItem = tab.MissionsColumn.Pagination.CurrentPageStartIndex - missingItems;
-                }
-            }
-            tab.MissionsColumn.Pagination.MaxItem = tab.MissionsColumn.Pagination.CurrentPageEndIndex;
-
-            while (i < max)
-            {
-                await BaseScript.Delay(0);
-                if (!Visible) return;
-                tab.MissionsColumn._itemCreation(tab.MissionsColumn.Pagination.CurrentPage, i, false, true);
-                i++;
-            }
-            tab.MissionsColumn.CurrentSelection = 0;
-            tab.MissionsColumn.Pagination.ScaleformIndex = tab.MissionsColumn.Pagination.GetScaleformIndex(tab.MissionsColumn.CurrentSelection);
-            tab.MissionsColumn.Items[0].Selected = false;
-            _pause._pause.CallFunction("SET_PLAYERS_TAB_MISSIONS_SELECTION", tab_id, tab.MissionsColumn.Pagination.ScaleformIndex);
-            _pause._pause.CallFunction("SET_PLAYERS_TAB_MISSIONS_QTTY", tab_id, tab.MissionsColumn.CurrentSelection + 1, tab.MissionsColumn.Items.Count);
-            tab.MissionsColumn.isBuilding = false;
-        }
-
-        internal async void buildStore(PlayerListTab tab)
-        {
-            int i = 0;
-            int tab_id = Tabs.IndexOf(tab);
-            int max = tab.StoreColumn.Pagination.ItemsPerPage;
-            if (tab.StoreColumn.Items.Count < max)
-                max = tab.StoreColumn.Items.Count;
-
-            tab.StoreColumn.Pagination.MinItem = tab.StoreColumn.Pagination.CurrentPageStartIndex;
-            if (tab.StoreColumn.Pagination.scrollType == ScrollingType.CLASSIC && tab.StoreColumn.Pagination.TotalPages > 1)
-            {
-                int missingItems = tab.StoreColumn.Pagination.GetMissingItems();
-                if (missingItems > 0)
-                {
-                    tab.StoreColumn.Pagination.ScaleformIndex = tab.StoreColumn.Pagination.GetPageIndexFromMenuIndex(tab.StoreColumn.Pagination.CurrentPageEndIndex) + missingItems;
-                    tab.StoreColumn.Pagination.MinItem = tab.StoreColumn.Pagination.CurrentPageStartIndex - missingItems;
-                }
-            }
-            tab.StoreColumn.Pagination.MaxItem = tab.StoreColumn.Pagination.CurrentPageEndIndex;
-
-            while (i < max)
-            {
-                await BaseScript.Delay(0);
-                if (!Visible) return;
-                tab.StoreColumn._itemCreation(tab.StoreColumn.Pagination.CurrentPage, i, false, true);
-                i++;
-            }
-            tab.StoreColumn.CurrentSelection = 0;
-            tab.StoreColumn.Pagination.ScaleformIndex = tab.StoreColumn.Pagination.GetScaleformIndex(tab.StoreColumn.CurrentSelection);
-            tab.StoreColumn.Items[0].Selected = false;
-            _pause._pause.CallFunction("SET_PLAYERS_TAB_STORE_SELECTION", tab_id, tab.StoreColumn.Pagination.ScaleformIndex);
-            _pause._pause.CallFunction("SET_PLAYERS_TAB_STORE_QTTY", tab_id, tab.StoreColumn.CurrentSelection + 1, tab.StoreColumn.Items.Count);
-            tab.StoreColumn.isBuilding = false;
-        }
-
         private bool controller = false;
-        public override void Draw()
+        public override async void Draw()
         {
             if (!Visible || TemporarilyHidden || isBuilding) return;
-            if (Tabs[Index] is PlayerListTab tab)
-            {
-                tab.Minimap.MaintainMap();
-            }
+            Tabs[Index].Minimap?.MaintainMap();
             base.Draw();
             _pause.Draw();
+            if(!IsCorona)
+                _pause._header.CallFunction("SHOW_ARROWS");
             UpdateKeymapItems();
-            if (_firstDrawTick)
-            {
-                _pause._lobby.CallFunction("FADE_IN");
-                _firstDrawTick = false;
-                timer = GetNetworkTime();
-            }
+            GetHoveredColumn();
         }
-
+        private async void GetHoveredColumn()
+        {
+            hoveredColumn = await Main.PauseMenu._pause.CallFunctionReturnValueInt("GET_HOVERED_COLUMN");
+        }
+        bool changed;
         private void UpdateKeymapItems()
         {
-            if (!IsInputDisabled(2))
+            if (!IsUsingKeyboard(2))
             {
                 if (!controller)
                 {
                     controller = true;
-                    if (Tabs[Index] is SubmenuTab)
-                    {
-                        foreach (TabLeftItem lItem in (Tabs[Index] as SubmenuTab).LeftItemList)
-                        {
-                            int idx = (Tabs[Index] as SubmenuTab).LeftItemList.IndexOf(lItem);
-                            if (lItem.ItemType == LeftItemType.Keymap)
-                            {
-                                for (int i = 0; i < lItem.ItemList.Count; i++)
-                                {
-                                    KeymapItem item = (KeymapItem)lItem.ItemList[i];
-                                    _pause.UpdateKeymap(Index, idx, i, item.PrimaryGamepad, item.SecondaryGamepad);
-                                }
-                            }
-                        }
-                    }
+                    changed = true;
                 }
             }
             else
@@ -593,627 +344,68 @@ namespace ScaleformUI.PauseMenu
                 if (controller)
                 {
                     controller = false;
-                    if (Tabs[Index] is SubmenuTab)
+                    changed = true;
+                }
+            }
+
+            if (changed)
+            {
+                if (Tabs[Index] is SubmenuTab smT)
+                {
+                    if(smT.currentItemType == LeftItemType.Keymap)
                     {
-                        foreach (TabLeftItem lItem in (Tabs[Index] as SubmenuTab).LeftItemList)
+                        for (int i = 0; i < smT.CenterColumn.Items.Count; i++)
                         {
-                            int idx = (Tabs[Index] as SubmenuTab).LeftItemList.IndexOf(lItem);
-                            if (lItem.ItemType == LeftItemType.Keymap)
-                            {
-                                for (int i = 0; i < lItem.ItemList.Count; i++)
-                                {
-                                    KeymapItem item = (KeymapItem)lItem.ItemList[i];
-                                    _pause.UpdateKeymap(Index, idx, i, item.PrimaryKeyboard, item.SecondaryKeyboard);
-                                }
-                            }
+                            smT.CenterColumn.UpdateSlot(i);
                         }
                     }
                 }
+                changed = false;
             }
-        }
-
-        public async void Select(bool playSound)
-        {
-            switch (FocusLevel)
-            {
-                case 0:
-                    FocusLevel++;
-                    if (Tabs[Index] is PlayerListTab pl)
-                    {
-                        int selection = pl._newStyle ? pl.Focus : 0;
-                        switch (pl.listCol[selection].Type)
-                        {
-                            case "settings":
-                                pl.SettingsColumn.Items[pl.SettingsColumn.CurrentSelection].Selected = true;
-                                break;
-                            case "store":
-                                pl.StoreColumn.Items[pl.StoreColumn.CurrentSelection].Selected = true;
-                                break;
-                            case "players":
-                                pl.PlayersColumn.Items[pl.PlayersColumn.CurrentSelection].Selected = true;
-                                if (pl.PlayersColumn.Items[pl.PlayersColumn.CurrentSelection].KeepPanelVisible)
-                                    pl.PlayersColumn.Items[pl.PlayersColumn.CurrentSelection].CreateClonedPed();
-                                break;
-                            case "missions":
-                                pl.MissionsColumn.Items[pl.MissionsColumn.CurrentSelection].Selected = true;
-                                break;
-                        }
-                        if (pl.listCol.Any(x => x.Type == "players"))
-                            SetPauseMenuPedLighting(FocusLevel != 0);
-                    }
-                    else if (Tabs[Index] is SubmenuTab)
-                    {
-                        Tabs[Index].LeftItemList[LeftItemIndex].Selected = true;
-                    }
-                    if (Tabs[Index].LeftItemList.All(x => !x.Enabled)) break;
-                    while (!Tabs[Index].LeftItemList[leftItemIndex].Enabled)
-                    {
-                        await BaseScript.Delay(0);
-                        LeftItemIndex++;
-                        _pause._pause.CallFunction("SELECT_LEFT_ITEM_INDEX", leftItemIndex);
-                    }
-                    break;
-                case 1:
-                    {
-                        if (Tabs[Index] is SubmenuTab)
-                        {
-                            TabLeftItem leftItem = Tabs[Index].LeftItemList[LeftItemIndex];
-                            if (!leftItem.Enabled)
-                            {
-                                Game.PlaySound(AUDIO_ERROR, AUDIO_LIBRARY);
-                                return;
-                            }
-                            if (leftItem.ItemType == LeftItemType.Settings)
-                            {
-                                FocusLevel = 2;
-                                if (leftItem.ItemList.All(x => !(x as SettingsItem).Enabled)) break;
-                                while (!(leftItem.ItemList[rightItemIndex] as SettingsItem).Enabled)
-                                {
-                                    await BaseScript.Delay(0);
-                                    rightItemIndex++;
-                                    _pause._pause.CallFunction("SELECT_RIGHT_ITEM_INDEX", rightItemIndex);
-                                }
-                            }
-                            SendPauseMenuLeftItemSelect();
-                        }
-                        else if (Tabs[Index] is PlayerListTab plTab)
-                        {
-                            switch (plTab.listCol[plTab.Focus].Type)
-                            {
-                                case "settings":
-                                    UIMenuItem item = plTab.SettingsColumn.Items[plTab.SettingsColumn.CurrentSelection];
-                                    if (!item.Enabled)
-                                    {
-                                        Game.PlaySound(AUDIO_ERROR, AUDIO_LIBRARY);
-                                        return;
-                                    }
-                                    switch (item)
-                                    {
-                                        case UIMenuCheckboxItem:
-                                            {
-                                                UIMenuCheckboxItem it = item as UIMenuCheckboxItem;
-                                                it.Checked = !it.Checked;
-                                                it.CheckboxEventTrigger();
-                                                plTab.SettingsColumn.SelectItem();
-                                                break;
-                                            }
-
-                                        case UIMenuListItem:
-                                            {
-                                                UIMenuListItem it = item as UIMenuListItem;
-                                                it.ListSelectedTrigger(it.Index);
-                                                plTab.SettingsColumn.SelectItem();
-                                                break;
-                                            }
-
-                                        default:
-                                            item.ItemActivate(null);
-                                            plTab.SettingsColumn.SelectItem();
-                                            break;
-                                    }
-                                    _pause._pause.CallFunction("SET_INPUT_EVENT", 16);
-                                    break;
-                                case "missions":
-                                    MissionItem mitem = plTab.MissionsColumn.Items[plTab.MissionsColumn.CurrentSelection];
-                                    mitem.ActivateMission(plTab);
-                                    plTab.MissionsColumn.SelectItem();
-                                    break;
-                                case "store":
-                                    StoreItem stItem = plTab.StoreColumn.Items[plTab.StoreColumn.CurrentSelection];
-                                    stItem.Activate(plTab);
-                                    plTab.StoreColumn.SelectItem();
-                                    break;
-                                case "players":
-                                    plTab.PlayersColumn.SelectItem();
-                                    break;
-                            }
-                        }
-                    }
-                    break;
-                case 2:
-                    {
-                        _pause._pause.CallFunction("SET_INPUT_EVENT", 16);
-                        TabLeftItem leftItem = Tabs[Index].LeftItemList[LeftItemIndex];
-                        if (leftItem.ItemType == LeftItemType.Settings)
-                        {
-                            if (leftItem.ItemList[RightItemIndex] is SettingsItem rightItem)
-                            {
-                                if (!rightItem.Enabled)
-                                {
-                                    Game.PlaySound(AUDIO_ERROR, AUDIO_LIBRARY);
-                                    return;
-                                }
-
-                                switch (rightItem.ItemType)
-                                {
-                                    case SettingsItemType.ListItem:
-                                        (rightItem as SettingsListItem).ListSelected();
-                                        break;
-                                    case SettingsItemType.CheckBox:
-                                        (rightItem as SettingsCheckboxItem).IsChecked = !(rightItem as SettingsCheckboxItem).IsChecked!;
-                                        break;
-                                    case SettingsItemType.MaskedProgressBar:
-                                    case SettingsItemType.ProgressBar:
-                                        (rightItem as SettingsProgressItem).ProgressSelected();
-                                        break;
-                                    case SettingsItemType.SliderBar:
-                                        (rightItem as SettingsSliderItem).SliderSelected();
-                                        break;
-                                    default:
-                                        rightItem.Activated();
-                                        break;
-                                }
-                                SendPauseMenuRightItemSelect();
-                            }
-                        }
-                    }
-                    break;
-            }
-            if (playSound)
-                Game.PlaySound(AUDIO_SELECT, AUDIO_LIBRARY);
         }
 
         public void GoBack()
         {
             Game.PlaySound(AUDIO_BACK, AUDIO_LIBRARY);
-            if (FocusLevel > 0)
+            if (IsCorona)
             {
-                if (Tabs[Index] is not PlayerListTab)
+                if (CurrentTab.CurrentColumnIndex > 0)
                 {
-                    FocusLevel--;
-                    if (Tabs[Index] is not TextTab)
-                        Tabs[Index].LeftItemList[LeftItemIndex].Selected = focusLevel == 1;
+                    CurrentTab.GoBack();
                 }
-                else if (Tabs[Index] is PlayerListTab pl)
+                else
                 {
-                    if (pl._newStyle)
+                    if (CanPlayerCloseMenu)
                     {
-                        FocusLevel--;
-                        SetPauseMenuPedLighting(FocusLevel != 0);
-                        if (pl.listCol.Any(x => x.Type == "settings"))
-                            pl.SettingsColumn.Items[pl.SettingsColumn.CurrentSelection].Selected = false;
-                        if (pl.listCol.Any(x => x.Type == "store"))
-                            pl.StoreColumn.Items[pl.StoreColumn.CurrentSelection].Selected = false;
-                        if (pl.listCol.Any(x => x.Type == "players"))
-                            pl.PlayersColumn.Items[pl.PlayersColumn.CurrentSelection].Selected = false;
-                        if (pl.listCol.Any(x => x.Type == "missions"))
-                            pl.MissionsColumn.Items[pl.MissionsColumn.CurrentSelection].Selected = false;
-                    }
-                    else
-                    {
-                        if (FocusLevel == 1)
-                        {
-                            switch (pl.listCol[pl.Focus].Type)
-                            {
-                                case "settings":
-                                    pl.SettingsColumn.Items[pl.SettingsColumn.CurrentSelection].Selected = false;
-                                    break;
-                                case "store":
-                                    pl.StoreColumn.Items[pl.StoreColumn.CurrentSelection].Selected = false;
-                                    break;
-                                case "players":
-                                    pl.PlayersColumn.Items[pl.PlayersColumn.CurrentSelection].Selected = false;
-                                    ClearPedInPauseMenu();
-                                    break;
-                                case "missions":
-                                    pl.MissionsColumn.Items[pl.MissionsColumn.CurrentSelection].Selected = false;
-                                    break;
-                            }
-                            if (pl.Focus == 0)
-                            {
-                                FocusLevel--;
-                                return;
-                            }
-                            pl.updateFocus(pl.Focus - 1);
-                            return;
-                        }
+                        if (CurrentTab is PlayerListTab plTab)
+                            plTab.Minimap.Enabled = false;
+                        Visible = false;
                     }
                 }
             }
             else
             {
-                if (CanPlayerCloseMenu) Visible = false;
-            }
-        }
-
-        public async void GoUp()
-        {
-            if (Tabs[Index] is PlayerListTab plTab && FocusLevel == 1)
-            {
-                switch (plTab.listCol[plTab.Focus].Type)
+                if (FocusLevel > 0)
                 {
-                    case "players":
-                        plTab.PlayersColumn.GoUp();
-                        break;
-                    case "store":
-                        plTab.StoreColumn.GoUp();
-                        break;
-                    case "settings":
-                        plTab.SettingsColumn.GoUp();
-                        break;
-                    case "missions":
-                        plTab.MissionsColumn.GoUp();
-                        break;
+                    //TODO: IMPLEMENTATION PER EACH TABS
+                    if (FocusLevel == 1 && CurrentTab.CurrentColumnIndex == 0)
+                    {
+                        Tabs[Index].UnFocus();
+                        FocusLevel--;
+                        if (CurrentTab is PlayerListTab plTab)
+                            plTab.Minimap.Enabled = false;
+                    }
+                    else
+                    {
+                        CurrentTab.GoBack();
+                    }
                 }
-                Game.PlaySound(AUDIO_UPDOWN, AUDIO_LIBRARY);
-                return;
-            }
-            int retVal = await _pause._pause.CallFunctionReturnValueInt("SET_INPUT_EVENT", 8);
-            if (retVal != -1)
-            {
-                if (FocusLevel == 1)
+                else
                 {
-                    LeftItemIndex = retVal;
-                }
-                else if (FocusLevel == 2)
-                {
-                    RightItemIndex = retVal;
+                    if (CanPlayerCloseMenu)
+                        Visible = false;
                 }
             }
-        }
-
-        public async void GoDown()
-        {
-            if (Tabs[Index] is PlayerListTab plTab && FocusLevel == 1)
-            {
-                switch (plTab.listCol[plTab.Focus].Type)
-                {
-                    case "players":
-                        plTab.PlayersColumn.GoDown();
-                        break;
-                    case "store":
-                        plTab.StoreColumn.GoDown();
-                        break;
-                    case "settings":
-                        plTab.SettingsColumn.GoDown();
-                        break;
-                    case "missions":
-                        plTab.MissionsColumn.GoDown();
-                        break;
-                }
-                Game.PlaySound(AUDIO_UPDOWN, AUDIO_LIBRARY);
-                return;
-            }
-
-            int retVal = await _pause._pause.CallFunctionReturnValueInt("SET_INPUT_EVENT", 9);
-            if (retVal != -1)
-            {
-                if (FocusLevel == 1)
-                {
-                    LeftItemIndex = retVal;
-                }
-                else if (FocusLevel == 2)
-                {
-                    RightItemIndex = retVal;
-                }
-            }
-        }
-
-        public async void GoLeft()
-        {
-            int retVal = await _pause._pause.CallFunctionReturnValueInt("SET_INPUT_EVENT", 10);
-            switch (FocusLevel)
-            {
-                case 0:
-                    ClearPedInPauseMenu();
-                    _pause.HeaderGoLeft();
-                    if (Tabs[Index] is SubmenuTab)
-                    {
-                        Tabs[Index].LeftItemList[LeftItemIndex].Selected = false;
-                    }
-                    Tabs[Index].Visible = false;
-                    Index = retVal;
-                    Tabs[Index].Visible = true;
-                    if (Tabs[Index] is PlayerListTab _plTab)
-                    {
-                        if (_plTab.listCol.Any(x => x.Type == "settings") && _plTab.SettingsColumn != null && _plTab.SettingsColumn.Items.Count > 0)
-                        {
-                            UIMenuItem item = _plTab.SettingsColumn.Items[_plTab.SettingsColumn.CurrentSelection];
-                            if (item is not UIMenuListItem && item is not UIMenuSliderItem && item is not UIMenuProgressItem)
-                            {
-                                item.Selected = false;
-                            }
-                        }
-                        if (_plTab.listCol.Any(x => x.Type == "missions") && _plTab.MissionsColumn != null && _plTab.MissionsColumn.Items.Count > 0)
-                            _plTab.MissionsColumn.Items[_plTab.MissionsColumn.CurrentSelection].Selected = false;
-                        if (_plTab.listCol.Any(x => x.Type == "store") && _plTab.StoreColumn != null && _plTab.StoreColumn.Items.Count > 0)
-                            _plTab.StoreColumn.Items[_plTab.StoreColumn.CurrentSelection].Selected = false;
-                        if (_plTab.listCol.Any(x => x.Type == "players"))
-                        {
-                            _plTab.PlayersColumn.Items[_plTab.PlayersColumn.CurrentSelection].Selected = false;
-                            if (_plTab.listCol[0].Type == "players" || _plTab.PlayersColumn.Items[_plTab.PlayersColumn.CurrentSelection].KeepPanelVisible)
-                            {
-                                if (_plTab.PlayersColumn.Items[_plTab.PlayersColumn.CurrentSelection].ClonePed != null)
-                                    _plTab.PlayersColumn.Items[_plTab.PlayersColumn.CurrentSelection].CreateClonedPed();
-                                else
-                                    ClearPedInPauseMenu();
-                            }
-                            else
-                            {
-                                ClearPedInPauseMenu();
-                            }
-                        }
-                        else ClearPedInPauseMenu();
-                    }
-                    break;
-                case 1:
-                    {
-                        if (Tabs[Index] is PlayerListTab plTab)
-                        {
-                            switch (plTab.listCol[plTab.Focus].Type)
-                            {
-                                case "settings":
-                                    {
-                                        UIMenuItem item = plTab.SettingsColumn.Items[plTab.SettingsColumn.CurrentSelection];
-                                        if (!item.Enabled)
-                                        {
-                                            if (plTab._newStyle)
-                                            {
-                                                plTab.SettingsColumn.Items[plTab.SettingsColumn.CurrentSelection].Selected = false;
-                                                plTab.updateFocus(plTab.Focus - 1);
-                                            }
-                                            else
-                                            {
-                                                Game.PlaySound("ERROR", "HUD_FRONTEND_DEFAULT_SOUNDSET");
-                                            }
-                                            return;
-                                        }
-
-                                        if (item is UIMenuListItem it)
-                                        {
-                                            it.Index = retVal;
-                                            //ListChange(it, it.Index);
-                                            it.ListChangedTrigger(it.Index);
-                                        }
-                                        else if (item is UIMenuSliderItem slit)
-                                        {
-                                            slit.Value = retVal;
-                                            slit.SliderChanged(slit.Value);
-                                            //SliderChange(it, it.Value);
-                                        }
-                                        else if (item is UIMenuProgressItem prit)
-                                        {
-                                            prit.Value = retVal;
-                                            prit.ProgressChanged(prit.Value);
-                                            //ProgressChange(it, it.Value);
-                                        }
-                                        else
-                                        {
-                                            if (plTab._newStyle)
-                                            {
-                                                plTab.SettingsColumn.Items[plTab.SettingsColumn.CurrentSelection].Selected = false;
-                                                plTab.updateFocus(plTab.Focus - 1);
-                                            }
-                                        }
-                                    }
-                                    break;
-                                case "missions":
-                                    if (plTab._newStyle)
-                                    {
-                                        plTab.MissionsColumn.Items[plTab.MissionsColumn.CurrentSelection].Selected = false;
-                                        plTab.updateFocus(plTab.Focus - 1);
-                                    }
-                                    break;
-                                case "store":
-                                    if (plTab._newStyle)
-                                    {
-                                        plTab.StoreColumn.Items[plTab.StoreColumn.CurrentSelection].Selected = false;
-                                        plTab.updateFocus(plTab.Focus - 1);
-                                    }
-                                    break;
-                                case "panel":
-                                    plTab.updateFocus(plTab.Focus - 1);
-                                    break;
-                                case "players":
-                                    if (plTab._newStyle)
-                                    {
-                                        plTab.PlayersColumn.Items[plTab.PlayersColumn.CurrentSelection].Selected = false;
-                                        plTab.updateFocus(plTab.Focus - 1);
-                                    }
-                                    else
-                                    {
-                                        if (plTab.PlayersColumn.Items[plTab.PlayersColumn.CurrentSelection].ClonePed != null)
-                                            plTab.PlayersColumn.Items[plTab.PlayersColumn.CurrentSelection].CreateClonedPed();
-                                    }
-                                    break;
-                            }
-                        }
-                        break;
-                    }
-                case 2:
-                    {
-                        SettingsItem rightItem = Tabs[Index].LeftItemList[LeftItemIndex].ItemList[RightItemIndex] as SettingsItem;
-                        switch (rightItem.ItemType)
-                        {
-                            case SettingsItemType.ListItem:
-                                (rightItem as SettingsListItem).ItemIndex = retVal;
-                                (rightItem as SettingsListItem).ListChanged();
-                                break;
-                            case SettingsItemType.SliderBar:
-                                (rightItem as SettingsSliderItem).Value = retVal;
-                                (rightItem as SettingsSliderItem).SliderChanged();
-                                break;
-                            case SettingsItemType.ProgressBar:
-                            case SettingsItemType.MaskedProgressBar:
-                                (rightItem as SettingsProgressItem).Value = retVal;
-                                (rightItem as SettingsProgressItem).ProgressChanged();
-                                break;
-                        }
-
-                        break;
-                    }
-            }
-        }
-
-        public async void GoRight()
-        {
-            int retVal = await _pause._pause.CallFunctionReturnValueInt("SET_INPUT_EVENT", 11);
-
-            switch (FocusLevel)
-            {
-                case 0:
-                    ClearPedInPauseMenu();
-                    _pause.HeaderGoRight();
-                    if (Tabs[Index] is SubmenuTab)
-                    {
-                        Tabs[Index].LeftItemList[LeftItemIndex].Selected = false;
-                    }
-                    Tabs[Index].Visible = false;
-                    Index = retVal;
-                    Tabs[Index].Visible = true;
-                    if (Tabs[Index] is PlayerListTab _plTab)
-                    {
-                        if (_plTab.listCol.Any(x => x.Type == "settings") && _plTab.SettingsColumn != null && _plTab.SettingsColumn.Items.Count > 0)
-                        {
-                            UIMenuItem item = _plTab.SettingsColumn.Items[_plTab.SettingsColumn.CurrentSelection];
-                            if (item is not UIMenuListItem && item is not UIMenuSliderItem && item is not UIMenuProgressItem)
-                            {
-                                item.Selected = false;
-                            }
-                        }
-                        if (_plTab.listCol.Any(x => x.Type == "missions") && _plTab.MissionsColumn != null && _plTab.MissionsColumn.Items.Count > 0)
-                            _plTab.MissionsColumn.Items[_plTab.MissionsColumn.CurrentSelection].Selected = false;
-                        if (_plTab.listCol.Any(x => x.Type == "store") && _plTab.StoreColumn != null && _plTab.StoreColumn.Items.Count > 0)
-                            _plTab.StoreColumn.Items[_plTab.StoreColumn.CurrentSelection].Selected = false;
-                        if (_plTab.listCol.Any(x => x.Type == "players"))
-                        {
-                            _plTab.PlayersColumn.Items[_plTab.PlayersColumn.CurrentSelection].Selected = false;
-                            if (_plTab.listCol[0].Type == "players" || _plTab.PlayersColumn.Items[_plTab.PlayersColumn.CurrentSelection].KeepPanelVisible)
-                            {
-                                if (_plTab.PlayersColumn.Items[_plTab.PlayersColumn.CurrentSelection].ClonePed != null)
-                                    _plTab.PlayersColumn.Items[_plTab.PlayersColumn.CurrentSelection].CreateClonedPed();
-                                else
-                                    ClearPedInPauseMenu();
-                            }
-                            else
-                                ClearPedInPauseMenu();
-                        }
-                        else ClearPedInPauseMenu();
-                    }
-                    break;
-                case 1:
-                    {
-                        if (Tabs[Index] is PlayerListTab plTab)
-                        {
-                            switch (plTab.listCol[plTab.Focus].Type)
-                            {
-                                case "settings":
-                                    {
-                                        UIMenuItem item = plTab.SettingsColumn.Items[plTab.SettingsColumn.CurrentSelection];
-                                        if (!item.Enabled)
-                                        {
-                                            if (plTab._newStyle)
-                                            {
-                                                plTab.SettingsColumn.Items[plTab.SettingsColumn.CurrentSelection].Selected = false;
-                                                plTab.updateFocus(plTab.Focus + 1);
-                                            }
-                                            else
-                                            {
-                                                Game.PlaySound("ERROR", "HUD_FRONTEND_DEFAULT_SOUNDSET");
-                                            }
-                                            return;
-                                        }
-
-                                        if (item is UIMenuListItem it)
-                                        {
-                                            it.Index = retVal;
-                                            //ListChange(it, it.Index);
-                                            it.ListChangedTrigger(it.Index);
-                                        }
-                                        else if (item is UIMenuSliderItem slit)
-                                        {
-                                            slit.Value = retVal;
-                                            slit.SliderChanged(slit.Value);
-                                            //SliderChange(it, it.Value);
-                                        }
-                                        else if (item is UIMenuProgressItem prit)
-                                        {
-                                            prit.Value = retVal;
-                                            prit.ProgressChanged(prit.Value);
-                                            //ProgressChange(it, it.Value);
-                                        }
-                                        else
-                                        {
-                                            if (plTab._newStyle)
-                                            {
-                                                plTab.SettingsColumn.Items[plTab.SettingsColumn.CurrentSelection].Selected = false;
-                                                plTab.updateFocus(plTab.Focus + 1);
-                                            }
-                                        }
-                                    }
-                                    break;
-                                case "missions":
-                                    if (plTab._newStyle)
-                                    {
-                                        plTab.MissionsColumn.Items[plTab.MissionsColumn.CurrentSelection].Selected = false;
-                                        plTab.updateFocus(plTab.Focus + 1);
-                                    }
-                                    break;
-                                case "store":
-                                    if (plTab._newStyle)
-                                    {
-                                        plTab.StoreColumn.Items[plTab.StoreColumn.CurrentSelection].Selected = false;
-                                        plTab.updateFocus(plTab.Focus + 1);
-                                    }
-                                    break;
-                                case "panel":
-                                    plTab.updateFocus(plTab.Focus + 1);
-                                    break;
-                                case "players":
-                                    if (plTab._newStyle)
-                                    {
-                                        plTab.PlayersColumn.Items[plTab.PlayersColumn.CurrentSelection].Selected = false;
-                                        plTab.updateFocus(plTab.Focus + 1);
-                                    }
-                                    break;
-                            }
-                        }
-                        break;
-                    }
-                case 2:
-                    {
-                        SettingsItem rightItem = Tabs[Index].LeftItemList[LeftItemIndex].ItemList[RightItemIndex] as SettingsItem;
-                        switch (rightItem.ItemType)
-                        {
-                            case SettingsItemType.ListItem:
-                                (rightItem as SettingsListItem).ItemIndex = retVal;
-                                (rightItem as SettingsListItem).ListChanged();
-                                break;
-                            case SettingsItemType.SliderBar:
-                                (rightItem as SettingsSliderItem).Value = retVal;
-                                (rightItem as SettingsSliderItem).SliderChanged();
-                                break;
-                            case SettingsItemType.ProgressBar:
-                            case SettingsItemType.MaskedProgressBar:
-                                (rightItem as SettingsProgressItem).Value = retVal;
-                                (rightItem as SettingsProgressItem).ProgressChanged();
-                                break;
-                        }
-
-                        break;
-                    }
-            }
-
         }
 
         private bool firstTick = true;
@@ -1221,6 +413,8 @@ namespace ScaleformUI.PauseMenu
         private int itemId = 0;
         private int context = 0;
         private int unused = 0;
+        private bool tabArrowsHovered;
+        private Tuple<string, string> headerPicture = new Tuple<string, string>("CHAR_DEFAULT", "CHAR_DEFAULT");
 
         public override async void ProcessMouse()
         {
@@ -1236,7 +430,7 @@ namespace ScaleformUI.PauseMenu
             SetInputExclusive(2, 238);
 
             bool successHeader = GetScaleformMovieCursorSelection(Main.PauseMenu._header.Handle, ref eventType, ref context, ref itemId, ref unused);
-            if (successHeader)
+            if (successHeader && !IsCorona)
             {
                 switch (eventType)
                 {
@@ -1244,374 +438,530 @@ namespace ScaleformUI.PauseMenu
                         switch (context)
                         {
                             case -1:
+                                FocusLevel = 0;
+                                CurrentTab.UnFocus();
                                 _pause.SelectTab(itemId);
-                                FocusLevel = 1;
                                 Index = itemId;
-                                if (Tabs[Index] is PlayerListTab tab)
-                                {
-                                    if (tab.PlayersColumn != null)
-                                    {
-                                        if (tab.PlayersColumn.Items[tab.PlayersColumn.CurrentSelection].ClonePed != null)
-                                            tab.PlayersColumn.Items[tab.PlayersColumn.CurrentSelection].CreateClonedPed();
-                                        else
-                                            ClearPedInPauseMenu();
-                                    }
-                                }
-                                else
-                                    ClearPedInPauseMenu();
+                                FocusLevel = 1;
+                                Tabs[Index].Focus();
                                 Game.PlaySound("SELECT", "HUD_FRONTEND_DEFAULT_SOUNDSET");
-                                if (Tabs[Index].LeftItemList.All(x => !x.Enabled)) break;
-                                Tabs[Index].LeftItemList[LeftItemIndex].Selected = true;
-                                while (!Tabs[Index].LeftItemList[leftItemIndex].Enabled)
-                                {
-                                    await BaseScript.Delay(0);
-                                    LeftItemIndex++;
-                                    _pause._pause.CallFunction("SELECT_LEFT_ITEM_INDEX", leftItemIndex);
-                                }
                                 break;
-                                /* TODO: CHANGE IT WITH SPRITE LIKE THE ACTUAL PAUSE MENU
-                            case 1:
-                                switch (itemId)
-                                {
-                                    case 0:
-                                        _pause.HeaderGoLeft();
-                                        break;
-                                    case 1:
-                                        _pause.HeaderGoRight();
-                                        break;
-                                }
-                                break;
-                                */
                         }
+                        break;
+                    case 6:
+                        switch (context)
+                        {
+                            case 1000:
+                                FocusLevel = 0;
+                                Tabs[Index].UnFocus();
+                                if (itemId == -1)
+                                    Index--;
+                                if (itemId == 1)
+                                    Index++;
+                                Tabs[Index].Focus();
+                                return;
+                        }
+                        break;
+                    case 8:
+                        tabArrowsHovered = false;
+                        break;
+                    case 9:
+                        tabArrowsHovered = true;
                         break;
                 }
             }
 
             bool successPause = GetScaleformMovieCursorSelection(Main.PauseMenu._pause.Handle, ref eventType, ref context, ref itemId, ref unused);
-            if (successPause)
+            if (successPause && !tabArrowsHovered)
             {
-                switch (eventType)
+                if (eventType == 5 && FocusLevel == 0 && !tabArrowsHovered)
                 {
-                    case 5: // on click pressed
-                        if (FocusLevel == 1 && Tabs[Index] is PlayerListTab tab)
-                        {
-                            int foc = tab.Focus;
-                            int curSel = 0;
-                            if (tab._newStyle)
-                            {
-                                switch (tab.listCol[foc].Type)
-                                {
-                                    case "settings":
-                                        curSel = tab.SettingsColumn.CurrentSelection;
-                                        tab.SettingsColumn.Items[tab.SettingsColumn.CurrentSelection].Selected = false;
-                                        break;
-                                    case "players":
-                                        curSel = tab.PlayersColumn.CurrentSelection;
-                                        tab.PlayersColumn.Items[tab.PlayersColumn.CurrentSelection].Selected = false;
-                                        break;
-                                    case "missions":
-                                        curSel = tab.MissionsColumn.CurrentSelection;
-                                        tab.MissionsColumn.Items[tab.MissionsColumn.CurrentSelection].Selected = false;
-                                        break;
-                                    case "store":
-                                        curSel = tab.StoreColumn.CurrentSelection;
-                                        tab.StoreColumn.Items[tab.StoreColumn.CurrentSelection].Selected = false;
-                                        break;
-                                }
-                            }
-                            tab.updateFocus(context, true);
-                            int index = tab.listCol[tab.Focus].Pagination.GetMenuIndexFromScaleformIndex(itemId);
-                            switch (tab.listCol[tab.Focus].Type)
-                            {
-                                case "settings":
-                                    tab.SettingsColumn.CurrentSelection = index;
-                                    break;
-                                case "players":
-                                    tab.PlayersColumn.CurrentSelection = index;
-                                    break;
-                                case "missions":
-                                    tab.MissionsColumn.CurrentSelection = index;
-                                    break;
-                                case "store":
-                                    tab.StoreColumn.CurrentSelection = index;
-                                    break;
-                            }
-                            if (curSel != index) Game.PlaySound(AUDIO_UPDOWN, AUDIO_LIBRARY);
+                    FocusLevel++;
+                    return;
+                }
 
-                            if (foc == tab.Focus && curSel == index)
-                                Select(false);
-                            return;
-                        }
-                        switch (context)
-                        {
-                            case 0: // going from unfocused to focused or playerListTab player selected
-                                FocusLevel = 1;
-                                if (Tabs[Index] is not PlayerListTab)
-                                {
-                                    if (Tabs[Index].LeftItemList.All(x => !x.Enabled)) break;
-                                    Tabs[Index].LeftItemList[LeftItemIndex].Selected = true;
-                                    while (!Tabs[Index].LeftItemList[leftItemIndex].Enabled)
-                                    {
-                                        await BaseScript.Delay(0);
-                                        LeftItemIndex++;
-                                        _pause._pause.CallFunction("SELECT_LEFT_ITEM_INDEX", leftItemIndex);
-                                    }
-                                }
-                                else
-                                {
-                                    PlayerListTab _tab = Tabs[Index] as PlayerListTab;
-                                    switch (_tab.listCol[_tab.Focus].Type)
-                                    {
-                                        case "settings":
-                                            _tab.SettingsColumn.Items[_tab.SettingsColumn.CurrentSelection].Selected = true;
-                                            break;
-                                        case "players":
-                                            _tab.PlayersColumn.Items[_tab.PlayersColumn.CurrentSelection].Selected = true;
-                                            if (_tab.PlayersColumn.Items[_tab.PlayersColumn.CurrentSelection].ClonePed != null)
-                                                _tab.PlayersColumn.Items[_tab.PlayersColumn.CurrentSelection].CreateClonedPed();
-                                            break;
-                                        case "missions":
-                                            _tab.MissionsColumn.Items[_tab.MissionsColumn.CurrentSelection].Selected = true;
-                                            break;
-                                        case "store":
-                                            _tab.StoreColumn.Items[_tab.StoreColumn.CurrentSelection].Selected = true;
-                                            break;
-                                    }
-                                    if (_tab.listCol.Any(x => x.Type == "players"))
-                                        SetPauseMenuPedLighting(FocusLevel != 0);
-                                }
-                                break;
-                            case 1: // left item in subitem tab pressed or playerListTab item selected
-                                if (Tabs[Index] is not PlayerListTab)
-                                {
-                                    if (FocusLevel != 1)
-                                    {
-                                        if (!Tabs[Index].LeftItemList[LeftItemIndex].Enabled)
-                                        {
-                                            Game.PlaySound(AUDIO_ERROR, AUDIO_LIBRARY);
-                                            return;
-                                        }
-                                        FocusLevel = 1;
-                                    }
-                                    else if (focusLevel == 1)
-                                    {
-                                        if (!Tabs[Index].LeftItemList[LeftItemIndex].Enabled)
-                                        {
-                                            Game.PlaySound(AUDIO_ERROR, AUDIO_LIBRARY);
-                                            return;
-                                        }
-                                        if (Tabs[Index].LeftItemList[LeftItemIndex].ItemType == LeftItemType.Settings)
-                                        {
-                                            FocusLevel = 2;
-                                            _pause._pause.CallFunction("SELECT_RIGHT_ITEM_INDEX", 0);
-                                            RightItemIndex = 0;
-                                        }
-                                    }
-                                    LeftItemIndex = itemId;
-                                    _pause._pause.CallFunction("SELECT_LEFT_ITEM_INDEX", itemId);
-                                    Tabs[Index].LeftItemList[LeftItemIndex].Activated();
-                                    SendPauseMenuLeftItemSelect();
-                                }
-                                break;
-                            case 2:// right settings item in subitem tab pressed
-                                if (!(Tabs[Index].LeftItemList[leftItemIndex].ItemList[itemId] as SettingsItem).Enabled)
-                                {
-                                    Game.PlaySound(AUDIO_ERROR, AUDIO_LIBRARY);
-                                    return;
-                                }
-
-                                if (FocusLevel != 2)
-                                    FocusLevel = 2;
-                                if (Tabs[Index].LeftItemList[leftItemIndex].ItemList[itemId] is SettingsItem)
-                                {
-                                    //(Tabs[Index].LeftItemList[leftItemIndex].ItemList[RightItemIndex] as SettingsTabItem).Activated();
-                                    if ((Tabs[Index].LeftItemList[leftItemIndex].ItemList[itemId] as SettingsItem).Selected)
-                                    {
-                                        SettingsItem item = (Tabs[Index].LeftItemList[leftItemIndex].ItemList[RightItemIndex] as SettingsItem);
-                                        switch (item.ItemType)
-                                        {
-                                            case SettingsItemType.ListItem:
-                                                (item as SettingsListItem).ListSelected();
-                                                break;
-                                            case SettingsItemType.CheckBox:
-                                                (item as SettingsCheckboxItem).IsChecked = !(item as SettingsCheckboxItem).IsChecked!;
-                                                break;
-                                            case SettingsItemType.MaskedProgressBar:
-                                            case SettingsItemType.ProgressBar:
-                                                (item as SettingsProgressItem).ProgressSelected();
-                                                break;
-                                            case SettingsItemType.SliderBar:
-                                                (item as SettingsSliderItem).SliderSelected();
-                                                break;
-                                            default:
-                                                item.Activated();
-                                                break;
-                                        }
-                                        SendPauseMenuRightItemSelect();
-                                        return;
-                                    }
-                                    (Tabs[Index].LeftItemList[leftItemIndex].ItemList[RightItemIndex] as SettingsItem).Selected = false;
-                                    RightItemIndex = itemId;
-                                    _pause._pause.CallFunction("SELECT_RIGHT_ITEM_INDEX", itemId);
-                                    (Tabs[Index].LeftItemList[leftItemIndex].ItemList[RightItemIndex] as SettingsItem).Selected = true;
-                                }
-
-                                break;
-                        }
-                        break;
-                    case 6: // on click released
-                        break;
-                    case 7: // on click released ouside
-                        break;
-                    case 0: // dragged outside
-                    case 8: // on not hover
-                        {
-                            if (Tabs[Index] is PlayerListTab plTab)
-                            {
-                                if (FocusLevel == 1)
-                                {
-                                    int index = plTab.listCol[context].Pagination.GetMenuIndexFromScaleformIndex(itemId);
-                                    switch (plTab.listCol[context].Type)
-                                    {
-                                        case "settings":
-                                            plTab.SettingsColumn.Items[index].Hovered = false;
-                                            break;
-                                        case "players":
-                                            plTab.PlayersColumn.Items[index].Hovered = false;
-                                            break;
-                                        case "missions":
-                                            plTab.MissionsColumn.Items[index].Hovered = false;
-                                            break;
-                                        case "store":
-                                            plTab.StoreColumn.Items[index].Hovered = false;
-                                            break;
-                                    }
-                                    return;
-                                }
-                            }
-
-                            switch (context)
-                            {
-                                case 1: // left item in subitem tab pressed
-                                    Tabs[Index].LeftItemList[itemId].Hovered = false;
-                                    break;
-                                case 2:// right settings item in subitem tab pressed
-                                    BasicTabItem curIt = Tabs[Index].LeftItemList[LeftItemIndex].ItemList[itemId];
-                                    if (curIt is SettingsItem)
-                                    {
-                                        (curIt as SettingsItem).Hovered = false;
-                                    }
-                                    break;
-                            }
-                        }
-                        break;
-                    case 9: // on hovered
-                        {
-                            if (Tabs[Index] is PlayerListTab plTab)
-                            {
-                                if (FocusLevel == 1)
-                                {
-                                    int index = plTab.listCol[context].Pagination.GetMenuIndexFromScaleformIndex(itemId);
-                                    switch (plTab.listCol[context].Type)
-                                    {
-                                        case "settings":
-                                            plTab.SettingsColumn.Items[index].Hovered = true;
-                                            break;
-                                        case "players":
-                                            plTab.PlayersColumn.Items[index].Hovered = true;
-                                            break;
-                                        case "missions":
-                                            plTab.MissionsColumn.Items[index].Hovered = true;
-                                            break;
-                                        case "store":
-                                            plTab.StoreColumn.Items[index].Hovered = true;
-                                            break;
-                                    }
-                                    return;
-                                }
-                            }
-
-                            switch (context)
-                            {
-                                case 1: // left item in subitem tab pressed
-                                    foreach (TabLeftItem item in Tabs[Index].LeftItemList)
-                                        item.Hovered = Tabs[Index].LeftItemList.IndexOf(item) == itemId && item.Enabled;
-                                    break;
-                                case 2:// right settings item in subitem tab pressed
-                                    foreach (BasicTabItem curIt in Tabs[Index].LeftItemList[LeftItemIndex].ItemList)
-                                    {
-                                        int idx = Tabs[Index].LeftItemList[LeftItemIndex].ItemList.IndexOf(curIt);
-                                        if (curIt is SettingsItem)
-                                        {
-                                            (curIt as SettingsItem).Hovered = itemId == idx && (curIt as SettingsItem).Enabled;
-                                        }
-                                    }
-                                    break;
-                            }
-                        }
-                        break;
-                    case 1: // dragged inside
-                        break;
+                Tabs[Index].MouseEvent(eventType, context, itemId);
+            }
+            if(!successPause && !successHeader && FocusLevel == 0)
+            {
+                if(Game.IsDisabledControlJustPressed(0, Control.CursorAccept))
+                {
+                    FocusLevel++;
                 }
             }
         }
 
-        public override async void ProcessControls()
+
+        float iPreviousXAxis = GetDisabledControlNormal(2, 195) * 128.0f;
+        float iPreviousYAxis = GetDisabledControlNormal(2, 196) * 128.0f;
+        float iPreviousXAxisR = GetDisabledControlNormal(2, 197) * 128.0f;
+        float iPreviousYAxisR = GetDisabledControlNormal(2, 198) * 128.0f;
+        private bool CheckInput(eFRONTEND_INPUT input, bool bPlaySound, CHECK_INPUT_OVERRIDE_FLAG OverrideFlags, bool bCheckForButtonJustPressed)
+        {
+            bool bOnlyCheckForDown = false;
+            int interval = (input == eFRONTEND_INPUT.FRONTEND_INPUT_UP) ? s_iLastRefireTimeUp : (input == eFRONTEND_INPUT.FRONTEND_INPUT_DOWN) ? s_iLastRefireTimeDn : BUTTON_PRESSED_DOWN_INTERVAL;
+
+            if (s_lastGameFrame != GetFrameCount() && GetGameTimer() > (s_pressedDownTimer + interval))
+            {
+                bOnlyCheckForDown = true;
+            }
+
+            bool bInputTriggered = false;
+
+            // We use GetNorm() but we convert back to the old value range as the frontend might be heavely dependent on this range.
+            float iXAxis = 0;
+            float iYAxis = 0;
+            float iYAxisR = 0;
+            float iXAxisR = 0;
+
+            bool c_ignoreDpad = (OverrideFlags & CHECK_INPUT_OVERRIDE_FLAG.CHECK_INPUT_OVERRIDE_FLAG_IGNORE_D_PAD) != 0;
+
+            if (!OverrideFlags.HasFlag(CHECK_INPUT_OVERRIDE_FLAG.CHECK_INPUT_OVERRIDE_FLAG_IGNORE_ANALOGUE_STICKS))
+            {
+                iXAxis = GetDisabledControlNormal(2, 195) * 128.0f;
+                iYAxis = GetDisabledControlNormal(2, 196) * 128.0f;
+                iYAxisR = GetDisabledControlNormal(2, 198) * 128.0f;
+                iXAxisR = GetDisabledControlNormal(2, 197) * 128.0f;
+            }
+
+
+            switch (input)
+            {
+                case eFRONTEND_INPUT.FRONTEND_INPUT_UP:
+                    {
+                        if (iXAxis > -FRONTEND_ANALOGUE_THRESHOLD && iXAxis < FRONTEND_ANALOGUE_THRESHOLD)
+                        {
+                            if (bOnlyCheckForDown)
+                            {
+                                if (iYAxis < -FRONTEND_ANALOGUE_THRESHOLD || (IsDisabledControlPressed(2, 188) && !c_ignoreDpad))
+                                    bInputTriggered = true;
+                            }
+                            else if ((iPreviousYAxis > -FRONTEND_ANALOGUE_THRESHOLD && iYAxis < -FRONTEND_ANALOGUE_THRESHOLD) || (IsDisabledControlJustPressed(2, 188) && !c_ignoreDpad))
+                                bInputTriggered = true;
+                        }
+
+                        if (s_lastGameFrame != GetFrameCount())
+                        {
+                            // can't just do bInputTriggered because we may be waiting for an up
+                            if (iYAxis < -FRONTEND_ANALOGUE_THRESHOLD || (IsDisabledControlPressed(2, 188) && !c_ignoreDpad))
+                            {
+                                if (bInputTriggered)
+                                    s_iLastRefireTimeUp = Math.Max(s_iLastRefireTimeUp - BUTTON_PRESSED_REFIRE_ATTRITION, BUTTON_PRESSED_REFIRE_MINIMUM);
+                            }
+                            else
+                                s_iLastRefireTimeUp = BUTTON_PRESSED_DOWN_INTERVAL;
+                        }
+                        break;
+                    }
+
+                case eFRONTEND_INPUT.FRONTEND_INPUT_DOWN:
+                    {
+                        if (iXAxis > -FRONTEND_ANALOGUE_THRESHOLD && iXAxis < FRONTEND_ANALOGUE_THRESHOLD)
+                        {
+                            if (bOnlyCheckForDown)
+                            {
+                                if (iYAxis > FRONTEND_ANALOGUE_THRESHOLD || (IsDisabledControlPressed(2, 187) && !c_ignoreDpad))
+                                    bInputTriggered = true;
+                            }
+                            else if ((iPreviousYAxis < FRONTEND_ANALOGUE_THRESHOLD && iYAxis > FRONTEND_ANALOGUE_THRESHOLD) || (IsDisabledControlJustPressed(2, 187) && !c_ignoreDpad))
+                                bInputTriggered = true;
+                        }
+
+                        if (s_lastGameFrame != GetFrameCount())
+                        {
+                            // can't just do bInputTriggered because we may be waiting for an up
+                            if (iYAxis > FRONTEND_ANALOGUE_THRESHOLD || (IsDisabledControlPressed(2, 187) && !c_ignoreDpad))
+                            {
+                                if (bInputTriggered)
+                                    s_iLastRefireTimeDn = Math.Max(s_iLastRefireTimeDn - BUTTON_PRESSED_REFIRE_ATTRITION, BUTTON_PRESSED_REFIRE_MINIMUM);
+                            }
+                            else
+                                s_iLastRefireTimeDn = BUTTON_PRESSED_DOWN_INTERVAL;
+                        }
+                        break;
+                    }
+
+                case eFRONTEND_INPUT.FRONTEND_INPUT_LEFT:
+                    {
+                        if (iYAxis > -FRONTEND_ANALOGUE_THRESHOLD && iYAxis < FRONTEND_ANALOGUE_THRESHOLD)
+                        {
+                            if (bOnlyCheckForDown)
+                            {
+                                if (iXAxis < -FRONTEND_ANALOGUE_THRESHOLD || (IsDisabledControlPressed(2, 189) && !c_ignoreDpad))
+                                    bInputTriggered = true;
+                            }
+                            else if ((iPreviousXAxis > -FRONTEND_ANALOGUE_THRESHOLD && iXAxis < -FRONTEND_ANALOGUE_THRESHOLD) || (IsDisabledControlJustPressed(2, 189) && !c_ignoreDpad))
+                                bInputTriggered = true;
+                        }
+
+                        break;
+                    }
+
+                case eFRONTEND_INPUT.FRONTEND_INPUT_RIGHT:
+                    {
+                        if (iYAxis > -FRONTEND_ANALOGUE_THRESHOLD && iYAxis < FRONTEND_ANALOGUE_THRESHOLD)
+                        {
+                            if (bOnlyCheckForDown)
+                            {
+                                if (iXAxis > FRONTEND_ANALOGUE_THRESHOLD || (IsDisabledControlPressed(2, 190) && !c_ignoreDpad))
+                                    bInputTriggered = true;
+
+                            }
+                            else if ((iPreviousXAxis < FRONTEND_ANALOGUE_THRESHOLD && iXAxis > FRONTEND_ANALOGUE_THRESHOLD) || (IsDisabledControlJustPressed(2, 190) && !c_ignoreDpad))
+                                bInputTriggered = true;
+                        }
+                        break;
+                    }
+
+                case eFRONTEND_INPUT.FRONTEND_INPUT_RUP:
+                    {
+                        if (bOnlyCheckForDown)
+                        {
+                            if (iYAxisR < -FRONTEND_ANALOGUE_THRESHOLD)
+                                bInputTriggered = true;
+                        }
+                        else if (iPreviousYAxisR > -FRONTEND_ANALOGUE_THRESHOLD && iYAxisR < -FRONTEND_ANALOGUE_THRESHOLD)
+                            bInputTriggered = true;
+                        break;
+                    }
+
+                case eFRONTEND_INPUT.FRONTEND_INPUT_RDOWN:
+                    {
+                        if (bOnlyCheckForDown)
+                        {
+                            if (iYAxisR > FRONTEND_ANALOGUE_THRESHOLD)
+                                bInputTriggered = true;
+                        }
+                        else if (iPreviousYAxisR < FRONTEND_ANALOGUE_THRESHOLD && iYAxisR > FRONTEND_ANALOGUE_THRESHOLD)
+                            bInputTriggered = true;
+                        break;
+                    }
+
+                case eFRONTEND_INPUT.FRONTEND_INPUT_RLEFT:
+                    {
+                        if (bOnlyCheckForDown)
+                        {
+                            if (iXAxisR < -FRONTEND_ANALOGUE_THRESHOLD)
+                                bInputTriggered = true;
+                        }
+                        else if (iPreviousXAxisR > -FRONTEND_ANALOGUE_THRESHOLD && iXAxisR < -FRONTEND_ANALOGUE_THRESHOLD)
+                            bInputTriggered = true;
+                        break;
+                    }
+
+                case eFRONTEND_INPUT.FRONTEND_INPUT_RRIGHT:
+                    {
+                        if (bOnlyCheckForDown)
+                        {
+                            if (iXAxisR > FRONTEND_ANALOGUE_THRESHOLD)
+                                bInputTriggered = true;
+                        }
+                        else if (iPreviousXAxisR < FRONTEND_ANALOGUE_THRESHOLD && iXAxisR > FRONTEND_ANALOGUE_THRESHOLD)
+                            bInputTriggered = true;
+                        break;
+                    }
+
+                case eFRONTEND_INPUT.FRONTEND_INPUT_ACCEPT:
+                    {
+                        bool bAcceptHasBeenPressed = false;
+
+                        if (bCheckForButtonJustPressed)
+                        {
+                            if (IsDisabledControlJustPressed(2, 201))
+                                bAcceptHasBeenPressed = true;
+                        }
+                        else
+                        {
+                            if (IsDisabledControlJustReleased(2, 201))
+                                bAcceptHasBeenPressed = true;
+                        }
+
+                        if (bAcceptHasBeenPressed)
+                            bInputTriggered = true;
+                        break;
+                    }
+
+                case eFRONTEND_INPUT.FRONTEND_INPUT_X:
+                    {
+                        if (IsDisabledControlJustReleased(2, 203))
+                            bInputTriggered = true;
+                        break;
+                    }
+
+                case eFRONTEND_INPUT.FRONTEND_INPUT_Y:
+                    {
+                        if (IsDisabledControlJustReleased(2, 204))
+                            bInputTriggered = true;
+                        break;
+                    }
+
+                case eFRONTEND_INPUT.FRONTEND_INPUT_BACK:
+                    {
+                        if (bCheckForButtonJustPressed)
+                        {
+                            if (IsDisabledControlJustPressed(2, 202))
+                                bInputTriggered = true;
+                        }
+                        else
+                        {
+                            if (IsDisabledControlJustReleased(2, 202))
+                                bInputTriggered = true;
+                        }
+                        // allowed fall through
+                        break;
+                    }
+
+                case eFRONTEND_INPUT.FRONTEND_INPUT_CURSOR_BACK:
+                    {
+                        if (bCheckForButtonJustPressed)
+                        {
+                            if (IsDisabledControlJustPressed(0, 238))
+                                bInputTriggered = true;
+                        }
+                        else
+                        {
+                            if (IsDisabledControlJustReleased(0, 238))
+                                bInputTriggered = true;
+                        }
+
+                        break;
+                    }
+
+                case eFRONTEND_INPUT.FRONTEND_INPUT_START:
+                    {
+                        if (IsDisabledControlJustReleased(0, 199))
+                        {
+                            bInputTriggered = true;
+                            break;
+                        }
+
+                        if (IsDisabledControlJustReleased(0, 200))
+                        {
+                            bInputTriggered = true;
+                            break;
+                        }
+
+
+                        break;
+                    }
+
+                case eFRONTEND_INPUT.FRONTEND_INPUT_SPECIAL_UP:
+                    {
+                        //if (GetPreviousYAxisR() > -FRONTEND_ANALOGUE_THRESHOLD && iYAxisR < -FRONTEND_ANALOGUE_THRESHOLD)
+                        if (iYAxisR < -FRONTEND_ANALOGUE_THRESHOLD)
+                            bInputTriggered = true;
+                        break;
+                    }
+
+                case eFRONTEND_INPUT.FRONTEND_INPUT_SPECIAL_DOWN:
+                    {
+                        //if (GetPreviousYAxisR() < FRONTEND_ANALOGUE_THRESHOLD && iYAxisR > FRONTEND_ANALOGUE_THRESHOLD)
+                        if (iYAxisR > FRONTEND_ANALOGUE_THRESHOLD)
+                            bInputTriggered = true;
+                        break;
+                    }
+
+                case eFRONTEND_INPUT.FRONTEND_INPUT_RT_SPECIAL:
+                case eFRONTEND_INPUT.FRONTEND_INPUT_RT:
+                    {
+                        if(IsDisabledControlJustPressed(2, 208))
+                            bInputTriggered = true;
+                        break;
+                    }
+
+                case eFRONTEND_INPUT.FRONTEND_INPUT_LT_SPECIAL:
+                case eFRONTEND_INPUT.FRONTEND_INPUT_LT:
+                    {
+                        if (IsDisabledControlJustPressed(2, 207))
+                            bInputTriggered = true;
+                        break;
+                    }
+                case eFRONTEND_INPUT.FRONTEND_INPUT_LB:
+                    {
+                        if (IsDisabledControlJustPressed(2, 205))
+                            bInputTriggered = true;
+                        break;
+                    }
+
+                case eFRONTEND_INPUT.FRONTEND_INPUT_RB:
+                    {
+                        if (IsDisabledControlJustPressed(2, 206))
+                            bInputTriggered = true;
+                        break;
+                    }
+
+                case eFRONTEND_INPUT.FRONTEND_INPUT_RSTICK_LEFT:
+                    {
+                        if (iXAxisR > FRONTEND_ANALOGUE_THRESHOLD)
+                            bInputTriggered = true;
+                    }
+                    break;
+
+                case eFRONTEND_INPUT.FRONTEND_INPUT_RSTICK_RIGHT:
+                    {
+                        if (iXAxisR < -FRONTEND_ANALOGUE_THRESHOLD)
+                            bInputTriggered = true;
+                    }
+                    break;
+
+                case eFRONTEND_INPUT.FRONTEND_INPUT_SELECT:
+                    {
+                        if (IsDisabledControlJustReleased(2, 217))
+                            bInputTriggered = true;
+                    }
+                    break;
+
+                case eFRONTEND_INPUT.FRONTEND_INPUT_R3:
+                    {
+                        if (IsDisabledControlJustReleased(2, 231))
+                            bInputTriggered = true;
+                    }
+                    break;
+
+                case eFRONTEND_INPUT.FRONTEND_INPUT_L3:
+                    {
+                        if (IsDisabledControlJustReleased(2, 230))
+                            bInputTriggered = true;
+                    }
+                    break;
+
+                case eFRONTEND_INPUT.FRONTEND_INPUT_CURSOR_ACCEPT:
+                    {
+                        if (IsDisabledControlJustReleased(2, 237))
+                            bInputTriggered = true;
+                    }
+                    break;
+            }
+
+            if (bInputTriggered)
+            {
+                if (s_lastGameFrame != GetFrameCount())
+                {
+                    s_pressedDownTimer = GetGameTimer();  // reset the timer to check for holding button down
+                    s_lastGameFrame = GetFrameCount();
+                    iPreviousXAxis = iXAxis;
+                    iPreviousYAxis = iYAxis;
+                    iPreviousXAxisR = iXAxisR;
+                    iPreviousYAxisR = iYAxisR;
+                }
+
+                //if (bPlaySound)
+                //{
+                //    PlayInputSound(input);
+                //}
+
+                //if(input == eFRONTEND_INPUT.FRONTEND_INPUT_CURSOR_ACCEPT)
+                //{
+                //    Main.PauseMenu._pause.CallFunction("CLEAR_ALL_HOVER");
+                //}
+            }
+            return (bInputTriggered);
+        }
+
+
+        public override void ProcessControls()
         {
             if (firstTick)
             {
                 firstTick = false;
                 return;
-                // without this shit the menu goes on focus without need if opened from another menu.
             }
 
-            if (!Visible || TemporarilyHidden) return;
+            if (!Visible || TemporarilyHidden || isBuilding) return;
 
-            if (Game.IsControlJustPressed(2, Control.PhoneUp))
-                GoUp();
-            else if (Game.IsControlJustPressed(2, Control.PhoneDown))
-                GoDown();
-            else if (Game.IsControlJustPressed(2, Control.PhoneLeft))
-                GoLeft();
-            else if (Game.IsControlJustPressed(2, Control.PhoneRight))
-                GoRight();
-            else if (Game.IsControlJustPressed(2, Control.FrontendLb) || (Game.IsControlJustPressed(2, (Control)192) && Game.IsControlPressed(2, Control.Sprint) && IsUsingKeyboard(2)))
+            //if (Game.IsDisabledControlJustPressed(2, Control.FrontendUp))
+            //    GoUp();
+            if (CheckInput(eFRONTEND_INPUT.FRONTEND_INPUT_UP, false, CHECK_INPUT_OVERRIDE_FLAG.CHECK_INPUT_OVERRIDE_FLAG_NONE, false))
             {
-                if (FocusLevel > 0) GoBack();
-                GoLeft();
+                CurrentTab.GoUp();
             }
-            else if (Game.IsControlJustPressed(2, Control.FrontendRb) || (Game.IsControlJustPressed(2, (Control)192) && IsUsingKeyboard(2)))
+            else if (CheckInput(eFRONTEND_INPUT.FRONTEND_INPUT_DOWN, false, CHECK_INPUT_OVERRIDE_FLAG.CHECK_INPUT_OVERRIDE_FLAG_NONE, false))
             {
-                if (FocusLevel > 0) GoBack();
-                GoRight();
+                CurrentTab.GoDown();
             }
-            else if (Game.IsControlJustPressed(2, Control.FrontendAccept))
-                Select(true);
-            else if (Game.IsControlJustReleased(2, Control.PhoneCancel))
-                GoBack();
-
-            if (Game.IsControlJustPressed(1, Control.CursorScrollUp))
-                _pause.SendScrollEvent(-1);
-            else if (Game.IsControlJustPressed(1, Control.CursorScrollDown))
-                _pause.SendScrollEvent(1);
-
-            if (Game.IsControlPressed(2, Control.LookUpOnly) && !IsUsingKeyboard(2))
+            else if (CheckInput(eFRONTEND_INPUT.FRONTEND_INPUT_LEFT, false, CHECK_INPUT_OVERRIDE_FLAG.CHECK_INPUT_OVERRIDE_FLAG_NONE, false))
             {
-                if (Main.GameTime - _timer > 175)
+                if (FocusLevel == 0 && !IsCorona)
+                    Index--;
+                else
+                    CurrentTab.GoLeft();
+            }
+            else if (CheckInput(eFRONTEND_INPUT.FRONTEND_INPUT_RIGHT, false, CHECK_INPUT_OVERRIDE_FLAG.CHECK_INPUT_OVERRIDE_FLAG_NONE, false))
+            {
+                if (FocusLevel == 0 && !IsCorona)
+                    Index++;
+                else
+                    CurrentTab.GoRight();
+            }
+            else if (CheckInput(eFRONTEND_INPUT.FRONTEND_INPUT_LB, false, CHECK_INPUT_OVERRIDE_FLAG.CHECK_INPUT_OVERRIDE_FLAG_NONE, false)
+                || (Game.IsDisabledControlJustPressed(2, (Control)192) && Game.IsControlPressed(2, Control.Sprint) && IsUsingKeyboard(2)))
+            {
+                if (IsCorona) return;
+                if (FocusLevel > 0)
+                    FocusLevel = 0;
+                Index--;
+            }
+            else if (CheckInput(eFRONTEND_INPUT.FRONTEND_INPUT_RB, false, CHECK_INPUT_OVERRIDE_FLAG.CHECK_INPUT_OVERRIDE_FLAG_NONE, false)
+                || (Game.IsDisabledControlJustPressed(2, (Control)192) && IsUsingKeyboard(2)))
+            {
+                if (IsCorona) return;
+                if (FocusLevel > 0)
+                    FocusLevel = 0;
+                Index++;
+            }
+            else if (CheckInput(eFRONTEND_INPUT.FRONTEND_INPUT_ACCEPT, false, CHECK_INPUT_OVERRIDE_FLAG.CHECK_INPUT_OVERRIDE_FLAG_NONE, false))
+            {
+                if (focusLevel == 0)
                 {
-                    _pause.SendScrollEvent(-1);
-                    _timer = Main.GameTime;
+                    Tabs[Index].Focus();
+                    FocusLevel++;
+                }
+                else
+                {
+                    CurrentTab.Select();
                 }
             }
-            else if (Game.IsControlPressed(2, Control.LookDownOnly) && !IsUsingKeyboard(2))
+            else if (CheckInput(eFRONTEND_INPUT.FRONTEND_INPUT_BACK, false, CHECK_INPUT_OVERRIDE_FLAG.CHECK_INPUT_OVERRIDE_FLAG_NONE, false) || CheckInput(eFRONTEND_INPUT.FRONTEND_INPUT_CURSOR_BACK, false, CHECK_INPUT_OVERRIDE_FLAG.CHECK_INPUT_OVERRIDE_FLAG_NONE, false))
             {
-                if (Main.GameTime - _timer > 175)
+                GoBack();
+            }
+            else if (CheckInput(eFRONTEND_INPUT.FRONTEND_INPUT_RUP, false, CHECK_INPUT_OVERRIDE_FLAG.CHECK_INPUT_OVERRIDE_FLAG_NONE, true))
+            {
+                if (!CurrentTab.Focused) return;
+                if (CurrentTab is TextTab tTab)
                 {
-                    _pause.SendScrollEvent(1);
-                    _timer = Main.GameTime;
+                    tTab.MouseEvent(10, 0, -1);
+                    Main.PauseMenu._pause.CallFunction("SET_COLUMN_INPUT_EVENT", 0, 8);
+                }
+                else if (CurrentTab is SubmenuTab smTab)
+                {
+                    if (smTab.currentItemType == LeftItemType.Info || smTab.currentItemType == LeftItemType.Statistics)
+                    {
+                        Game.PlaySound(AUDIO_UPDOWN, AUDIO_LIBRARY);
+                        Main.PauseMenu._pause.CallFunction("SET_COLUMN_INPUT_EVENT", 1, 8);
+                    }
+                }
+            }
+            else if (CheckInput(eFRONTEND_INPUT.FRONTEND_INPUT_RDOWN, false, CHECK_INPUT_OVERRIDE_FLAG.CHECK_INPUT_OVERRIDE_FLAG_NONE, true))
+            {
+                if (!CurrentTab.Focused) return;
+                if (CurrentTab is TextTab tTab)
+                {
+                    tTab.MouseEvent(11, 0, -1);
+                    Main.PauseMenu._pause.CallFunction("SET_COLUMN_INPUT_EVENT", 0, 9);
+                }
+                else if (CurrentTab is SubmenuTab smTab)
+                {
+                    if (smTab.currentItemType == LeftItemType.Info || smTab.currentItemType == LeftItemType.Statistics)
+                    {
+                        Game.PlaySound(AUDIO_UPDOWN, AUDIO_LIBRARY);
+                        Main.PauseMenu._pause.CallFunction("SET_COLUMN_INPUT_EVENT", 1, 9);
+                    }
                 }
             }
         }
+
+        public BaseTab CurrentTab => Tabs[Index];
 
         internal void SendPauseMenuOpen()
         {
@@ -1633,22 +983,13 @@ namespace ScaleformUI.PauseMenu
             OnPauseMenuFocusChanged?.Invoke(this, Tabs[Index], FocusLevel);
         }
 
-        internal void SendPauseMenuLeftItemChange()
+        internal void SendColumnItemSelect(PM_Column col)
         {
-            OnLeftItemChange?.Invoke(this, Tabs[Index].LeftItemList[LeftItemIndex], LeftItemIndex);
+            OnColumnItemSelect.Invoke(this, CurrentTab, col.position, col.Index);
         }
-
-        internal void SendPauseMenuLeftItemSelect()
+        internal void SendColumnItemChange(PM_Column col)
         {
-            OnLeftItemSelect?.Invoke(this, Tabs[Index].LeftItemList[LeftItemIndex], LeftItemIndex);
-        }
-        internal void SendPauseMenuRightItemChange()
-        {
-            OnRightItemChange?.Invoke(this, Tabs[Index].LeftItemList[LeftItemIndex].ItemList[RightItemIndex] as SettingsItem, LeftItemIndex, RightItemIndex);
-        }
-        internal void SendPauseMenuRightItemSelect()
-        {
-            OnRightItemSelect?.Invoke(this, Tabs[Index].LeftItemList[LeftItemIndex].ItemList[RightItemIndex] as SettingsItem, LeftItemIndex, RightItemIndex);
+            OnColumnItemSelect.Invoke(this, CurrentTab, col.position, col.Index);
         }
     }
 }

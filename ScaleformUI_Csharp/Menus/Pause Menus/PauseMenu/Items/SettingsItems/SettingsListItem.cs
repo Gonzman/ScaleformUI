@@ -1,12 +1,10 @@
-﻿using System.Collections.Generic;
-
-namespace ScaleformUI.PauseMenu
+﻿namespace ScaleformUI.PauseMenu
 {
     public delegate void SettingsListItemChanged(SettingsListItem item, int value, string listItem);
     public delegate void SettingsListItemSelected(SettingsListItem item, int value, string listItem);
     public class SettingsListItem : SettingsItem
     {
-        private int itemIndex;
+        internal int itemIndex;
         public List<dynamic> ListItems { get; set; }
         public event SettingsListItemChanged OnListItemChanged;
         public event SettingsListItemSelected OnListItemSelected;
@@ -16,13 +14,8 @@ namespace ScaleformUI.PauseMenu
             set
             {
                 itemIndex = value;
-                if (Parent != null)
-                {
-                    int tab = Parent.Parent.Parent.Tabs.IndexOf(Parent.Parent);
-                    int leftItem = Parent.Parent.LeftItemList.IndexOf(Parent);
-                    int rightIndex = Parent.ItemList.IndexOf(this);
-                    Parent.Parent.Parent._pause.SetRightSettingsItemIndex(tab, leftItem, rightIndex, itemIndex);
-                }
+                if (ParentColumn != null && ParentColumn.visible)
+                    ParentColumn.UpdateSlot(ParentColumn.Items.IndexOf(this));
                 ListChanged();
             }
         }

@@ -38,7 +38,7 @@ function WarningInstance:Load()
         return p
     end
 
-    self._sc = Scaleform.Request("POPUP_WARNING")
+    self._sc = Scaleform.RequestWidescreen("POPUP_WARNING")
 
     if self._sc == nil then
         p:reject("Error requesting warning scaleform.")
@@ -134,7 +134,7 @@ function WarningInstance:Update()
             then
                 self.OnButtonPressed(v)
                 self:Dispose()
-                
+
                 ScaleformUI.Scaleforms.InstructionalButtons:ClearButtonList()
                 ScaleformUI.Scaleforms.InstructionalButtons.UseMouseButtons = false
                 if MenuHandler._currentMenu ~= nil then

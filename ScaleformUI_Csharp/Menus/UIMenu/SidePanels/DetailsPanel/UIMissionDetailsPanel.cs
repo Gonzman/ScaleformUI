@@ -1,4 +1,5 @@
 ﻿using ScaleformUI.Elements;
+using System.Drawing;
 
 namespace ScaleformUI.Menu
 {
@@ -16,7 +17,8 @@ namespace ScaleformUI.Menu
                 title = value;
                 if (ParentItem is not null && ParentItem.Parent != null && ParentItem.Parent.Visible)
                 {
-                    Main.scaleformUI.CallFunction("UPDATE_SIDE_PANEL_TITLE", ParentItem.Parent.Pagination.GetScaleformIndex(ParentItem.Parent.MenuItems.IndexOf(this.ParentItem)), title);
+                    int it = ParentItem.Parent.MenuItems.IndexOf(ParentItem);
+                    ParentItem.Parent.SendSidePanelToScaleform(it, true);
                 }
             }
         }
@@ -71,10 +73,10 @@ namespace ScaleformUI.Menu
         {
             TextureDict = txd;
             TextureName = txn;
-            if (ParentItem is not null)
+            if (ParentItem is not null && ParentItem.Parent != null && ParentItem.Parent.Visible)
             {
-                int wid = ParentItem.Parent.Pagination.GetScaleformIndex(ParentItem.Parent.MenuItems.IndexOf(this.ParentItem));
-                Main.scaleformUI.CallFunction("UPDATE_MISSION_DETAILS_PANEL_IMG", wid, TextureDict, TextureName);
+                int it = ParentItem.Parent.MenuItems.IndexOf(ParentItem);
+                ParentItem.Parent.SendSidePanelToScaleform(it, true);
             }
 
         }
@@ -88,8 +90,29 @@ namespace ScaleformUI.Menu
             Items.Add(item);
             if (ParentItem is not null && ParentItem.Parent != null && ParentItem.Parent.Visible)
             {
-                int wid = ParentItem.Parent.Pagination.GetScaleformIndex(ParentItem.Parent.MenuItems.IndexOf(this.ParentItem));
-                Main.scaleformUI.CallFunction("ADD_MISSION_DETAILS_DESC_ITEM", wid, item.Type, item.TextLeft, item.TextRight, (int)item.Icon, item.IconColor, item.Tick, item._labelFont.FontName, item._labelFont.FontID, item._rightLabelFont.FontName, item._rightLabelFont.FontID);
+                int it = ParentItem.Parent.MenuItems.IndexOf(ParentItem);
+                ParentItem.Parent.SendSidePanelToScaleform(it, true);
+            }
+        }
+
+        public void Clear()
+        {
+            Title = "";
+            TextureDict = "";
+            TextureName = "";
+            Items.Clear();
+            if (ParentItem is not null && ParentItem.Parent != null && ParentItem.Parent.Visible)
+            {
+                Main.scaleformUI.CallFunction("SET_PANEL_DATA_SLOT_EMPTY");
+            }
+        }
+
+        public void Refresh()
+        {
+            if (ParentItem is not null && ParentItem.Parent != null && ParentItem.Parent.Visible)
+            {
+                int it = ParentItem.Parent.MenuItems.IndexOf(ParentItem);
+                ParentItem.Parent.SendSidePanelToScaleform(it);
             }
         }
 
@@ -102,8 +125,8 @@ namespace ScaleformUI.Menu
             Items.RemoveAt(idx);
             if (ParentItem is not null && ParentItem.Parent != null && ParentItem.Parent.Visible)
             {
-                int wid = ParentItem.Parent.Pagination.GetScaleformIndex(ParentItem.Parent.MenuItems.IndexOf(this.ParentItem));
-                Main.scaleformUI.CallFunction("REMOVE_MISSION_DETAILS_DESC_ITEM", wid, idx);
+                int it = ParentItem.Parent.MenuItems.IndexOf(ParentItem);
+                ParentItem.Parent.SendSidePanelToScaleform(it, true);
             }
         }
     }

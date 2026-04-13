@@ -197,7 +197,7 @@ end
 ---@return nil
 function Notifications:ShowFloatingHelpNotification(msg, coords)
     AddTextEntry("ScaleformUIFloatingHelpText", msg)
-    SetFloatingHelpTextWorldPosition(1, coords)
+    SetFloatingHelpTextWorldPosition(1, coords.x, coords.y, coords.z)
     SetFloatingHelpTextStyle(1, 1, 2, -1, 3, 0)
     BeginTextCommandDisplayHelp("ScaleformUIFloatingHelpText")
     EndTextCommandDisplayHelp(2, false, false, -1)
@@ -207,7 +207,8 @@ end
 ---@param title string @The title
 ---@param subtitle string @The subtitle
 ---@param text string @The body of the nofitication
----@param characterIcon string @The character to be displayed in the notification, use the NotificationCharacters
+---@param iconSet string @The texture dictionary for the icon, use the NotificationCharacters
+---@param icon string @The texture name for the icon
 ---@param backgroundColour HudColours @The background color
 ---@param flashColour SColor @The flash color (RGBA)
 ---@param blink boolean @Should the notification blink?
@@ -218,9 +219,11 @@ end
 ---@see HudColours
 ---@see NotificationType
 ---@return nil
-function Notifications:ShowAdvancedNotification(title, subtitle, text, characterIcon, backgroundColour, flashColour, blink, notificationType, sound)
+function Notifications:ShowAdvancedNotification(title, subtitle, text, iconSet, icon, backgroundColour, flashColour,
+                                                blink, notificationType, sound)
     if (notificationType == nil) then notificationType = self.NotificationIcon.Default end
-    if (characterIcon == nil) then characterIcon = self.IconChars.Default end
+    if (iconSet == nil) then iconSet = self.IconChars.Default end
+    if (icon == nil) then icon = self.IconChars.Default end
     if (backgroundColour == nil) then backgroundColour = -1 end
     if (blink == nil) then blink = false end
     ThefeedResetAllParameters()
@@ -234,7 +237,8 @@ function Notifications:ShowAdvancedNotification(title, subtitle, text, character
         ThefeedSetAnimpostfxColor(flashColour.R, flashColour.G, flashColour.B, flashColour.A)
     end
     if (sound) then PlaySoundFrontend(-1, "DELETE", "HUD_DEATHMATCH_SOUNDSET", true); end
-    self._handle = EndTextCommandThefeedPostMessagetext(characterIcon, characterIcon, true, notificationType, title, subtitle)
+    self._handle = EndTextCommandThefeedPostMessagetext(iconSet, icon, true, notificationType, title,
+        subtitle)
 end
 
 -- TODO: Investigate if newProgress should be a boolean or a number for EndTextCommandThefeedPostStats
@@ -280,7 +284,8 @@ function Notifications:ShowVSNotification(leftPed, leftScore, leftColor, rightPe
 
     BeginTextCommandThefeedPost("")
     ---@diagnostic disable-next-line: redundant-parameter -- This is a bug in the linter
-    self._handle = EndTextCommandThefeedPostVersusTu(txd_1, txd_1, leftScore, txd_2, txd_2, rightScore, leftColor, rightColor)
+    self._handle = EndTextCommandThefeedPostVersusTu(txd_1, txd_1, leftScore, txd_2, txd_2, rightScore, leftColor,
+        rightColor)
 
     UnregisterPedheadshot(handle_1)
     UnregisterPedheadshot(handle_2)
@@ -320,21 +325,21 @@ end
 ---@param x number @The x position of the text (0-1)
 ---@param y number @The y position of the text (0-1)
 ---@param text string @The text
----@param color SColor @The color of the text (RGBA)
----@param font Font @The font
----@param textAlignment number @The text alignment
----@param shadow boolean @Should the text have a shadow?
----@param outline boolean @Should the text have an outline?
----@param wrap number @The wrap
+---@param color? SColor @The color of the text (RGBA)
+---@param font? Font @The font
+---@param textAlignment? number @The text alignment
+---@param shadow? boolean @Should the text have a shadow?
+---@param outline? boolean @Should the text have an outline?
+---@param wrap? number @The wrap
 ---@see Font
 ---@return nil
 function Notifications:DrawText(x, y, text, color, font, textAlignment, shadow, outline, wrap)
-    if (color == nil) then color = { r = 255, g = 255, b = 255, a = 255 } end
-    if (font == nil) then font = 4 end
-    if (textAlignment == nil) then textAlignment = 1 end
-    if (shadow == nil) then shadow = true end
-    if (outline == nil) then outline = true end
-    if (wrap == nil) then wrap = 0 end
+    if not color then color = SColor.HUD_Pure_white end
+    if not font then font = 4 end
+    if not textAlignment then textAlignment = 1 end
+    if not shadow then shadow = true end
+    if not outline then outline = true end
+    if not wrap then wrap = 0 end
 
     local screenw, screenh = GetActiveScreenResolution()
     local height = 1080
@@ -344,8 +349,8 @@ function Notifications:DrawText(x, y, text, color, font, textAlignment, shadow, 
     SetTextFont(font)
     SetTextScale(0.0, 0.5)
     SetTextColour(color.r, color.g, color.b, color.a)
-    if (shadow) then SetTextDropShadow() end
-    if (outline) then SetTextOutline() end
+    if shadow then SetTextDropShadow() end
+    if outline then SetTextOutline() end
     if (wrap ~= 0) then
         local xsize = (x + wrap) / width
         SetTextWrap(x, xsize)
@@ -363,10 +368,10 @@ end
 
 ---Add subtitle to the screen
 ---@param msg string @The message
----@param duration number @The duration of how long the subtitle will be displayed (in ms)
+---@param duration? number @The duration of how long the subtitle will be displayed (in ms)
 ---@return nil
 function Notifications:ShowSubtitle(msg, duration)
-    if (duration == nil) then duration = 2500 end
+    if not duration then duration = 2500 end
     AddTextEntry("ScaleformUISubtitle", msg)
     BeginTextCommandPrint("ScaleformUISubtitle")
     EndTextCommandPrint(duration, true)

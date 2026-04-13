@@ -4,13 +4,46 @@ UIRadioMenu.__call = function()
     return "UIRadioMenu"
 end
 
+---@class UIRadioMenu: Scaleform
+---@field public visible boolean
+---@field public isAnimating boolean
+---@field public currentSelection number
+---@field public oldAngle number
+---@field public changed boolean
+---@field public Stations table
+---@field public _AnimDirection number
+---@field public _animDuration number
+---@field public InstructionalButtons table
+---@field public OnMenuOpen fun(menu: UIRadioMenu, data: any)
+---@field public OnMenuClose fun(menu: UIRadioMenu)
+---@field public OnIndexChange fun(index: number)
+---@field public OnStationSelect fun(segment: any, index: number)
+---@field public AnimDirection fun(direction: number)
+---@field public AnimationDuration fun(time: number)
+---@field public AddInstructionButton fun(button: table)
+---@field public RemoveInstructionButton fun(button: table)
+---@field public CurrentSelection fun(index: number)
+---@field public Visible fun(bool: boolean)
+---@field public BuildMenu fun()
+---@field public AddStation fun(station: table)
+---@field public ProcessMouse fun()
+---@field public ProcessControl fun()
+---@field public SwitchTo fun(newMenu: UIRadioMenu, newMenuCurrentSelection: number, inheritOldMenuParams: boolean)
+---@field public GoBack fun()
+---@field public Select fun()
+---@field public Draw fun()
+---@field private _visible boolean
+---@field private _animating boolean
+
+---New
+---@return UIRadioMenu
 function UIRadioMenu.New()
     local data = {
-        visible=false,
-        isAnimating=false,
-        currentSelection=1,
-        oldAngle=0,
-        changed=false,
+        visible = false,
+        isAnimating = false,
+        currentSelection = 1,
+        oldAngle = 0,
+        changed = false,
         Stations = {},
         _AnimDirection = -1,
         _animDuration = 1.0,
@@ -115,7 +148,7 @@ end
 function UIRadioMenu:BuildMenu()
     Citizen.CreateThread(function()
         ScaleformUI.Scaleforms._radioMenu:CallFunction("CREATE_MENU", true, 0, 0)
-        for k,v in pairs(self.Stations) do
+        for k, v in pairs(self.Stations) do
             ScaleformUI.Scaleforms._radioMenu:CallFunction("ADD_ITEM", v.TextureDictionary, v.TextureName, v.StationName, v.Artist, v.Track)
         end
         ScaleformUI.Scaleforms._radioMenu:CallFunction("LOAD_MENU")
@@ -151,7 +184,7 @@ function UIRadioMenu:ProcessControl()
     if x > 400 or y > 400 or x < -400 or y < -400 then
         local step = 360 / #self.Stations
         angle = math.atan(y, x) * (180 / math.pi)
-        if angle == 0 then 
+        if angle == 0 then
             normalized_angle = 0
         else
             normalized_angle = (angle + 450) % 360
@@ -222,10 +255,7 @@ function UIRadioMenu:animateIn()
     ScaleformUI.Scaleforms._radioMenu:CallFunction("ANIMATE_IN", self._animDuration, self._AnimDirection, "zoom")
     repeat
         Citizen.Wait(0)
-        local return_value = ScaleformUI.Scaleforms._radioMenu:CallFunction("GET_IS_ANIMATING", true) --[[@as number]]
-        while not IsScaleformMovieMethodReturnValueReady(return_value) do
-            Citizen.Wait(0)
-        end
+        local return_value = ScaleformUI.Scaleforms._radioMenu:CallFunctionAsyncReturnBool("GET_IS_ANIMATING", true) --[[@as number]]
         self.isAnimating = GetScaleformMovieMethodReturnValueBool(return_value)
     until not self.isAnimating
 end
@@ -234,10 +264,7 @@ function UIRadioMenu:animateOut()
     ScaleformUI.Scaleforms._radioMenu:CallFunction("ANIMATE_OUT", self._animDuration, self._AnimDirection, "zoom")
     repeat
         Citizen.Wait(0)
-        local return_value = ScaleformUI.Scaleforms._radioMenu:CallFunction("GET_IS_ANIMATING", true) --[[@as number]]
-        while not IsScaleformMovieMethodReturnValueReady(return_value) do
-            Citizen.Wait(0)
-        end
+        local return_value = ScaleformUI.Scaleforms._radioMenu:CallFunctionAsyncReturnBool("GET_IS_ANIMATING", true) --[[@as number]]
         self.isAnimating = GetScaleformMovieMethodReturnValueBool(return_value)
     until not self.isAnimating
 end

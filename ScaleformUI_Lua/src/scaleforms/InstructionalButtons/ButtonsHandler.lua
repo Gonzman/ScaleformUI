@@ -22,10 +22,24 @@ end
 ---@field public IsSaving boolean
 ---@field public ControlButtons table<string, InstructionalButton>
 ---@field public Enabled fun(self: table, bool: boolean?): boolean
+---@field public Load fun(self: table):nil
+---@field public SetInstructionalButtons fun(self: table, buttons: table<InstructionalButton>):nil
+---@field public AddInstructionalButton fun(self: table, button: InstructionalButton):nil
+---@field public RemoveInstructionalButton fun(self: table, button: InstructionalButton):nil
+---@field public ClearButtonList fun(self: table):nil
+---@field public Refresh fun(self: table):nil
+---@field public ShowBusySpinner fun(self: table, spinnerType: number, text: string, time: number, manualDispose?: boolean):nil
+---@field public HideBusySpinner fun(self: table):nil
+---@field public UpdateButtons fun(self: table):nil
+---@field public Draw fun(self: table):nil
+---@field public DrawScreenSpace fun(self: table, x: number, y: number):nil
+---@field public DrawScreeSpace fun(self: table, x: number, y: number):nil
+---@field public Update fun(self: table):nil
 
 ---Loads the instructional buttons
 function ButtonsHandler:Load()
-    if self._sc ~= nil then return end
+    if self._sc ~= nil and self._sc:IsLoaded() then return end
+    if self._sc ~= nil then self._sc = nil end
     self._sc = Scaleform.Request("INSTRUCTIONAL_BUTTONS")
     local timeout = 1000
     local start = GlobalGameTimer
@@ -162,7 +176,7 @@ end
 ---Update tick for the instructional buttons
 function ButtonsHandler:Update()
     if (self.ControlButtons == nil or #self.ControlButtons == 0) and not self.IsSaving then return end
-    if self._sc == nil then self:Load() end
+    if self._sc == nil or not self._sc:IsLoaded() then self:Load() end
     if IsUsingKeyboard(2) then
         if not self.IsUsingKeyboard then
             self.IsUsingKeyboard = true
@@ -181,14 +195,14 @@ function ButtonsHandler:Update()
     HideHudComponentThisFrame(7)
     HideHudComponentThisFrame(9)
 
-    for k,v in pairs(self.ControlButtons) do
+    for k, v in pairs(self.ControlButtons) do
         if IsUsingKeyboard(2) then
             if IsControlJustPressed(0, v.KeyboardButton) or IsDisabledControlJustPressed(0, v.KeyboardButton) then
                 v.OnControlSelected(v)
             end
             if v.KeyboardButtons ~= nil and #v.KeyboardButtons > 0 then
-                for i,j in pairs(v.KeyboardButtons) do
-                    if IsControlJustPressed(0, j)  or IsDisabledControlJustPressed(0, j) then
+                for i, j in pairs(v.KeyboardButtons) do
+                    if IsControlJustPressed(0, j) or IsDisabledControlJustPressed(0, j) then
                         v.OnControlSelected(v)
                     end
                 end
@@ -198,8 +212,8 @@ function ButtonsHandler:Update()
                 v.OnControlSelected(v)
             end
             if v.GamepadButtons ~= nil and #v.GamepadButtons > 0 then
-                for i,j in pairs(v.GamepadButtons) do
-                    if IsControlJustPressed(0, j)  or IsDisabledControlJustPressed(0, j) then
+                for i, j in pairs(v.GamepadButtons) do
+                    if IsControlJustPressed(0, j) or IsDisabledControlJustPressed(0, j) then
                         v.OnControlSelected(v)
                     end
                 end

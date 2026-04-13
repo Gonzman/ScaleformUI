@@ -24,11 +24,13 @@ AddEventHandler("onResourceStop", function(resName)
         if MenuHandler:IsAnyMenuOpen() or MenuHandler:IsAnyPauseMenuOpen() then
             MenuHandler:CloseAndClearHistory()
         end
-        if IsPauseMenuActive() or GetCurrentFrontendMenuVersion() == `FE_MENU_VERSION_CORONA` then
+        if IsPauseMenuActive() and GetCurrentFrontendMenuVersion() == `FE_MENU_VERSION_CORONA` then
             ActivateFrontendMenu(`FE_MENU_VERSION_CORONA`, false, 0)
             AnimpostfxStop("PauseMenuIn");
             AnimpostfxPlay("PauseMenuOut", 800, false);
         end
+        -- DO NOT REMOVE THIS.. THIS IS NEEDED!
+        ScaleformUI.Scaleforms.MinimapOverlays:ClearAll()
         ScaleformUI.Scaleforms._pauseMenu:Dispose()
         ScaleformUI.Scaleforms._ui:CallFunction("CLEAR_ALL")
         ScaleformUI.Scaleforms._ui:Dispose()
@@ -42,41 +44,62 @@ AddEventHandler("onResourceStop", function(resName)
     end
 end)
 
-Citizen.CreateThread(function()
+local function initializeScaleforms()
     ScaleformUI.Scaleforms._ui = Scaleform.RequestWidescreen("scaleformui")
     ScaleformUI.Scaleforms._radialMenu = Scaleform.RequestWidescreen("radialmenu")
     ScaleformUI.Scaleforms._radioMenu = Scaleform.RequestWidescreen("radiomenu")
     ScaleformUI.Scaleforms._pauseMenu = PauseMenu.New()
     ScaleformUI.Scaleforms._pauseMenu:Load()
     ScaleformUI.Scaleforms.MinimapOverlays:Load()
+end
 
+Citizen.CreateThread(function()
+    initializeScaleforms()
+    
     while true do
-        if MenuHandler.ableToDraw and not (IsWarningMessageActive() or ScaleformUI.Scaleforms.Warning:IsShowing()) then
-            if GetCurrentFrontendMenuVersion() == `FE_MENU_VERSION_CORONA` then
-                SetScriptGfxDrawBehindPausemenu(true)
-                BeginScaleformMovieMethodOnFrontend("INSTRUCTIONAL_BUTTONS");
-                ScaleformMovieMethodAddParamPlayerNameString("SET_DATA_SLOT_EMPTY");
-                EndScaleformMovieMethod()
-                BeginScaleformMovieMethodOnFrontendHeader("SHOW_MENU");
-                ScaleformMovieMethodAddParamBool(false);
-                EndScaleformMovieMethod();
-                BeginScaleformMovieMethodOnFrontendHeader("SHOW_HEADING_DETAILS");
-                ScaleformMovieMethodAddParamBool(false);
-                EndScaleformMovieMethod();
+        -- Check if any menu is active
+        if MenuHandler:IsAnyMenuOpen() or MenuHandler:IsAnyPauseMenuOpen() then
+            if MenuHandler.ableToDraw and not (IsWarningMessageActive() or ScaleformUI.Scaleforms.Warning:IsShowing()) then
+                -- Cache frontend menu version check
+                local currentMenuVersion = GetCurrentFrontendMenuVersion()
+                
+                if currentMenuVersion == `FE_MENU_VERSION_CORONA` then
+                    SetScriptGfxDrawBehindPausemenu(true)
+                    
+                    BeginScaleformMovieMethodOnFrontend("INSTRUCTIONAL_BUTTONS")
+                    ScaleformMovieMethodAddParamPlayerNameString("SET_DATA_SLOT_EMPTY")
+                    EndScaleformMovieMethod()
+                    
+                    BeginScaleformMovieMethodOnFrontendHeader("SHOW_MENU")
+                    ScaleformMovieMethodAddParamBool(false)
+                    EndScaleformMovieMethod()
+                    
+                    BeginScaleformMovieMethodOnFrontendHeader("SHOW_HEADING_DETAILS")
+                    ScaleformMovieMethodAddParamBool(false)
+                    EndScaleformMovieMethod()
+                end
+                
+                MenuHandler:ProcessMenus()
             end
-            MenuHandler:ProcessMenus()
         end
+        
+        -- Update scaleforms outside menu checks
         ScaleformUI.Scaleforms.Warning:Update()
+        
         if ScaleformUI.Scaleforms.SplashText ~= nil then
             ScaleformUI.Scaleforms.SplashText:Draw()
         end
+        
         ScaleformUI.Scaleforms.InstructionalButtons:Update()
+        
         if not IsPauseMenuActive() then
             ScaleformUI.Scaleforms.BigMessageInstance:Update()
             ScaleformUI.Scaleforms.MidMessageInstance:Update()
             ScaleformUI.Scaleforms.PlayerListScoreboard:Update()
             ScaleformUI.Scaleforms.JobMissionSelector:Update()
             ScaleformUI.Scaleforms.BigFeed:Update()
+            
+            -- Check for null references once per iteration
             if ScaleformUI.Scaleforms._ui == nil then
                 ScaleformUI.Scaleforms._ui = Scaleform.RequestWidescreen("scaleformui")
             end
