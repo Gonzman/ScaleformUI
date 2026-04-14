@@ -2,17 +2,17 @@ import { BaseMenu } from "./menu.base";
 
 export class BreadcrumbsHandler {
     static breadcrumbs: [BaseMenu, any][] = [];
-    public static SwitchInProgress: boolean = false
+    public static SwitchInProgress: boolean = false;
 
     static get Count(): number {
         return this.breadcrumbs.length;
     }
 
     static get CurrentDepth(): number {
-        return this.breadcrumbs.length - 1;
+        return this.breadcrumbs.length === 0 ? 0 : this.breadcrumbs.length - 1;
     }
 
-    public static  get PreviousMenu(): BaseMenu {
+    public static get PreviousMenu(): BaseMenu {
         return this.breadcrumbs[this.CurrentDepth - 1][0];
     }
 

@@ -29,20 +29,32 @@ export class SColor {
         return this.r;
     }
 
+    public get IsEmpty(): boolean {
+        return this.A === 0 && this.R === 0 && this.G === 0 && this.B === 0;
+    }
+
     public static FromHex(hexColor: string): SColor {
-        if (typeof hexColor === "string") {
-            if (hexColor.startsWith("#")) {
-                let hex = hexColor.replace("#", ""); // Remove "#" symbol if present
-                let a = GetRandomIntInRange(1, 255);
-                let r = parseInt(hex.slice(2, 4), 16); // Convert next two characters to decimal (red channel)
-                let g = parseInt(hex.slice(4, 6), 16); // Convert next two characters to decimal (green channel)
-                let b = parseInt(hex.slice(6, 8), 16); // Convert last two characters to decimal (blue channel)
-                return new SColor(a, r, g, b);
-            } else {
-                throw new Error("Invalid Hex value");
-            }
+        if (!hexColor || !hexColor.startsWith("#")) {
+            throw new Error("Invalid Hex value");
         }
-        return new SColor(0, 0, 0, 0);
+
+        const hex = hexColor.substring(1);
+        if (hex.length === 6) {
+            const r = parseInt(hex.slice(0, 2), 16);
+            const g = parseInt(hex.slice(2, 4), 16);
+            const b = parseInt(hex.slice(4, 6), 16);
+            return SColor.FromArgb(255, r, g, b);
+        }
+
+        if (hex.length === 8) {
+            const a = parseInt(hex.slice(0, 2), 16);
+            const r = parseInt(hex.slice(2, 4), 16);
+            const g = parseInt(hex.slice(4, 6), 16);
+            const b = parseInt(hex.slice(6, 8), 16);
+            return new SColor(a, r, g, b);
+        }
+
+        throw new Error("Invalid Hex value");
     }
 
     public static FromHudColor(color: HudColor): SColor {
@@ -55,36 +67,38 @@ export class SColor {
     }
 
     public static FromRandomValues(): SColor {
-        let a = 255;
-        let r = GetRandomIntInRange(1, 255);
-        let g = GetRandomIntInRange(1, 255);
-        let b = GetRandomIntInRange(1, 255);
+        const a = 255;
+        const r = Math.floor(Math.random() * 256);
+        const g = Math.floor(Math.random() * 256);
+        const b = Math.floor(Math.random() * 256);
         return new SColor(a, r, g, b);
     }
 
     public static FromArgbInt(argb: number): SColor {
-        let isNegative = false;
-        if (argb < 0) {
-            isNegative = true;
-            argb = Math.abs(argb); // Convert negative value to positive
-        }
-
-        let a = (argb >> 24) & 255;
-        let r = (argb >> 16) & 255;
-        let g = (argb >> 8) & 255;
-        let b = argb & 255;
-
-        if (isNegative) {
-            a = 255 - a;
-            r = 255 - r;
-            g = 255 - g;
-            b = 255 - b;
-        }
+        const value = argb >>> 0;
+        const a = (value >>> 24) & 0xff;
+        const r = (value >>> 16) & 0xff;
+        const g = (value >>> 8) & 0xff;
+        const b = value & 0xff;
         return new SColor(a, r, g, b);
     }
 
-    public static FromArgb(alpha: number, red: number, green: number, blue: number): SColor {
-        return new SColor(alpha, red, green, blue);
+    public static FromArgb(alpha: number, red: number, green: number, blue: number): SColor;
+    public static FromArgb(red: number, green: number, blue: number): SColor;
+    public static FromArgb(...args: number[]): SColor {
+        if (args.length === 3) {
+            return SColor.FromArgb(255, args[0], args[1], args[2]);
+        }
+
+        if (args.length === 4) {
+            return new SColor(args[0], args[1], args[2], args[3]);
+        }
+
+        throw new Error("Invalid number of arguments for FromArgb");
+    }
+
+    public static FromColor(color: SColor): SColor {
+        return new SColor(color.A, color.R, color.G, color.B);
     }
 
     public static FromRgb(red: number, green: number, blue: number): SColor {
@@ -185,8 +199,8 @@ export class SColor {
         );
     }
 
-    equals(other: SColor): boolean {
-        return this.equals(other);
+    public equals(other: SColor): boolean {
+        return this.A === other.A && this.R === other.R && this.G === other.G && this.B === other.B;
     }
 
     //[[ WINDOWS SYSTEM COLORS ]]
@@ -333,7 +347,7 @@ export class SColor {
     public static YellowGreen = SColor.FromArgbInt(-6632142);
 
     //[[ GTA HUD COLORS ]]
-    public static HUD_None = SColor.FromHudColor(-1);
+    public static HUD_None = SColor.FromArgbInt(-1);
     public static HUD_Pure_white = SColor.FromHudColor(0);
     public static HUD_White = SColor.FromHudColor(1);
     public static HUD_Black = SColor.FromHudColor(2);

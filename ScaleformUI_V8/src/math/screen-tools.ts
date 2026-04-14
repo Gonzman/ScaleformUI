@@ -2,7 +2,6 @@ import { Vector2 } from "./vector2";
 import { Vector3 } from "./vector3";
 
 export class ScreenTools {
-
     // Global Variables
     public static GlobalGameTimer: number = Date.now();
 
@@ -18,19 +17,18 @@ export class ScreenTools {
 
     // Resolution Helpers
     public static ResolutionMaintainRatio(): [number, number] {
-        const [screenw, screenh] = GetActiveScreenResolution(); // Implement this 
+        const [screenw, screenh] = GetActiveScreenResolution();
         const ratio = screenw / screenh;
-        const width = 1080 * ratio;
-        return  [width, 1080]
+        return [1080 * ratio, 1080];
     }
 
     public static SafezoneBounds(): Vector2 {
-        const t = GetSafeZoneSize(); // Implement this 
-        var g = MathExtensions.round(t, 2);
-        g = (g * 100) - 90;
+        const t = GetSafeZoneSize();
+        let g = MathExtensions.round(t, 2);
+        g = g * 100 - 90;
         g = 10 - g;
 
-        const screenw = 720 * GetAspectRatio(false); // Implement these s
+        const screenw = 720 * GetAspectRatio(false);
         const screenh = 720;
         const ratio = screenw / screenh;
         const wmp = ratio * 5.4;
@@ -49,31 +47,25 @@ export class ScreenTools {
     }
 
     public static IsVectorInsideSphere(vector: Vector3, position: Vector3, scale: Vector3): boolean {
-        const distance = new Vector3(
-            vector.x - position.x,
-            vector.y - position.y,
-            vector.z - position.z
-        );
+        const distance = new Vector3(vector.x - position.x, vector.y - position.y, vector.z - position.z);
         const radius = ScreenTools.GetVectorMagnitude(scale) / 2;
         return ScreenTools.GetVectorMagnitude(distance) <= radius;
     }
 
     // Array Operations
     public static AllTrue(arr: boolean[]): boolean {
-        return arr.every(v => v);
+        return arr.every((v) => v);
     }
 
     public static AllFalse(arr: boolean[]): boolean {
-        return arr.some(v => v);
+        return arr.some((v) => v);
     }
 
     // Mouse Bounds Check
     public static IsMouseInBounds(x: number, y: number, width: number, height: number): boolean {
-        var [mx, my] = [Math.round(GetControlNormal(0, 239) * 1920), Math.round(GetControlNormal(0, 240) * 1080)]
-        mx = Math.round(mx * 1920);
-        my = Math.round(my * 1080);
-        [x, y] = ScreenTools.FormatXWYH(x, y);
-        [width, height] = ScreenTools.FormatXWYH(width, height);
+        const [screenw, screenh] = GetActiveScreenResolution();
+        const mx = Math.round(GetControlNormal(0, 239) * screenw);
+        const my = Math.round(GetControlNormal(0, 240) * screenh);
         return mx >= x && mx <= x + width && my > y && my < y + height;
     }
 
@@ -93,7 +85,7 @@ export class ScreenTools {
         return vector.x * vector.x + vector.y * vector.y + vector.z * vector.z;
     }
 
-    // Wrapping 
+    // Wrapping
     public static Wrap(value: number, min: number, max: number): number {
         const range = max - min;
         let normalizedValue = (value - min) % range;
@@ -112,13 +104,13 @@ export class ScreenTools {
 
     // Coordinate Conversions
     public static ConvertResolutionCoordsToScaleformCoords(realX: number, realY: number): Vector2 {
-        const [x, y] = GetActiveScreenResolution(); // Implement this 
-        return new Vector2(realX / x * 1280, realY / y * 720);
+        const [x, y] = GetActiveScreenResolution();
+        return new Vector2((realX / x) * 1280, (realY / y) * 720);
     }
 
     public static ConvertScaleformCoordsToResolutionCoords(scaleformX: number, scaleformY: number): Vector2 {
-        const [x, y] = GetActiveScreenResolution(); // Implement this 
-        return new Vector2(scaleformX / 1280 * x, scaleformY / 720 * y);
+        const [x, y] = GetActiveScreenResolution();
+        return new Vector2((scaleformX / 1280) * x, (scaleformY / 720) * y);
     }
 
     public static ConvertScreenCoordsToScaleformCoords(scX: number, scY: number): Vector2 {
@@ -126,25 +118,25 @@ export class ScreenTools {
     }
 
     public static ConvertScaleformCoordsToScreenCoords(scaleformX: number, scaleformY: number): Vector2 {
-        const [w, h] = GetActiveScreenResolution(); // Implement this 
-        return new Vector2((scaleformX / w) * 2.0 - 1.0, (scaleformY / h) * 2.0 - 1.0);
+        const [w, h] = GetActiveScreenResolution();
+        return new Vector2(scaleformX / w, scaleformY / h);
     }
 
     public static ConvertResolutionCoordsToScreenCoords(x: number, y: number): Vector2 {
-        const [w, h] = GetActiveScreenResolution(); // Implement this 
+        const [w, h] = GetActiveScreenResolution();
         const normalizedX = Math.max(0.0, Math.min(1.0, x / w));
         const normalizedY = Math.max(0.0, Math.min(1.0, y / h));
         return new Vector2(normalizedX, normalizedY);
     }
 
     public static ConvertResolutionSizeToScaleformSize(realWidth: number, realHeight: number): Vector2 {
-        const [x, y] = GetActiveScreenResolution(); // Implement this 
-        return new Vector2(realWidth / x * 1280, realHeight / y * 720);
+        const [x, y] = GetActiveScreenResolution();
+        return new Vector2((realWidth / x) * 1280, (realHeight / y) * 720);
     }
 
     public static ConvertScaleformSizeToResolutionSize(scaleformWidth: number, scaleformHeight: number): Vector2 {
-        const [x, y] = GetActiveScreenResolution(); // Implement this 
-        return new Vector2(scaleformWidth / 1280 * x, scaleformHeight / 720 * y);
+        const [x, y] = GetActiveScreenResolution();
+        return new Vector2((scaleformWidth / 1280) * x, (scaleformHeight / 720) * y);
     }
 
     public static ConvertScreenSizeToScaleformSize(scWidth: number, scHeight: number): Vector2 {
@@ -152,53 +144,85 @@ export class ScreenTools {
     }
 
     public static ConvertScaleformSizeToScreenSize(scaleformWidth: number, scaleformHeight: number): Vector2 {
-        const [w, h] = GetActiveScreenResolution(); // Implement this 
-        return new Vector2((scaleformWidth / w) * 2.0 - 1.0, (scaleformHeight / h) * 2.0 - 1.0);
+        const [w, h] = GetActiveScreenResolution();
+        return new Vector2(scaleformWidth / w, scaleformHeight / h);
     }
 
     public static ConvertResolutionSizeToScreenSize(width: number, height: number): Vector2 {
-        const [w, h] = GetActiveScreenResolution(); // Implement this 
+        const [w, h] = GetActiveScreenResolution();
         const normalizedWidth = Math.max(0.0, Math.min(1.0, width / w));
         const normalizedHeight = Math.max(0.0, Math.min(1.0, height / h));
         return new Vector2(normalizedWidth, normalizedHeight);
     }
 
     // Aspect Ratio Adjustments
-    public static AdjustNormalized16_9ValuesForCurrentAspectRatio(x: number, y: number, w: number, h: number): [number, number, number, number] {
-        var fPhysicalAspect = GetAspectRatio(false); // Implement this 
-        if (ScreenTools.IsSuperWideScreen()) { // Implement this 
-            fPhysicalAspect = 16.0 / 9.0;
+    public static AdjustNormalized16_9ValuesForCurrentAspectRatio(
+        widescreen: number,
+        x: number,
+        y: number,
+        w: number,
+        h: number
+    ): [number, number, number, number] {
+        if (widescreen === 0) {
+            if (x > 0.5) {
+                widescreen = 2;
+            } else if (x < 0.5) {
+                widescreen = 1;
+            } else {
+                widescreen = 3;
+            }
         }
 
-        const fScalar = (16.0 / 9.0) / fPhysicalAspect;
+        const fPhysicalAspect = GetAspectRatio(false);
+        const fScalar = 16.0 / 9.0 / fPhysicalAspect;
         const fAdjustPos = 1.0 - fScalar;
 
-        w *= fScalar;
+        switch (widescreen) {
+            case 1:
+                w *= fScalar;
+                x *= fScalar;
+                break;
+            case 2:
+                w *= fScalar;
+                x = x * fScalar + fAdjustPos;
+                break;
+            case 3:
+                w *= fScalar;
+                x = x * fScalar + fAdjustPos * 0.5;
+                break;
+            case 4:
+                w *= fScalar;
+                break;
+        }
 
-        const newX = x * fScalar;
-        x = newX + fAdjustPos * 0.5;
         [x, w] = ScreenTools.AdjustForSuperWidescreen(x, w);
         return [x, y, w, h];
     }
 
     public static AdjustForSuperWidescreen(x: number, w: number): [number, number] {
-        if (!ScreenTools.IsSuperWideScreen()) { // Implement this 
+        if (!ScreenTools.IsSuperWideScreen()) {
             return [x, w];
         }
 
-        const difference = ((16.0 / 9.0) / GetAspectRatio(false)); // Implement this 
-
-        x = 0.5 - ((0.5 - x) * difference);
+        const difference = 16.0 / 9.0 / GetAspectRatio(false);
+        x = 0.5 - (0.5 - x) * difference;
         w *= difference;
 
         return [x, w];
     }
 
     public static IsSuperWideScreen(): boolean {
-        const aspRat = GetAspectRatio(false); // Implement this 
-        return aspRat > (16.0 / 9.0);
+        const aspRat = GetAspectRatio(false);
+        return aspRat > 16.0 / 9.0;
     }
 
+    public static GetWideScreen(): boolean {
+        const WIDESCREEN_ASPECT = 1.5;
+        const [w, h] = GetActiveScreenResolution();
+        const fLogicalAspectRatio = GetAspectRatio(false);
+        const fPhysicalAspectRatio = w / h;
+        return fPhysicalAspectRatio > WIDESCREEN_ASPECT && fLogicalAspectRatio > WIDESCREEN_ASPECT;
+    }
 }
 
 // String Extensions
@@ -241,7 +265,7 @@ export class MathExtensions {
     public static round(num: number, decimalPlaces?: number): number {
         if (decimalPlaces !== undefined) {
             const multiplier = Math.pow(10, decimalPlaces);
-            return Math.floor((num * multiplier) + 0.5) / multiplier;
+            return Math.floor(num * multiplier + 0.5) / multiplier;
         } else {
             return Math.floor(num + 0.5);
         }

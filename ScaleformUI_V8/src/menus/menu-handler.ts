@@ -1,6 +1,7 @@
 import { BreadcrumbsHandler } from "./breadcrumbs-handler";
 import { BaseMenu } from "./menu.base";
 import { UIMenu } from "./UIMenu/uimenu";
+import { ScaleformUI } from "scaleforms/scaleformui/main";
 
 export class MenuHandler {
     static _currentMenu: BaseMenu | null = null;
@@ -26,8 +27,8 @@ export class MenuHandler {
 
         if (newMenuCurrentSelection == null) newMenuCurrentSelection = 0;
         if (currentMenu instanceof UIMenu && newMenu instanceof UIMenu) {
-            let newUIMenu: UIMenu = newMenu as UIMenu;
-            let old: UIMenu = currentMenu as UIMenu;
+            const newUIMenu = newMenu as UIMenu;
+            const old = currentMenu as UIMenu;
             if (inheritOldMenuParams == null) {
                 inheritOldMenuParams = false;
             }
@@ -67,25 +68,29 @@ export class MenuHandler {
     static ProcessMenus() {
         this.Draw();
         this.ProcessControl();
+        this.ProcessMouse();
     }
 
     static ProcessControl() {
-        if (this._currentMenu !== null) {
+        if (this._currentMenu !== null && this._currentPauseMenu === null) {
             this._currentMenu.processControl();
-            this._currentMenu.processMouse();
-        }
-
-        if (this._currentPauseMenu !== null) {
+        } else if (this._currentPauseMenu !== null) {
             this._currentPauseMenu.processControl();
+        }
+    }
+
+    static ProcessMouse() {
+        if (this._currentMenu !== null && this._currentPauseMenu === null) {
+            this._currentMenu.processMouse();
+        } else if (this._currentPauseMenu !== null) {
             this._currentPauseMenu.processMouse();
         }
     }
 
     static Draw() {
-        if (this._currentMenu !== null) {
+        if (this._currentMenu !== null && this._currentPauseMenu === null) {
             this._currentMenu.draw();
-        }
-        if (this._currentPauseMenu !== null) {
+        } else if (this._currentPauseMenu !== null) {
             this._currentPauseMenu.draw();
         }
     }
@@ -99,7 +104,7 @@ export class MenuHandler {
             this._currentPauseMenu.Visible = false;
         }
         BreadcrumbsHandler.Clear();
-        //ScaleformUI.Scaleforms.InstructionalButtons:ClearButtonList() to be handled 🤔🤔
+        ScaleformUI.Scaleforms.InstructionalButtons.ClearButtonList();
     }
 
     static get IsAnyMenuOpen(): boolean {

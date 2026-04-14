@@ -366,3 +366,4 @@ FodyWeavers.xsd
 /CompiledLibs/**/*.dll
 /scripts/*.log
 /scripts/*.bat
+/dist/**

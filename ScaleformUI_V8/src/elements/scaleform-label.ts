@@ -9,6 +9,17 @@ export class ScaleformLabel {
         return this._label;
     }
 
+    get SplitLabel(): string[] {
+        const stringsNeeded = Math.floor((this._label.length - 1) / 99) + 1;
+        const outputString: string[] = [];
+
+        for (let i = 0; i < stringsNeeded; i++) {
+            outputString[i] = this._label.substring(i * 99, Math.min(this._label.length, (i + 1) * 99));
+        }
+
+        return outputString;
+    }
+
     equals(obj: Object): boolean {
         if (!(obj instanceof ScaleformLabel)) {
             return false;
