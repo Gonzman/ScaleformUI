@@ -24,7 +24,7 @@ Port the C# ScaleformUI main project into the TypeScript V8 codebase.
 ### HUD and notification systems
 
 - [x] `Hud/Markers/Marker.cs` => `src/hud/marker.ts`
-- [ ] `Hud/Markers/MarkersHandler.cs`
+- [x] `Hud/Markers/MarkersHandler.cs`
 - [ ] `Hud/Notifications/NotificationChars.cs`
 - [x] `Hud/Notifications/Notifications.cs` => `src/hud/notifications.ts` Need update
 
