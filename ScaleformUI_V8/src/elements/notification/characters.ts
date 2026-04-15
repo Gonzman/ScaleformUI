@@ -168,5 +168,5 @@ export enum NotificationCharacters {
     Trevor = "CHAR_TREVOR",
     Wade = "CHAR_WADE",
     YouTube = "CHAR_YOUTUBE",
-    CreatorPortraits = "CHAR_CREATOR_PORTRAITS",
+    CreatorPortraits = "CHAR_CREATOR_PORTRAITS"
 }

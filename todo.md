@@ -25,7 +25,7 @@ Port the C# ScaleformUI main project into the TypeScript V8 codebase.
 
 - [x] `Hud/Markers/Marker.cs` => `src/hud/marker.ts`
 - [x] `Hud/Markers/MarkersHandler.cs`
-- [ ] `Hud/Notifications/NotificationChars.cs`
+- [x] `Hud/Notifications/NotificationChars.cs` => `src/elements/notification/characters.ts`
 - [x] `Hud/Notifications/Notifications.cs` => `src/hud/notifications.ts` Need update
 
 ### Menu framework and navigation
@@ -67,7 +67,7 @@ Port the C# ScaleformUI main project into the TypeScript V8 codebase.
 - [ ] `Menus/Pause Menus/PauseMenu/Tabs/SubmenuTab.cs`
 - [ ] `Menus/Pause Menus/PauseMenu/Tabs/TabLeftItem.cs`
 - [ ] `Menus/Pause Menus/PauseMenu/Tabs/TextTab.cs`
-- [ ] `Menus/Pause Menus/PauseMenu/Tabs/Submenu.ts` https://github.com/manups4e/ScaleformUI/issues/245 ==> IDEA: With new Pause Menu update incoming you can achieve this feature by clearing and rebuilding dynamically each Tab's columns. (The same way R* does) (keeping it opened as reference)
+- [ ] `Menus/Pause Menus/PauseMenu/Tabs/Submenu.ts` https://github.com/manups4e/ScaleformUI/issues/245 ==> IDEA: With new Pause Menu update incoming you can achieve this feature by clearing and rebuilding dynamically each Tab's columns. (The same way R\* does) (keeping it opened as reference)
 
 ### Radial menu
 
@@ -81,6 +81,7 @@ Port the C# ScaleformUI main project into the TypeScript V8 codebase.
 - [ ] `Menus/UIRadioMenu/UIRadioMenu.cs`
 
 ### UIMenu
+
 - [ ] `/Menus/UIMenu/Items/UIMenuCheckboxItem.cs`
 - [ ] `/Menus/UIMenu/Items/UIMenuDynamicListItem.cs`
 - [ ] `/Menus/UIMenu/Items/UIMenuItem.cs`
