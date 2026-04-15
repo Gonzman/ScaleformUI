@@ -10,11 +10,11 @@ Port the C# ScaleformUI main project into the TypeScript V8 codebase.
 
 - [x] `Elements/Colors.cs` => `src/elements/notification/colors.ts`
 - [x] `Elements/Controls.cs` => `src/elements/controls.ts`
-- [x] `Elements/SColor.cs` => `src/elements/scolor.ts` Need update
+- [x] `Elements/SColor.cs` => `src/elements/scolor.ts`
 - [x] `Elements/ScaleformFonts.cs` => `src/elements/scaleform-fonts.ts`
-- [x] `Elements/ScaleformLabel.cs` => `src/elements/scaleform-label.ts` Need update
+- [x] `Elements/ScaleformLabel.cs` => `src/elements/scaleform-label.ts`
 - [x] `Elements/ScaleformLiteralString.cs` => `src/elements/scaleform-literal-string.ts`
-- [x] `Elements/ScreenTools.cs` => `src/math/screen-tools.ts` Need update
+- [x] `Elements/ScreenTools.cs` => `src/math/screen-tools.ts`
 - [x] `Elements/PointExtensions.cs` => `src/elements/PointExtensions.ts`
 - [x] `Elements/VehicleColors.cs` => `src/elements/vehicle-colors.ts`
 - [ ] `Elements/Sprite.cs` Nur vom Timerbar genutzt
@@ -26,13 +26,13 @@ Port the C# ScaleformUI main project into the TypeScript V8 codebase.
 - [x] `Hud/Markers/Marker.cs` => `src/hud/marker.ts`
 - [x] `Hud/Markers/MarkersHandler.cs`
 - [x] `Hud/Notifications/NotificationChars.cs` => `src/elements/notification/characters.ts`
-- [x] `Hud/Notifications/Notifications.cs` => `src/hud/notifications.ts` Need update
+- [x] `Hud/Notifications/Notifications.cs` => `src/hud/notifications.ts`
 
 ### Menu framework and navigation
 
-- [x] `Menus/BreadcrumbsHandler.cs` => `src/menus/breadcrumbs-handler.ts` Need update
-- [x] `Menus/MenuBase.cs` => `src/menus/menu.base.ts` Need update
-- [x] `Menus/MenuHandler.cs` => `src/menus/menu-handler.ts` Need update
+- [x] `Menus/BreadcrumbsHandler.cs` => `src/menus/breadcrumbs-handler.ts`
+- [x] `Menus/MenuBase.cs` => `src/menus/menu.base.ts`
+- [x] `Menus/MenuHandler.cs` => `src/menus/menu-handler.ts`
 - [ ] `Menus/Pause Menus/PauseMenuBase.cs`
 - [ ] `Menus/Pause Menus/Elements/Columns/Column.cs`
 - [ ] `Menus/Pause Menus/Elements/Columns/MissionsListColumn.cs`
