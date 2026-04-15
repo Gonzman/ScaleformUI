@@ -19,7 +19,7 @@ Port the C# ScaleformUI main project into the TypeScript V8 codebase.
 - [x] `Elements/VehicleColors.cs` => `src/elements/vehicle-colors.ts`
 - [ ] `Elements/Sprite.cs` Nur vom Timerbar genutzt
 - [ ] `Elements/UIResRectangle.cs` Nur vom Timerbar genutzt
-- [ ] `Elements/UIResText.cs`
+- [x] `Elements/UIResText.cs` => `src/elements/UIResText.ts`
 
 ### HUD and notification systems
 
