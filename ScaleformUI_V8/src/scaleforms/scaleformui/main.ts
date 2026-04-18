@@ -69,7 +69,8 @@ on('onResourceStop', (resName: string) => {
 });
 
 setTick(() => {
-    if (MenuHandler.ableToDraw && !(IsWarningMessageActive() || ScaleformUI.Scaleforms.Warning.IsShowing)) {
+    const warningShowing = !!ScaleformUI.Scaleforms.Warning?.IsShowing;
+    if (MenuHandler.ableToDraw && !(IsWarningMessageActive() || warningShowing)) {
         MenuHandler.ProcessMenus();
     }
     /*

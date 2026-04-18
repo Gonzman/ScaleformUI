@@ -20,7 +20,7 @@ export class Countdown implements ScaleformHandler {
         this.scaleform = Scaleform.request("COUNTDOWN");
         const to = 1000;
         const start = GetGameTimer();
-        await waitUntilReturns(noop, () => this.scaleform!.isLoaded && GetGameTimer() - start < to, true, 0);
+        await waitUntilReturns(noop, () => this.scaleform!.isLoaded || GetGameTimer() - start >= to, true, 0);
         if (!this.scaleform.isLoaded) {
             throw new Error("Countdown scaleform didnt load");
         }

@@ -1,5 +1,6 @@
-import { UIMenuItem } from "menus/UIMenu/items/uimenuitem";
-import { InstructionalButtonSelectedEventBuilder, InstructionalButtonSelectedEvent } from '../../menus/UIMenu/emitters/emitters';
+import type { UIMenuItem } from "menus/UIMenu/items/uimenuitem";
+import { InstructionalButtonSelectedEventBuilder } from '../../menus/UIMenu/emitters/emitters';
+import type { InstructionalButtonSelectedEvent } from '../../menus/UIMenu/emitters/emitters';
 
 export enum PadCheck {
     Any = 0,

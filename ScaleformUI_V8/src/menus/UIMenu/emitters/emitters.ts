@@ -1,18 +1,18 @@
 import { DelegateBuilder, IDelegate } from "helpers/eventemitter";
-import { UIMenu } from "../uimenu";
-import { UIMenuItem } from "../items/uimenuitem";
-import { UIMenuCheckboxItem } from "../items/uimenucheckboxitem";
-import { ChangeDirection, UIMenuDynamicListItem } from "../items/uimenudynamiclistitem";
-import { UIMenuListItem } from "../items/uimenulistitem";
-import { UIMenuProgressItem } from '../items/uimenuprogressitem';
-import { UIMenuSliderItem } from "../items/uimenuslideritem";
-import { UIMenuStatsItem } from "../items/uimenustatsitem";
-import { InstructionalButton } from '../../../scaleforms/instructional-buttons/instructionalbutton';
-import { UIMenuColorPanel } from "../panels/uimenucolorpanel";
-import { UIVehicleColourPickerPanel } from "../sidepanels/ColorPicker/uivehiclecolourpickerpanel";
-import { UIMenuPercentagePanel } from "../panels/uimenupercentagepanel";
-import { Vector2 } from "math/vector2";
-import { UIMenuGridPanel } from "../panels/uimenugridpanel";
+import type { UIMenu } from "../uimenu";
+import type { UIMenuItem } from "../items/uimenuitem";
+import type { UIMenuCheckboxItem } from "../items/uimenucheckboxitem";
+import type { ChangeDirection, UIMenuDynamicListItem } from "../items/uimenudynamiclistitem";
+import type { UIMenuListItem } from "../items/uimenulistitem";
+import type { UIMenuProgressItem } from '../items/uimenuprogressitem';
+import type { UIMenuSliderItem } from "../items/uimenuslideritem";
+import type { UIMenuStatsItem } from "../items/uimenustatsitem";
+import type { InstructionalButton } from '../../../scaleforms/instructional-buttons/instructionalbutton';
+import type { UIMenuColorPanel } from "../panels/uimenucolorpanel";
+import type { UIVehicleColourPickerPanel } from "../sidepanels/ColorPicker/uivehiclecolourpickerpanel";
+import type { UIMenuPercentagePanel } from "../panels/uimenupercentagepanel";
+import type { Vector2 } from "math/vector2";
+import type { UIMenuGridPanel } from "../panels/uimenugridpanel";
 
 // interfaces
 export interface UIMenuItemChangeCallback extends IDelegate {

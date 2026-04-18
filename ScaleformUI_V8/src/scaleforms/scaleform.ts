@@ -129,7 +129,7 @@ export class Scaleform {
     }
 
     public get isLoaded() {
-        return !HasScaleformMovieLoaded(this.handle)
+        return HasScaleformMovieLoaded(this.handle)
     }
 
 

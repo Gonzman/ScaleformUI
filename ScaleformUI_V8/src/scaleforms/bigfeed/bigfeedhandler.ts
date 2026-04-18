@@ -83,7 +83,7 @@ export class BigFeedHandler implements ScaleformHandler {
         this.scaleform = Scaleform.request("GTAV_ONLINE");
         const start = GetGameTimer();
         const to = 1000;
-        await waitUntilReturns(noop, () => this.scaleform!.isLoaded && GetGameTimer() - start < to, true, 0);
+        await waitUntilReturns(noop, () => this.scaleform!.isLoaded || GetGameTimer() - start >= to, true, 0);
         this.scaleform!.callFunction("HIDE_ONLINE_LOGO", false);
     }
 

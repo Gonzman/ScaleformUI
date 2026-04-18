@@ -1,4 +1,4 @@
-import { UIMenuItem } from "../items/uimenuitem";
+import type { UIMenuItem } from "../items/uimenuitem";
 
 export abstract class UIMenuPanel {
     public Selected: boolean = false

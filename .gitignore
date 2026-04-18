@@ -366,4 +366,5 @@ FodyWeavers.xsd
 /CompiledLibs/**/*.dll
 /scripts/*.log
 /scripts/*.bat
-/dist/**
+/ScaleformUI_V8/dist/**
+/ScaleformUI_V8/server/**

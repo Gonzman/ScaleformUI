@@ -34,7 +34,7 @@ export class InstructionalButtonsHandler {
         this._sc = Scaleform.request("instructional_buttons")
         const start = GetGameTimer()
         const to = 1000
-        await waitUntilReturns(noop, () => this._sc!.isLoaded && GetGameTimer() - start < to, true, 0)
+        await waitUntilReturns(noop, () => this._sc!.isLoaded || GetGameTimer() - start >= to, true, 0)
         let [w, h] = GetActiveScreenResolution();
         this._sc!.callFunction("SET_DISPLAY_CONFIG", 1280, 720, 0.05, 0.95, 0.05, 0.95, true, false, false, w, h)
     }
@@ -111,6 +111,18 @@ export class InstructionalButtonsHandler {
         }
     }
 
+    private isWarningShowing(): boolean {
+        return !!ScaleformUI.Scaleforms.Warning?.IsShowing;
+    }
+
+    private isWarningShowingWithButtons(): boolean {
+        return !!ScaleformUI.Scaleforms.Warning?.IsShowingWithButtons;
+    }
+
+    private isWarningActiveForButtons(): boolean {
+        return this.isWarningShowing() || this.isWarningShowingWithButtons();
+    }
+
     updateButtons() {
         if (!this._changed) return;
         this.keyboardButtons.length = 0;
@@ -127,7 +139,7 @@ export class InstructionalButtonsHandler {
                     continue;
                 }
                 this.gamepadButtons.push(button);
-                if (ScaleformUI.Scaleforms.Warning.IsShowing || ScaleformUI.Scaleforms.Warning.IsShowingWithButtons)
+                if (this.isWarningActiveForButtons())
                     this._sc.callFunction("SET_DATA_SLOT", count, button.GetButtonId(), button.Text, 0, -1);
                 else
                     this._sc.callFunction("SET_DATA_SLOT", count, button.GetButtonId(), button.Text);
@@ -140,7 +152,7 @@ export class InstructionalButtonsHandler {
                 if (this.UseMouseButtons)
                     this._sc.callFunction("SET_DATA_SLOT", count, button.GetButtonId(), button.Text, 1, button.KeyboardButton);
                 else {
-                    if (ScaleformUI.Scaleforms.Warning.IsShowing || ScaleformUI.Scaleforms.Warning.IsShowingWithButtons)
+                    if (this.isWarningActiveForButtons())
                         this._sc.callFunction("SET_DATA_SLOT", count, button.GetButtonId(), button.Text, 0, -1);
                     else
                         this._sc.callFunction("SET_DATA_SLOT", count, button.GetButtonId(), button.Text);
@@ -176,7 +188,7 @@ export class InstructionalButtonsHandler {
         }
         this.updateButtons();
 
-        if (!ScaleformUI.Scaleforms.Warning.IsShowing || ScaleformUI.Scaleforms.Warning.IsShowingWithButtons)
+        if (!this.isWarningShowing() || this.isWarningShowingWithButtons())
             this.Draw();
 
         this.keyboardButtons.forEach((button: InstructionalButton) => {

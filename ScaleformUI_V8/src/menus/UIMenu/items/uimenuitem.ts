@@ -1,15 +1,20 @@
 import { ItemFont } from "elements/ItemFont";
 import { ScaleformFonts } from "elements/scaleform-fonts";
 import { SColor } from "elements/scolor";
-import { ScaleformUI } from "scaleforms/scaleformui/main";
 import { BreadcrumbsHandler } from "menus/breadcrumbs-handler";
 import { replaceRstarColorsWith } from '../../../elements/color';
 import { BadgeStyle } from "elements/badge";
 import { ItemChangeCallbackBuilder, UIMenuItemChangeCallback } from "../emitters/emitters";
-import { UIMenu } from "../uimenu";
-import { UIMenuPanel } from "../panels/uimenupanel";
-import { UIMenuSidePanel } from "../sidepanels/uimenusidepanel";
-import { UIMissionDetailsPanel } from "../sidepanels/DetailsPanel/uimissiondetailspanel";
+import type { UIMenu } from "../uimenu";
+import type { UIMenuPanel } from "../panels/uimenupanel";
+import type { UIMenuSidePanel } from "../sidepanels/uimenusidepanel";
+import type { UIMissionDetailsPanel } from "../sidepanels/DetailsPanel/uimissiondetailspanel";
+
+const ScaleformUI = {
+    get Scaleforms() {
+        return (require("scaleforms/scaleformui/main") as typeof import("scaleforms/scaleformui/main")).ScaleformUI.Scaleforms;
+    },
+};
 
 type SettingsListColumn = {
     Parent: { Visible: boolean };
@@ -405,11 +410,20 @@ export class UIMenuItem {
         }
     }
 
+    private isMissionDetailsPanel(panel: UIMenuSidePanel | UIMissionDetailsPanel): panel is UIMissionDetailsPanel {
+        const candidate = panel as UIMissionDetailsPanel;
+        return Array.isArray((candidate as any).Items)
+            && typeof (candidate as any).PanelSide !== "undefined"
+            && typeof (candidate as any).TitleType !== "undefined"
+            && typeof (candidate as any).TextureDict === "string"
+            && typeof (candidate as any).TextureName === "string";
+    }
+
     public AddSidePanel(panel: UIMenuSidePanel | UIMissionDetailsPanel){
         panel.SetParentItem(this)
         this.SidePanel = panel;
         if (this.Parent !== null && this.Parent.Visible && this.Parent.Pagination.IsItemVisible(this.Parent.Items.indexOf(this))) {
-            if (panel instanceof UIMissionDetailsPanel) {
+            if (this.isMissionDetailsPanel(panel)) {
                 const mis = panel;
                 const itemIndex = this.Parent.Pagination.GetScaleformIndex(this.Parent.Items.indexOf(this));
                 ScaleformUI.Scaleforms._ui.callFunction("ADD_SIDE_PANEL_TO_ITEM", itemIndex, 0, mis.PanelSide, mis.TitleType, mis.Title, mis.TitleColor, mis.TextureDict, mis.TextureName);

@@ -159,7 +159,7 @@ export class SubmenuCentralColumn extends PM_Column {
         if (item instanceof SettingsCheckboxItem) return item.IsChecked;
         if (item instanceof SettingsProgressItem) return item.ColoredBarColor.getArgbValue();
         if (item instanceof SettingsSliderItem) return item.ColoredBarColor.getArgbValue();
-        return undefined;
+        return 0;
     }
 
     private isJumpableSetting(item: SettingsItem): boolean {

@@ -10,6 +10,7 @@ export class PauseMenuHandler {
     BGEnabled: boolean = false;
     Loaded: boolean = false;
     _visible: boolean = false;
+    private firstTick: boolean = true;
 
     constructor() {
         this._header = null;
@@ -19,6 +20,7 @@ export class PauseMenuHandler {
         this.BGEnabled = false;
         this.Loaded = false;
         this._visible = false;
+        this.firstTick = true;
     }
 
     public set Visible(_v: boolean) {
@@ -29,12 +31,16 @@ export class PauseMenuHandler {
     }
 
     load() {
-        if (this._header != null && this._pause != null && this._lobby != null) return;
-        this._header = Scaleform.requestWideScreen("pausemenuheader");
-        this._pause = Scaleform.requestWideScreen("pausemenu");
-        this._lobby = Scaleform.requestWideScreen("lobbymenu");
-        this._pauseBG = Scaleform.requestWideScreen("store_background");
-        this.Loaded = this._header.isLoaded && this._pause.isLoaded && this._lobby.isLoaded;
+        if (this._header == null) this._header = Scaleform.requestWideScreen("pausemenuheader");
+        if (this._pause == null) this._pause = Scaleform.requestWideScreen("ScaleformUIPause");
+        if (this._lobby == null) this._lobby = Scaleform.requestWideScreen("lobbymenu");
+        if (this._pauseBG == null) this._pauseBG = Scaleform.requestWideScreen("store_background");
+        this.Loaded = !!(this._header?.isLoaded && this._pause?.isLoaded && this._pauseBG?.isLoaded);
+    }
+
+    fadeInMenus() {
+        this._header?.callFunction("DRAW_MENU");
+        this._pause?.callFunction("DRAW_MENU");
     }
 
     setHeaderTitle(title: string, subtitle: string, shiftUpHeader: boolean) {
@@ -74,7 +80,6 @@ export class PauseMenuHandler {
     addPauseMenuTab(title: string, _type: number, _tabContentType: number, color: SColor) {
         if (color == null) color = SColor.HUD_Freemode;
         this._header?.callFunction("ADD_HEADER_TAB", title, _type, color);
-        this._pause?.callFunction("ADD_TAB", _tabContentType);
     }
 
     addLobbyMenuTab(title: string, _type: number, color: SColor) {
@@ -84,11 +89,10 @@ export class PauseMenuHandler {
 
     selectTab(tab: number) {
         this._header?.callFunction("SET_TAB_INDEX", tab);
-        this._pause?.callFunction("SET_TAB_INDEX", tab);
     }
 
-    setFocus(focusLevel: number) {
-        this._pause?.callFunction("SET_FOCUS", focusLevel);
+    setFocus(focusLevel: number, dontFallOff = false, skipInputSpamCheck = false) {
+        this._pause?.callFunction("MENU_SHIFT_DEPTH", focusLevel, dontFallOff, skipInputSpamCheck);
     }
 
     addLeftItem(
@@ -337,17 +341,22 @@ export class PauseMenuHandler {
         this._header?.callFunction("CLEAR_ALL");
         this._lobby?.callFunction("CLEAR_ALL");
         this._visible = false;
+        this.firstTick = true;
     }
 
     draw(isLobby: boolean) {
         if (isLobby == null) isLobby = false;
-        if (this._visible && GetCurrentFrontendMenuVersion() == -2060115030) {
-            SetScriptGfxDrawBehindPausemenu(true);
-            if (IsUsingKeyboard(2)) SetMouseCursorActiveThisFrame();
-            if (this.BGEnabled) this._pauseBG?.render2d();
-            this._header?.render2dNormal(0.501, 0.162, 0.6782, 0.145);
-            if (isLobby) this._lobby?.render2dNormal(0.6617187, 0.7226667, 1.0, 1.0);
-            else this._pause?.render2dNormal(0.6617187, 0.7226667, 1.0, 1.0);
+        if (!this._visible || !IsFrontendReadyForControl()) return;
+        SetScriptGfxDrawBehindPausemenu(true);
+        DisableFrontendThisFrame();
+        if (IsUsingKeyboard(2)) SetMouseCursorActiveThisFrame();
+        if (this.firstTick) {
+            this.fadeInMenus();
+            this.firstTick = false;
         }
+        if (this.BGEnabled) this._pauseBG?.render2d();
+        this._header?.render2dNormal(0.501, 0.162, 0.6782, 0.145);
+        if (isLobby) this._lobby?.render2dNormal(0.6617187, 0.7226667, 1.0, 1.0);
+        else this._pause?.render2dNormal(0.6617187, 0.7226667, 1.0, 1.0);
     }
 }

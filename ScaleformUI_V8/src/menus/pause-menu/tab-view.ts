@@ -68,7 +68,7 @@ export class TabView extends PauseMenuBase {
         this.InstructionalButtons = [
             new InstructionalButton(UIMenu._selectTextLocalized, -1, 176, 176, InputGroup.UNUSED),
             new InstructionalButton(UIMenu._backTextLocalized, -1, 177, 177, InputGroup.UNUSED),
-            new InstructionalButton(GetLabelText("HUD_INPUT1C"), -1, -1, -1, InputGroup.INPUTGROUP_FRONTEND_BUMPERS),
+            new InstructionalButton(GetLabelText("HUD_INPUT1C"), -1, -1, -1, InputGroup.INPUTGROUP_FRONTEND_BUMPERS)
         ];
         this._pause = ScaleformUI.Scaleforms._pauseMenu;
     }
@@ -127,10 +127,10 @@ export class TabView extends PauseMenuBase {
     public override set Visible(value: boolean) {
         super.Visible = value;
         this._pause.Visible = value;
-        SetPauseMenuActive(false);
+        SetPauseMenuActive(value);
 
         if (value) {
-            ActivateFrontendMenu(GetHashKey("FE_MENU_VERSION_CORONA"), true, -1);
+            ActivateFrontendMenu(GetHashKey("FE_MENU_VERSION_EMPTY_NO_BACKGROUND"), true, -1);
             if (this.ShowBlur) {
                 AnimpostfxStop("PauseMenuOut");
                 AnimpostfxPlay("PauseMenuIn", 0, true);
@@ -188,9 +188,12 @@ export class TabView extends PauseMenuBase {
             this._pause._header?.callFunction("ENABLE_DYNAMIC_WIDTH", this.SetHeaderDynamicWidth);
             this.Tabs.forEach((tab) => this._pause.addPauseMenuTab(tab.Title, 0, tab._type, tab.TabColor));
         } else {
-            if (this.coronaTab.LeftColumn) this._pause.addLobbyMenuTab(this.coronaTab.LeftColumn.Label, 2, this.coronaTab.LeftColumn.Color);
-            if (this.coronaTab.CenterColumn) this._pause.addLobbyMenuTab(this.coronaTab.CenterColumn.Label, 2, this.coronaTab.CenterColumn.Color);
-            if (this.coronaTab.RightColumn) this._pause.addLobbyMenuTab(this.coronaTab.RightColumn.Label, 2, this.coronaTab.RightColumn.Color);
+            if (this.coronaTab.LeftColumn)
+                this._pause.addLobbyMenuTab(this.coronaTab.LeftColumn.Label, 2, this.coronaTab.LeftColumn.Color);
+            if (this.coronaTab.CenterColumn)
+                this._pause.addLobbyMenuTab(this.coronaTab.CenterColumn.Label, 2, this.coronaTab.CenterColumn.Color);
+            if (this.coronaTab.RightColumn)
+                this._pause.addLobbyMenuTab(this.coronaTab.RightColumn.Label, 2, this.coronaTab.RightColumn.Color);
             this._pause._header?.callFunction("SET_ALL_HIGHLIGHTS", true, this.TabsColor);
             this._pause._header?.callFunction("ENABLE_DYNAMIC_WIDTH", false);
         }
@@ -225,7 +228,9 @@ export class TabView extends PauseMenuBase {
         SetInputExclusive(2, 237);
         SetInputExclusive(2, 238);
 
-        const [successHeader, eventTypeH, itemIdH, contextH] = GetScaleformMovieCursorSelection(this._pause._header?.handle ?? 0);
+        const [successHeader, eventTypeH, itemIdH, contextH] = GetScaleformMovieCursorSelection(
+            this._pause._header?.handle ?? 0
+        );
         if (successHeader && !this.IsCorona) {
             if (eventTypeH === 5 && contextH === -1) {
                 this.FocusLevel = 0;
@@ -246,7 +251,9 @@ export class TabView extends PauseMenuBase {
             else if (eventTypeH === 9) this.tabArrowsHovered = true;
         }
 
-        const [successPause, eventTypeP, itemIdP, contextP] = GetScaleformMovieCursorSelection(this._pause._pause?.handle ?? 0);
+        const [successPause, eventTypeP, itemIdP, contextP] = GetScaleformMovieCursorSelection(
+            this._pause._pause?.handle ?? 0
+        );
         if (successPause && !this.tabArrowsHovered) {
             if (eventTypeP === 5 && this.FocusLevel === 0) {
                 this.FocusLevel++;
@@ -267,18 +274,30 @@ export class TabView extends PauseMenuBase {
             if (this.FocusLevel === 0 && !this.IsCorona) this.Index++;
             else this.CurrentTab.GoRight();
         } else if (IsDisabledControlJustPressed(2, 205)) {
-            if (!this.IsCorona) { if (this.FocusLevel > 0) this.FocusLevel = 0; this.Index--; }
+            if (!this.IsCorona) {
+                if (this.FocusLevel > 0) this.FocusLevel = 0;
+                this.Index--;
+            }
         } else if (IsDisabledControlJustPressed(2, 206)) {
-            if (!this.IsCorona) { if (this.FocusLevel > 0) this.FocusLevel = 0; this.Index++; }
+            if (!this.IsCorona) {
+                if (this.FocusLevel > 0) this.FocusLevel = 0;
+                this.Index++;
+            }
         } else if (IsDisabledControlJustReleased(2, 201)) {
-            if (this.focusLevel === 0) { this.Tabs[this.Index].Focus(); this.FocusLevel++; }
-            else this.CurrentTab.Select();
+            if (this.focusLevel === 0) {
+                this.Tabs[this.Index].Focus();
+                this.FocusLevel++;
+            } else this.CurrentTab.Select();
         } else if (IsDisabledControlJustReleased(2, 202) || IsDisabledControlJustReleased(0, 238)) this.GoBack();
         else if (IsDisabledControlJustPressed(2, 241)) {
             if (this.CurrentTab instanceof TextTab) {
                 this.CurrentTab.MouseEvent(10, 0, -1);
                 this._pause._pause?.callFunction("SET_COLUMN_INPUT_EVENT", 0, 8);
-            } else if (this.CurrentTab instanceof SubmenuTab && (this.CurrentTab.currentItemType === LeftItemType.Info || this.CurrentTab.currentItemType === LeftItemType.Statistics)) {
+            } else if (
+                this.CurrentTab instanceof SubmenuTab &&
+                (this.CurrentTab.currentItemType === LeftItemType.Info ||
+                    this.CurrentTab.currentItemType === LeftItemType.Statistics)
+            ) {
                 PlaySoundFrontend(-1, TabView.AUDIO_UPDOWN, TabView.AUDIO_LIBRARY, true);
                 this._pause._pause?.callFunction("SET_COLUMN_INPUT_EVENT", 1, 8);
             }
@@ -286,7 +305,11 @@ export class TabView extends PauseMenuBase {
             if (this.CurrentTab instanceof TextTab) {
                 this.CurrentTab.MouseEvent(11, 0, -1);
                 this._pause._pause?.callFunction("SET_COLUMN_INPUT_EVENT", 0, 9);
-            } else if (this.CurrentTab instanceof SubmenuTab && (this.CurrentTab.currentItemType === LeftItemType.Info || this.CurrentTab.currentItemType === LeftItemType.Statistics)) {
+            } else if (
+                this.CurrentTab instanceof SubmenuTab &&
+                (this.CurrentTab.currentItemType === LeftItemType.Info ||
+                    this.CurrentTab.currentItemType === LeftItemType.Statistics)
+            ) {
                 PlaySoundFrontend(-1, TabView.AUDIO_UPDOWN, TabView.AUDIO_LIBRARY, true);
                 this._pause._pause?.callFunction("SET_COLUMN_INPUT_EVENT", 1, 9);
             }
@@ -298,7 +321,8 @@ export class TabView extends PauseMenuBase {
         if (this.IsCorona) {
             if (this.CurrentTab.CurrentColumnIndex > 0) this.CurrentTab.GoBack();
             else if (this.CanPlayerCloseMenu) {
-                if (this.CurrentTab instanceof PlayerListTab && this.CurrentTab.Minimap) this.CurrentTab.Minimap.Enabled = false;
+                if (this.CurrentTab instanceof PlayerListTab && this.CurrentTab.Minimap)
+                    this.CurrentTab.Minimap.Enabled = false;
                 this.Visible = false;
             }
             return;
@@ -307,29 +331,60 @@ export class TabView extends PauseMenuBase {
             if (this.FocusLevel === 1 && this.CurrentTab.CurrentColumnIndex === 0) {
                 this.CurrentTab.UnFocus();
                 this.FocusLevel--;
-                if (this.CurrentTab instanceof PlayerListTab && this.CurrentTab.Minimap) this.CurrentTab.Minimap.Enabled = false;
+                if (this.CurrentTab instanceof PlayerListTab && this.CurrentTab.Minimap)
+                    this.CurrentTab.Minimap.Enabled = false;
             } else this.CurrentTab.GoBack();
         } else if (this.CanPlayerCloseMenu) this.Visible = false;
     }
 
-    public onPauseMenuOpen(handler: PauseMenuOpenEvent): void { this.openHandlers.push(handler); }
-    public onPauseMenuClose(handler: PauseMenuCloseEvent): void { this.closeHandlers.push(handler); }
-    public onPauseMenuTabChanged(handler: PauseMenuTabChanged): void { this.tabChangedHandlers.push(handler); }
-    public onPauseMenuFocusChanged(handler: PauseMenuFocusChanged): void { this.focusChangedHandlers.push(handler); }
-    public onColumnItemChange(handler: ColumnItemEvent): void { this.columnChangeHandlers.push(handler); }
-    public onColumnItemSelect(handler: ColumnItemEvent): void { this.columnSelectHandlers.push(handler); }
+    public onPauseMenuOpen(handler: PauseMenuOpenEvent): void {
+        this.openHandlers.push(handler);
+    }
+    public onPauseMenuClose(handler: PauseMenuCloseEvent): void {
+        this.closeHandlers.push(handler);
+    }
+    public onPauseMenuTabChanged(handler: PauseMenuTabChanged): void {
+        this.tabChangedHandlers.push(handler);
+    }
+    public onPauseMenuFocusChanged(handler: PauseMenuFocusChanged): void {
+        this.focusChangedHandlers.push(handler);
+    }
+    public onColumnItemChange(handler: ColumnItemEvent): void {
+        this.columnChangeHandlers.push(handler);
+    }
+    public onColumnItemSelect(handler: ColumnItemEvent): void {
+        this.columnSelectHandlers.push(handler);
+    }
 
-    public SendPauseMenuOpen(): void { this.openHandlers.forEach((h) => h(this)); }
-    public SendPauseMenuClose(): void { this.closeHandlers.forEach((h) => h(this)); }
-    public SendPauseMenuTabChange(): void { this.tabChangedHandlers.forEach((h) => h(this, this.Tabs[this.Index], this.Index)); }
-    public SendPauseMenuFocusChange(): void { this.focusChangedHandlers.forEach((h) => h(this, this.Tabs[this.Index], this.FocusLevel)); }
-    public SendColumnItemSelect(col: PM_Column): void { this.columnSelectHandlers.forEach((h) => h(this, this.CurrentTab, col.position as number, col.Index)); }
-    public SendColumnItemChange(col: PM_Column): void { this.columnChangeHandlers.forEach((h) => h(this, this.CurrentTab, col.position as number, col.Index)); }
+    public SendPauseMenuOpen(): void {
+        this.openHandlers.forEach((h) => h(this));
+    }
+    public SendPauseMenuClose(): void {
+        this.closeHandlers.forEach((h) => h(this));
+    }
+    public SendPauseMenuTabChange(): void {
+        this.tabChangedHandlers.forEach((h) => h(this, this.Tabs[this.Index], this.Index));
+    }
+    public SendPauseMenuFocusChange(): void {
+        this.focusChangedHandlers.forEach((h) => h(this, this.Tabs[this.Index], this.FocusLevel));
+    }
+    public SendColumnItemSelect(col: PM_Column): void {
+        this.columnSelectHandlers.forEach((h) => h(this, this.CurrentTab, col.position as number, col.Index));
+    }
+    public SendColumnItemChange(col: PM_Column): void {
+        this.columnChangeHandlers.forEach((h) => h(this, this.CurrentTab, col.position as number, col.Index));
+    }
 
     private UpdateKeymapItems(): void {
         if (!IsUsingKeyboard(2)) {
-            if (!this.controller) { this.controller = true; this.changed = true; }
-        } else if (this.controller) { this.controller = false; this.changed = true; }
+            if (!this.controller) {
+                this.controller = true;
+                this.changed = true;
+            }
+        } else if (this.controller) {
+            this.controller = false;
+            this.changed = true;
+        }
 
         if (this.changed && this.Tabs[this.Index] instanceof SubmenuTab) {
             const smTab = this.Tabs[this.Index] as SubmenuTab;
@@ -341,7 +396,9 @@ export class TabView extends PauseMenuBase {
     }
 
     private async GetHoveredColumn(): Promise<void> {
-        this.hoveredColumn = await (ScaleformUI.Scaleforms._pauseMenu._pause?.callFunctionReturnInt("GET_HOVERED_COLUMN") ?? Promise.resolve(0));
+        this.hoveredColumn = await (ScaleformUI.Scaleforms._pauseMenu._pause?.callFunctionReturnInt(
+            "GET_HOVERED_COLUMN"
+        ) ?? Promise.resolve(0));
     }
 }
 

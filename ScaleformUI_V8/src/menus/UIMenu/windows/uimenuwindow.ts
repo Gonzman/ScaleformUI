@@ -1,4 +1,4 @@
-import { UIMenu } from "../uimenu";
+import type { UIMenu } from "../uimenu";
 
 export class UIMenuWindow{
     public ParentMenu!: UIMenu;

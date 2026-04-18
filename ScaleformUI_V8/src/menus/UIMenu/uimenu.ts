@@ -372,9 +372,22 @@ export class UIMenu extends BaseMenu {
         } while (this.isFading)
     }
 
+    private isWarningShowing(): boolean {
+        const warning = ScaleformUI.Scaleforms.Warning as { IsShowing?: boolean; isShowing?: boolean } | undefined;
+        return !!(warning?.IsShowing ?? warning?.isShowing);
+    }
+
+    private isWarningShowingWithButtons(): boolean {
+        return !!ScaleformUI.Scaleforms.Warning?.IsShowingWithButtons;
+    }
+
+    private isWarningBlockingInput(): boolean {
+        return this.isWarningShowing() && !this.isWarningShowingWithButtons();
+    }
+
     public AddInstructionalButton(button: InstructionalButton) {
         this.instructionalButtons.push(button);
-        if (this.Visible && !(ScaleformUI.Scaleforms.Warning.IsShowing || ScaleformUI.Scaleforms.Warning.IsShowingWithButtons))
+        if (this.Visible && !this.isWarningBlockingInput())
             ScaleformUI.Scaleforms.InstructionalButtons.SetInstructionalButtons(this.instructionalButtons);
     }
 
@@ -385,7 +398,7 @@ export class UIMenu extends BaseMenu {
     public RemoveInstructionalButtonAt(index: number) {
         if (this.instructionalButtons.length >= index) {
             this.instructionalButtons.splice(index, 1);
-            if (this.Visible && !(ScaleformUI.Scaleforms.Warning.IsShowing || ScaleformUI.Scaleforms.Warning.IsShowingWithButtons))
+            if (this.Visible && !this.isWarningBlockingInput())
                 ScaleformUI.Scaleforms.InstructionalButtons.SetInstructionalButtons(this.instructionalButtons);
         }
     }
@@ -887,7 +900,7 @@ export class UIMenu extends BaseMenu {
             return;
         }
 
-        if (UpdateOnscreenKeyboard() == 0 || IsWarningMessageActive() || ScaleformUI.Scaleforms.Warning.isShowing || BreadcrumbsHandler.SwitchInProgress || this.isFading) {
+        if (UpdateOnscreenKeyboard() == 0 || IsWarningMessageActive() || this.isWarningShowing() || BreadcrumbsHandler.SwitchInProgress || this.isFading) {
             return;
         }
 
@@ -965,7 +978,7 @@ export class UIMenu extends BaseMenu {
     }
 
     public override async draw() {
-        if (!this.Visible || ScaleformUI.Scaleforms.Warning.IsShowing)
+        if (!this.Visible || this.isWarningShowing())
             return;
         while (!ScaleformUI.Scaleforms._ui?.isLoaded)
             await Delay(0);

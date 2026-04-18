@@ -26,7 +26,7 @@ export class BigmessageInstance implements ScaleformHandler {
         this.scaleform = Scaleform.request("MP_BIG_MESSAGE_FREEMODE");
         const start = GetGameTimer();
         const to = 1000;
-        await waitUntilReturns(noop, () => this.scaleform!.isLoaded && GetGameTimer() - start < to, true, 0);
+        await waitUntilReturns(noop, () => this.scaleform!.isLoaded || GetGameTimer() - start >= to, true, 0);
     }
 
     /**
