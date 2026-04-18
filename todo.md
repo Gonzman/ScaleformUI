@@ -52,22 +52,22 @@ Port the C# ScaleformUI main project into the TypeScript V8 codebase.
 - [x] `Menus/Pause Menus/Elements/Panels/MinimapPanel.cs` => `src/menus/pause-menu/elements/panels/minimap-panel.ts`
 - [x] `Menus/Pause Menus/Elements/Panels/MissionDetailsPanel.cs` => `src/menus/pause-menu/elements/panels/mission-details-panel.ts`
 - [x] `Menus/Pause Menus/Elements/Panels/PlayerStatsPanel.cs` => `src/menus/pause-menu/elements/panels/player-stats-panel.ts`
-- [ ] `Menus/Pause Menus/LobbyMenu/MainView.cs`
-- [ ] `Menus/Pause Menus/PauseMenu/Items/BasicTabItem.cs`
-- [ ] `Menus/Pause Menus/PauseMenu/Items/KeymapItem.cs`
-- [ ] `Menus/Pause Menus/PauseMenu/Items/SettingsItems/SettingsCheckboxItem.cs`
-- [ ] `Menus/Pause Menus/PauseMenu/Items/SettingsItems/SettingsItem.cs`
-- [ ] `Menus/Pause Menus/PauseMenu/Items/SettingsItems/SettingsListItem.cs`
-- [ ] `Menus/Pause Menus/PauseMenu/Items/SettingsItems/SettingsProgressItem.cs`
-- [ ] `Menus/Pause Menus/PauseMenu/Items/SettingsItems/SettingsSliderItem.cs`
-- [ ] `Menus/Pause Menus/PauseMenu/Items/StatsTabItem.cs`
-- [ ] `Menus/Pause Menus/PauseMenu/TabView.cs`
-- [ ] `Menus/Pause Menus/PauseMenu/Tabs/BaseTab.cs`
-- [ ] `Menus/Pause Menus/PauseMenu/Tabs/PlayerListTab.cs`
-- [ ] `Menus/Pause Menus/PauseMenu/Tabs/SubmenuTab.cs`
-- [ ] `Menus/Pause Menus/PauseMenu/Tabs/TabLeftItem.cs`
-- [ ] `Menus/Pause Menus/PauseMenu/Tabs/TextTab.cs`
-- [ ] `Menus/Pause Menus/PauseMenu/Tabs/Submenu.ts` https://github.com/manups4e/ScaleformUI/issues/245 ==> IDEA: With new Pause Menu update incoming you can achieve this feature by clearing and rebuilding dynamically each Tab's columns. (The same way R\* does) (keeping it opened as reference)
+- [x] `Menus/Pause Menus/LobbyMenu/MainView.cs` => `src/menus/lobby-menu/main-view.ts`
+- [x] `Menus/Pause Menus/PauseMenu/Items/BasicTabItem.cs` => `src/menus/pause-menu/elements/items/basic-tab-item.ts`
+- [x] `Menus/Pause Menus/PauseMenu/Items/KeymapItem.cs` => `src/menus/pause-menu/elements/items/keymap-item.ts`
+- [x] `Menus/Pause Menus/PauseMenu/Items/SettingsItems/SettingsCheckboxItem.cs` => `src/menus/pause-menu/elements/items/settings-items/settings-checkbox-item.ts`
+- [x] `Menus/Pause Menus/PauseMenu/Items/SettingsItems/SettingsItem.cs` => `src/menus/pause-menu/elements/items/settings-items/settings-item.ts`
+- [x] `Menus/Pause Menus/PauseMenu/Items/SettingsItems/SettingsListItem.cs` => `src/menus/pause-menu/elements/items/settings-items/settings-list-item.ts`
+- [x] `Menus/Pause Menus/PauseMenu/Items/SettingsItems/SettingsProgressItem.cs` => `src/menus/pause-menu/elements/items/settings-items/settings-progress-item.ts`
+- [x] `Menus/Pause Menus/PauseMenu/Items/SettingsItems/SettingsSliderItem.cs` => `src/menus/pause-menu/elements/items/settings-items/settings-slider-item.ts`
+- [x] `Menus/Pause Menus/PauseMenu/Items/StatsTabItem.cs` => `src/menus/pause-menu/elements/items/stats-tab-item.ts`
+- [x] `Menus/Pause Menus/PauseMenu/TabView.cs` => `src/menus/pause-menu/tab-view.ts`
+- [x] `Menus/Pause Menus/PauseMenu/Tabs/BaseTab.cs` => `src/menus/pause-menu/tabs/base-tab.ts`
+- [x] `Menus/Pause Menus/PauseMenu/Tabs/PlayerListTab.cs` => `src/menus/pause-menu/tabs/player-list-tab.ts`
+- [x] `Menus/Pause Menus/PauseMenu/Tabs/SubmenuTab.cs` => `src/menus/pause-menu/tabs/submenu-tab.ts`
+- [x] `Menus/Pause Menus/PauseMenu/Tabs/TabLeftItem.cs` => `src/menus/pause-menu/items/tab-left-item.ts`
+- [x] `Menus/Pause Menus/PauseMenu/Tabs/TextTab.cs` => `src/menus/pause-menu/tabs/text-tab.ts`
+- [x] `Menus/Pause Menus/PauseMenu/Tabs/Submenu.ts` => `src/menus/pause-menu/tabs/submenu.ts` https://github.com/manups4e/ScaleformUI/issues/245 ==> IDEA: With new Pause Menu update incoming you can achieve this feature by clearing and rebuilding dynamically each Tab's columns. (The same way R\* does) (keeping it opened as reference)
 
 ### Radial menu
 

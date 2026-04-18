@@ -28,6 +28,18 @@ export class PauseMenuBase {
         // override in derived classes
     }
 
+    public processControl(): void {
+        this.ProcessControls();
+    }
+
+    public processMouse(): void {
+        this.ProcessMouse();
+    }
+
+    public draw(): void {
+        this.Draw();
+    }
+
     public Draw(): void {
         // Prevent certain controls while the pause menu is drawn (mirrors C# API.DisableControlAction calls)
         DisableControlAction(0, 199, true);
