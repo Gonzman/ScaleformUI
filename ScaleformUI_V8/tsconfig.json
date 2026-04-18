@@ -1,20 +1,24 @@
 {
     "compilerOptions": {
-        "outDir": "./dist",
+        "target": "es2022",
+        "strict": true,
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
         "noImplicitAny": true,
-        "module": "commonjs",
-        "target": "es2020",
-        "lib": ["es2020"],
+        "noImplicitThis": true,
+        "module": "CommonJS",
+        "types": ["@citizenfx/client", "@types/node", "jest"],
+        "lib": ["ES2022"],
+        "noUnusedParameters": true,
+        "noUnusedLocals": true,
+        "experimentalDecorators": true,
+        "resolveJsonModule": true,
         "paths": {
             "*": ["./src/*"]
         },
-        "types": ["@citizenfx/client", "jest"],
         "inlineSourceMap": true,
         "allowJs": true,
-        "resolveJsonModule": true,
         "skipLibCheck": true,
-        "strict": true,
-        "experimentalDecorators": true,
         "noEmit": true
     },
     "include": ["src/**/*", "jest.config.js"],
