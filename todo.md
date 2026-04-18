@@ -40,18 +40,18 @@ Port the C# ScaleformUI main project into the TypeScript V8 codebase.
 - [ ] `Menus/Pause Menus/Elements/Columns/SettingsListColumn.cs`
 - [ ] `Menus/Pause Menus/Elements/Columns/StoreListColumn.cs`
 - [ ] `Menus/Pause Menus/Elements/CrewTag.cs`
-- [ ] `Menus/Pause Menus/Elements/Items/FakeBlip.cs`
-- [ ] `Menus/Pause Menus/Elements/Items/FriendItem.cs`
-- [ ] `Menus/Pause Menus/Elements/Items/LobbyItem.cs`
-- [ ] `Menus/Pause Menus/Elements/Items/MMPLayerItem.cs`
-- [ ] `Menus/Pause Menus/Elements/Items/MinimapBaseItem.cs`
-- [ ] `Menus/Pause Menus/Elements/Items/MinimapRaceCheckpoint.cs`
-- [ ] `Menus/Pause Menus/Elements/Items/MinimapRoute.cs`
-- [ ] `Menus/Pause Menus/Elements/Items/MissionItem.cs`
-- [ ] `Menus/Pause Menus/Elements/Items/StoreItem.cs`
-- [ ] `Menus/Pause Menus/Elements/Panels/MinimapPanel.cs`
-- [ ] `Menus/Pause Menus/Elements/Panels/MissionDetailsPanel.cs`
-- [ ] `Menus/Pause Menus/Elements/Panels/PlayerStatsPanel.cs`
+- [x] `Menus/Pause Menus/Elements/Items/FakeBlip.cs` => `src/menus/pause-menu/elements/items/fake-blip.ts`
+- [x] `Menus/Pause Menus/Elements/Items/FriendItem.cs` => `src/menus/pause-menu/elements/items/friend-item.ts`
+- [x] `Menus/Pause Menus/Elements/Items/LobbyItem.cs` => `src/menus/pause-menu/elements/items/lobby-item.ts`
+- [x] `Menus/Pause Menus/Elements/Items/MMPLayerItem.cs` => `src/menus/pause-menu/elements/items/mmp-layer-item.ts`
+- [x] `Menus/Pause Menus/Elements/Items/MinimapBaseItem.cs` => `src/menus/pause-menu/elements/items/minimap-base-item.ts`
+- [x] `Menus/Pause Menus/Elements/Items/MinimapRaceCheckpoint.cs` => `src/menus/pause-menu/elements/items/minimap-race-checkpoint.ts`
+- [x] `Menus/Pause Menus/Elements/Items/MinimapRoute.cs` => `src/menus/pause-menu/elements/items/minimap-route.ts`
+- [x] `Menus/Pause Menus/Elements/Items/MissionItem.cs` => `src/menus/pause-menu/elements/items/mission-item.ts`
+- [x] `Menus/Pause Menus/Elements/Items/StoreItem.cs` => `src/menus/pause-menu/elements/items/store-item.ts`
+- [x] `Menus/Pause Menus/Elements/Panels/MinimapPanel.cs` => `src/menus/pause-menu/elements/panels/minimap-panel.ts`
+- [x] `Menus/Pause Menus/Elements/Panels/MissionDetailsPanel.cs` => `src/menus/pause-menu/elements/panels/mission-details-panel.ts`
+- [x] `Menus/Pause Menus/Elements/Panels/PlayerStatsPanel.cs` => `src/menus/pause-menu/elements/panels/player-stats-panel.ts`
 - [ ] `Menus/Pause Menus/LobbyMenu/MainView.cs`
 - [ ] `Menus/Pause Menus/PauseMenu/Items/BasicTabItem.cs`
 - [ ] `Menus/Pause Menus/PauseMenu/Items/KeymapItem.cs`
