@@ -5,63 +5,81 @@ import { ScaleformLiteralString } from "elements/scaleform-literal-string";
 import { SColor } from "elements/scolor";
 
 export interface ScaleformHandler {
-    load(): Promise<void>
-    update(): void
-    destroy(): Promise<void>
+    load(): Promise<void>;
+    update(): void;
+    destroy(): Promise<void>;
 }
 
 export class Scaleform {
-    private deleted = false
-    private constructor(private readonly name: string, readonly handle: number) { }
+    private deleted = false;
+    private constructor(
+        private readonly name: string,
+        readonly handle: number
+    ) {}
 
     public static request(name: string) {
-        return new Scaleform(name, RequestScaleformMovie(name))
+        return new Scaleform(name, RequestScaleformMovie(name));
     }
 
     public static requestWideScreen(name: string) {
-        return new Scaleform(name, RequestScaleformMovieInstance(name))
+        return new Scaleform(name, RequestScaleformMovieInstance(name));
     }
 
-    public callFunction(funcName: string, ...args: (number | boolean | string | ScaleformLiteralString | ScaleformLabel | SColor)[]) {
-        BeginScaleformMovieMethod(this.handle, funcName)
-        this.processScaleformArgs(funcName, args)
-        EndScaleformMovieMethod()
+    public callFunction(
+        funcName: string,
+        ...args: (number | boolean | string | ScaleformLiteralString | ScaleformLabel | SColor)[]
+    ) {
+        BeginScaleformMovieMethod(this.handle, funcName);
+        this.processScaleformArgs(funcName, args);
+        EndScaleformMovieMethod();
     }
 
-    private callFunctionReturnInternal(functionName: string, args: (number | boolean | string | ScaleformLiteralString | ScaleformLabel | SColor)[]): number {
+    private callFunctionReturnInternal(
+        functionName: string,
+        args: (number | boolean | string | ScaleformLiteralString | ScaleformLabel | SColor)[]
+    ): number {
         this.processScaleformArgs(functionName, args);
         return EndScaleformMovieMethodReturnValue();
     }
 
-    public async callFunctionReturnInt(functionName: string, ...args: (number | boolean | string | ScaleformLiteralString | ScaleformLabel | SColor)[]): Promise<number> {
-        let scaleformHandle = this.callFunctionReturnInternal(functionName, args)
+    public async callFunctionReturnInt(
+        functionName: string,
+        ...args: (number | boolean | string | ScaleformLiteralString | ScaleformLabel | SColor)[]
+    ): Promise<number> {
+        let scaleformHandle = this.callFunctionReturnInternal(functionName, args);
         while (!IsScaleformMovieMethodReturnValueReady(scaleformHandle)) {
-            await Delay(0)
+            await Delay(0);
         }
-        return GetScaleformMovieFunctionReturnInt(scaleformHandle)
+        return GetScaleformMovieFunctionReturnInt(scaleformHandle);
     }
 
-    public async callFunctionReturnBool(functionName: string, ...args: (number | boolean | string | ScaleformLiteralString | ScaleformLabel | SColor)[]): Promise<boolean> {
-        let scaleformHandle = this.callFunctionReturnInternal(functionName, args)
+    public async callFunctionReturnBool(
+        functionName: string,
+        ...args: (number | boolean | string | ScaleformLiteralString | ScaleformLabel | SColor)[]
+    ): Promise<boolean> {
+        let scaleformHandle = this.callFunctionReturnInternal(functionName, args);
         while (!IsScaleformMovieMethodReturnValueReady(scaleformHandle)) {
-            await Delay(0)
+            await Delay(0);
         }
-        return GetScaleformMovieFunctionReturnBool(scaleformHandle)
+        return GetScaleformMovieFunctionReturnBool(scaleformHandle);
     }
 
-    public async callFunctionReturnString(functionName: string, ...args: (number | boolean | string | ScaleformLiteralString | ScaleformLabel | SColor)[]): Promise<string> {
-        let scaleformHandle = this.callFunctionReturnInternal(functionName, args)
+    public async callFunctionReturnString(
+        functionName: string,
+        ...args: (number | boolean | string | ScaleformLiteralString | ScaleformLabel | SColor)[]
+    ): Promise<string> {
+        let scaleformHandle = this.callFunctionReturnInternal(functionName, args);
         while (!IsScaleformMovieMethodReturnValueReady(scaleformHandle)) {
-            await Delay(0)
+            await Delay(0);
         }
-        return GetScaleformMovieFunctionReturnString(scaleformHandle)
+        return GetScaleformMovieFunctionReturnString(scaleformHandle);
     }
 
     /**
      * Render the scaleform in fullscreen
      */
     public render2d() {
-        DrawScaleformMovieFullscreen(this.handle, 255, 255, 255, 255, 0)
+        DrawScaleformMovieFullscreen(this.handle, 255, 255, 255, 255, 0);
     }
 
     /**
@@ -72,7 +90,7 @@ export class Scaleform {
      * @param height
      */
     public render2dNormal(x: number, y: number, width: number, height: number) {
-        DrawScaleformMovie(this.handle, x, y, width, height, 255, 255, 255, 255, 0)
+        DrawScaleformMovie(this.handle, x, y, width, height, 255, 255, 255, 255, 0);
     }
 
     /**
@@ -83,12 +101,12 @@ export class Scaleform {
      * @param sizeY
      */
     public render2dScreenSpace(localX: number, localY: number, sizeX: number, sizeY: number) {
-        const [w, h] = GetScreenResolution()
-        const x = localY / w
-        const y = localX / h
-        const width = sizeX / w
-        const height = sizeY / h
-        DrawScaleformMovie(this.handle, x + (width / 2.0), y + (height / 2.0), width, height, 255, 255, 255, 255, 0)
+        const [w, h] = GetScreenResolution();
+        const x = localY / w;
+        const y = localX / h;
+        const width = sizeX / w;
+        const height = sizeY / h;
+        DrawScaleformMovie(this.handle, x + width / 2.0, y + height / 2.0, width, height, 255, 255, 255, 255, 0);
     }
 
     /**
@@ -98,7 +116,7 @@ export class Scaleform {
      * @param scale `Vector3`
      */
     public render3d(coords: Vector3, rot: Vector3, scale: Vector3) {
-        DrawScaleformMovie_3dSolid(this.handle, ...coords.toArr(), ...rot.toArr(), 2.0, 2.0, 1.0, ...scale.toArr(), 2)
+        DrawScaleformMovie_3dSolid(this.handle, ...coords.toArr(), ...rot.toArr(), 2.0, 2.0, 1.0, ...scale.toArr(), 2);
     }
 
     /**
@@ -108,61 +126,65 @@ export class Scaleform {
      * @param scale `Vector3`
      */
     public render3dAdditive(coords: Vector3, rot: Vector3, scale: Vector3) {
-        DrawScaleformMovie_3d(this.handle, ...coords.toArr(), ...rot.toArr(), 2.0, 2.0, 1.0, ...scale.toArr(), 2)
+        DrawScaleformMovie_3d(this.handle, ...coords.toArr(), ...rot.toArr(), 2.0, 2.0, 1.0, ...scale.toArr(), 2);
     }
 
     /**
      * Destroy the scaleform
      */
     public dispose() {
-        SetScaleformMovieAsNoLongerNeeded(this.handle)
-        this.deleted = true
+        SetScaleformMovieAsNoLongerNeeded(this.handle);
+        this.deleted = true;
     }
 
     // Backward-compatible alias used by older handlers.
     public destroy() {
-        this.dispose()
+        this.dispose();
     }
 
     public get isValid() {
-        return !this.deleted
+        return !this.deleted;
     }
 
     public get isLoaded() {
-        return HasScaleformMovieLoaded(this.handle)
+        return HasScaleformMovieLoaded(this.handle);
     }
 
-
-    private processScaleformArgs(fname: string, args: (number | boolean | string | ScaleformLiteralString | ScaleformLabel | SColor)[]) {
+    private processScaleformArgs(
+        fname: string,
+        args: (number | boolean | string | ScaleformLiteralString | ScaleformLabel | SColor)[]
+    ) {
         for (const [argIndex, arg] of args.entries()) {
             if (typeof arg === "boolean") {
-                ScaleformMovieMethodAddParamBool(arg)
+                ScaleformMovieMethodAddParamBool(arg);
             } else if (typeof arg === "number") {
                 if (Number.isInteger(arg)) {
-                    ScaleformMovieMethodAddParamInt(arg)
+                    ScaleformMovieMethodAddParamInt(arg);
                 } else {
-                    ScaleformMovieMethodAddParamFloat(arg)
+                    ScaleformMovieMethodAddParamFloat(arg);
                 }
             } else if (typeof arg === "string") {
-                this.addStringArg(arg)
+                this.addStringArg(arg);
             } else if (arg instanceof ScaleformLiteralString) {
-                ScaleformMovieMethodAddParamTextureNameString_2(arg.LiteralString)
+                ScaleformMovieMethodAddParamTextureNameString_2(arg.LiteralString);
             } else if (arg instanceof ScaleformLabel) {
-                BeginTextCommandScaleformString(arg.Label)
-                EndTextCommandScaleformString()
+                BeginTextCommandScaleformString(arg.Label);
+                EndTextCommandScaleformString();
             } else if (arg instanceof SColor) {
-                ScaleformMovieMethodAddParamInt(arg.toArgb())
+                ScaleformMovieMethodAddParamInt(arg.toArgb());
             } else {
-                throw new Error(`Received invalid argument: ${arg} at position #${argIndex} while calling scaleform function: ${fname}`)
+                throw new Error(
+                    `Received invalid argument: ${arg} at position #${argIndex} while calling scaleform function: ${fname}`
+                );
             }
         }
     }
 
     private addStringArg(arg: string) {
-        if (["b_", "t_"].some(prefix => arg.startsWith(prefix))) {
-            ScaleformMovieMethodAddParamPlayerNameString(arg)
+        if (["b_", "t_"].some((prefix) => arg.startsWith(prefix))) {
+            ScaleformMovieMethodAddParamPlayerNameString(arg);
         } else {
-            ScaleformMovieMethodAddParamTextureNameString(arg)
+            ScaleformMovieMethodAddParamTextureNameString(arg);
         }
     }
 }

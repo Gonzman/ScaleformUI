@@ -18,25 +18,27 @@ export class InstructionalButtonsHandler {
     _changed: boolean = true;
     savingTimer: number = 0;
     private _isSaving: boolean = false;
-    public ControlButtons: InstructionalButton[] = []
-    private keyboardButtons: InstructionalButton[] = []
-    private gamepadButtons: InstructionalButton[] = []
+    public ControlButtons: InstructionalButton[] = [];
+    private keyboardButtons: InstructionalButton[] = [];
+    private gamepadButtons: InstructionalButton[] = [];
 
     constructor() {
         this.ControlButtons = [];
         this.Load();
     }
 
-    public get IsSaving(): boolean { return this._isSaving; }
+    public get IsSaving(): boolean {
+        return this._isSaving;
+    }
 
     async Load() {
-        if (this._sc) return
-        this._sc = Scaleform.request("instructional_buttons")
-        const start = GetGameTimer()
-        const to = 1000
-        await waitUntilReturns(noop, () => this._sc!.isLoaded || GetGameTimer() - start >= to, true, 0)
+        if (this._sc) return;
+        this._sc = Scaleform.request("instructional_buttons");
+        const start = GetGameTimer();
+        const to = 1000;
+        await waitUntilReturns(noop, () => this._sc!.isLoaded || GetGameTimer() - start >= to, true, 0);
         let [w, h] = GetActiveScreenResolution();
-        this._sc!.callFunction("SET_DISPLAY_CONFIG", 1280, 720, 0.05, 0.95, 0.05, 0.95, true, false, false, w, h)
+        this._sc!.callFunction("SET_DISPLAY_CONFIG", 1280, 720, 0.05, 0.95, 0.05, 0.95, true, false, false, w, h);
     }
 
     public SetInstructionalButtons(buttons: InstructionalButton[]) {
@@ -72,8 +74,8 @@ export class InstructionalButtonsHandler {
             this.ControlButtons.length = 0;
         }
         this._changed = true;
-        this._sc.callFunction("CLEAR_ALL")
-        this._sc.callFunction("CLEAR_RENDER")
+        this._sc.callFunction("CLEAR_ALL");
+        this._sc.callFunction("CLEAR_RENDER");
     }
     public async AddSavingText(spinnerType: LoadingSpinnerType, text: string, time: number) {
         this._isSaving = true;
@@ -85,7 +87,6 @@ export class InstructionalButtonsHandler {
             RemoveLoadingPrompt();
         }
         this._isSaving = false;
-
     }
 
     private showLoadingPrompt(spinnerType: LoadingSpinnerType, text: string) {
@@ -141,30 +142,31 @@ export class InstructionalButtonsHandler {
                 this.gamepadButtons.push(button);
                 if (this.isWarningActiveForButtons())
                     this._sc.callFunction("SET_DATA_SLOT", count, button.GetButtonId(), button.Text, 0, -1);
-                else
-                    this._sc.callFunction("SET_DATA_SLOT", count, button.GetButtonId(), button.Text);
-            }
-            else {
+                else this._sc.callFunction("SET_DATA_SLOT", count, button.GetButtonId(), button.Text);
+            } else {
                 if (button.PadCheck == PadCheck.Controller) {
                     continue;
                 }
                 this.keyboardButtons.push(button);
                 if (this.UseMouseButtons)
-                    this._sc.callFunction("SET_DATA_SLOT", count, button.GetButtonId(), button.Text, 1, button.KeyboardButton);
+                    this._sc.callFunction(
+                        "SET_DATA_SLOT",
+                        count,
+                        button.GetButtonId(),
+                        button.Text,
+                        1,
+                        button.KeyboardButton
+                    );
                 else {
                     if (this.isWarningActiveForButtons())
                         this._sc.callFunction("SET_DATA_SLOT", count, button.GetButtonId(), button.Text, 0, -1);
-                    else
-                        this._sc.callFunction("SET_DATA_SLOT", count, button.GetButtonId(), button.Text);
-
+                    else this._sc.callFunction("SET_DATA_SLOT", count, button.GetButtonId(), button.Text);
                 }
-
             }
             count++;
         }
         this._sc.callFunction("DRAW_INSTRUCTIONAL_BUTTONS", -1);
         this._changed = false;
-
     }
 
     Draw() {
@@ -188,28 +190,40 @@ export class InstructionalButtonsHandler {
         }
         this.updateButtons();
 
-        if (!this.isWarningShowing() || this.isWarningShowingWithButtons())
-            this.Draw();
+        if (!this.isWarningShowing() || this.isWarningShowingWithButtons()) this.Draw();
 
         this.keyboardButtons.forEach((button: InstructionalButton) => {
-            if (this.IsControlJustPressed(button.KeyboardButton, button.PadCheck) || (button.KeyboardButtons != null && button.KeyboardButtons.some(x => this.IsControlJustPressed(x, button.PadCheck))))
+            if (
+                this.IsControlJustPressed(button.KeyboardButton, button.PadCheck) ||
+                (button.KeyboardButtons != null &&
+                    button.KeyboardButtons.some((x) => this.IsControlJustPressed(x, button.PadCheck)))
+            )
                 button.InvokeEvent(button);
-        })
+        });
         this.gamepadButtons.forEach((button: InstructionalButton) => {
-            if (this.IsControlJustPressed(button.GamepadButton, button.PadCheck) || (button.GamepadButtons != null && button.GamepadButtons.some(x => this.IsControlJustPressed(x, button.PadCheck))))
+            if (
+                this.IsControlJustPressed(button.GamepadButton, button.PadCheck) ||
+                (button.GamepadButtons != null &&
+                    button.GamepadButtons.some((x) => this.IsControlJustPressed(x, button.PadCheck)))
+            )
                 button.InvokeEvent(button);
-        })
-        if (this.UseMouseButtons)
-            ShowCursorThisFrame();
+        });
+        if (this.UseMouseButtons) ShowCursorThisFrame();
         HideHudComponentThisFrame(6);
         HideHudComponentThisFrame(7);
         HideHudComponentThisFrame(9);
     }
 
     public IsControlJustPressed(control: number, keyboardOnly: PadCheck): boolean {
-        return IsControlJustPressed(2, control) && (keyboardOnly == PadCheck.Keyboard ? IsUsingKeyboard(2) : keyboardOnly != PadCheck.Controller || !IsUsingKeyboard(2));
+        return (
+            IsControlJustPressed(2, control) &&
+            (keyboardOnly == PadCheck.Keyboard
+                ? IsUsingKeyboard(2)
+                : keyboardOnly != PadCheck.Controller || !IsUsingKeyboard(2))
+        );
     }
 
-    public ForceUpdate() { this._changed = true }
-
+    public ForceUpdate() {
+        this._changed = true;
+    }
 }

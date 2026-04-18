@@ -35,7 +35,7 @@ import {
     GridPanelChangedEvent,
     MenuOpenedEvent,
     MenuClosedEvent,
-    StatItemProgressChange,
+    StatItemProgressChange
 } from "./emitters/emitters";
 import { Scaleform } from "scaleforms/scaleform";
 import { Delay } from "helpers/loaders";
@@ -45,15 +45,15 @@ import { Controls } from "elements/controls";
 import { UIMenuSeparatorItem } from "./items/uimenuseparatoritem";
 import { UIMenuListItem } from "./items/uimenulistitem";
 import { UIMenuSliderItem } from "./items/uimenuslideritem";
-import { UIMenuProgressItem } from './items/uimenuprogressitem';
+import { UIMenuProgressItem } from "./items/uimenuprogressitem";
 import { ScreenTools } from "math/screen-tools";
 import { MenuHandler } from "menus/menu-handler";
-import { Countdown } from '../../scaleforms/countdown/countdown';
+import { Countdown } from "../../scaleforms/countdown/countdown";
 import { ChangeDirection, UIMenuDynamicListItem } from "./items/uimenudynamiclistitem";
 import { UIMenuStatsItem } from "./items/uimenustatsitem";
 import { BadgeStyle } from "elements/badge";
 import { UIMenuCheckboxItem } from "./items/uimenucheckboxitem";
-import { UIMenuColorPanel, ColorPanelType } from './panels/uimenucolorpanel';
+import { UIMenuColorPanel, ColorPanelType } from "./panels/uimenucolorpanel";
 import { UIMenuPanel } from "./panels/uimenupanel";
 import { UIMenuPercentagePanel } from "./panels/uimenupercentagepanel";
 import { UIMenuGridPanel } from "./panels/uimenugridpanel";
@@ -134,7 +134,6 @@ export class UIMenu extends BaseMenu {
 
     _keyDictionary: Map<MenuControls, Array<number>> = new Map();
 
-
     public set MaxItemsOnScreen(value: number) {
         this.Pagination.ItemsPerPage = value;
     }
@@ -199,7 +198,11 @@ export class UIMenu extends BaseMenu {
     public set DescriptionFont(font: ItemFont) {
         this.descriptionFont = font;
         if (this.Visible) {
-            ScaleformUI.Scaleforms._ui?.callFunction("SET_DESC_FONT", this.descriptionFont.fontName, this.descriptionFont.fontId);
+            ScaleformUI.Scaleforms._ui?.callFunction(
+                "SET_DESC_FONT",
+                this.descriptionFont.fontName,
+                this.descriptionFont.fontId
+            );
         }
     }
     public get DescriptionFont(): ItemFont {
@@ -283,7 +286,17 @@ export class UIMenu extends BaseMenu {
         this._StatItemProgressChange.add(delegate);
     }
 
-    constructor(title: string, subtitle: string, offset: Vector2, spriteLibrary: string, spriteName: string, glare: boolean = false, alternativeTitle: boolean = false, fadingTime: number = 0.1, longdesc: string) {
+    constructor(
+        title: string,
+        subtitle: string,
+        offset: Vector2,
+        spriteLibrary: string,
+        spriteName: string,
+        glare: boolean = false,
+        alternativeTitle: boolean = false,
+        fadingTime: number = 0.1,
+        longdesc: string
+    ) {
         super();
         this._customTexture = [spriteLibrary, spriteName];
         this.Offset = offset;
@@ -301,7 +314,7 @@ export class UIMenu extends BaseMenu {
             new InstructionalButton(UIMenu._backTextLocalized, -1, 177, 177, -1)
         ];
         if (!isNullOrWhiteSpace(longdesc)) {
-            AddTextEntry("ScaleformUILongDesc", longdesc)
+            AddTextEntry("ScaleformUILongDesc", longdesc);
             this.itemless = true;
         }
     }
@@ -328,48 +341,48 @@ export class UIMenu extends BaseMenu {
 
     public HasControlJustBeenPressed(control: MenuControls): boolean {
         let tmpControls: Array<number> = [...(this._keyDictionary.get(control) as Array<number>)];
-        return tmpControls.some(index => IsControlJustPressed(index, control));
+        return tmpControls.some((index) => IsControlJustPressed(index, control));
     }
 
     public HasControlJustBeenReleased(control: MenuControls): boolean {
         let tmpControls: Array<number> = [...(this._keyDictionary.get(control) as Array<number>)];
-        return tmpControls.some(index => IsControlJustReleased(index, control));
+        return tmpControls.some((index) => IsControlJustReleased(index, control));
     }
 
     private _controlCounter: number = 0;
     public IsControlBeingPressed(control: MenuControls): boolean {
         let tmpControls: Array<number> = [...(this._keyDictionary.get(control) as Array<number>)];
         if (this.HasControlJustBeenReleased(control)) this._controlCounter = 0;
-        return tmpControls.some(index => IsControlPressed(index, control));
+        return tmpControls.some((index) => IsControlPressed(index, control));
     }
 
     public async fadeInMenu() {
-        ScaleformUI.Scaleforms._ui?.callFunction("FADE_IN_MENU")
+        ScaleformUI.Scaleforms._ui?.callFunction("FADE_IN_MENU");
         do {
-            await Delay(0)
+            await Delay(0);
             this.isFading = await ScaleformUI.Scaleforms._ui?.callFunctionReturnBool("GET_IS_FADING");
-        } while (this.isFading)
+        } while (this.isFading);
     }
     public async fadeOutMenu() {
-        ScaleformUI.Scaleforms._ui?.callFunction("FADE_OUT_MENU")
+        ScaleformUI.Scaleforms._ui?.callFunction("FADE_OUT_MENU");
         do {
-            await Delay(0)
+            await Delay(0);
             this.isFading = await ScaleformUI.Scaleforms._ui?.callFunctionReturnBool("GET_IS_FADING");
-        } while (this.isFading)
+        } while (this.isFading);
     }
     public async fadeOutItems() {
-        ScaleformUI.Scaleforms._ui?.callFunction("FADE_OUT_ITEMS")
+        ScaleformUI.Scaleforms._ui?.callFunction("FADE_OUT_ITEMS");
         do {
-            await Delay(0)
+            await Delay(0);
             this.isFading = await ScaleformUI.Scaleforms._ui?.callFunctionReturnBool("GET_IS_FADING");
-        } while (this.isFading)
+        } while (this.isFading);
     }
     public async fadeInItems() {
-        ScaleformUI.Scaleforms._ui?.callFunction("FADE_IN_ITEMS")
+        ScaleformUI.Scaleforms._ui?.callFunction("FADE_IN_ITEMS");
         do {
-            await Delay(0)
+            await Delay(0);
             this.isFading = await ScaleformUI.Scaleforms._ui?.callFunctionReturnBool("GET_IS_FADING");
-        } while (this.isFading)
+        } while (this.isFading);
     }
 
     private isWarningShowing(): boolean {
@@ -483,14 +496,15 @@ export class UIMenu extends BaseMenu {
                         let uimenu = prevMenu as UIMenu;
                         if (uimenu.Items.length == 0) {
                             MenuHandler.CloseAndClearHistory();
-                            throw new Error(`UIMenu ${this.Title} previous menu is empty... Closing and clearing history.`);
+                            throw new Error(
+                                `UIMenu ${this.Title} previous menu is empty... Closing and clearing history.`
+                            );
                         }
                     }
                     BreadcrumbsHandler.Backwards();
                 }
                 this.Visible = false;
-                if (prevMenu != null)
-                    prevMenu.Visible = true;
+                if (prevMenu != null) prevMenu.Visible = true;
                 BreadcrumbsHandler.SwitchInProgress = false;
             }
         }
@@ -503,11 +517,20 @@ export class UIMenu extends BaseMenu {
             await Delay(0);
             let overflow = this.CurrentSelection == 0 && this.Pagination.TotalPages > 1;
             if (this.Pagination.GoUp()) {
-                if (this.ScrollingType == MenuScrollingType.ENDLESS || (this.ScrollingType == MenuScrollingType.CLASSIC && !overflow)) {
-                    this._itemCreation(this.Pagination.GetPage(this.CurrentSelection), this.Pagination.CurrentPageIndex, true);
+                if (
+                    this.ScrollingType == MenuScrollingType.ENDLESS ||
+                    (this.ScrollingType == MenuScrollingType.CLASSIC && !overflow)
+                ) {
+                    this._itemCreation(
+                        this.Pagination.GetPage(this.CurrentSelection),
+                        this.Pagination.CurrentPageIndex,
+                        true
+                    );
                     ScaleformUI.Scaleforms._ui?.callFunction("SET_INPUT_EVENT", 8, this.delay);
-                }
-                else if (this.ScrollingType == MenuScrollingType.PAGINATED || (this.ScrollingType == MenuScrollingType.CLASSIC && overflow)) {
+                } else if (
+                    this.ScrollingType == MenuScrollingType.PAGINATED ||
+                    (this.ScrollingType == MenuScrollingType.CLASSIC && overflow)
+                ) {
                     this.isBuilding = true;
                     await this.fadeOutItems();
                     this.isFading = true;
@@ -520,13 +543,14 @@ export class UIMenu extends BaseMenu {
                     this.isBuilding = false;
                 }
             }
-        }
-        while (this.Items[this.CurrentSelection] instanceof UIMenuSeparatorItem && (this.Items[this.CurrentSelection] as UIMenuSeparatorItem).Jumpable);
+        } while (
+            this.Items[this.CurrentSelection] instanceof UIMenuSeparatorItem &&
+            (this.Items[this.CurrentSelection] as UIMenuSeparatorItem).Jumpable
+        );
         ScaleformUI.Scaleforms._ui?.callFunction("SET_CURRENT_ITEM", this.Pagination.ScaleformIndex);
         ScaleformUI.Scaleforms._ui?.callFunction("SET_COUNTER_QTTY", this.CurrentSelection + 1, this.Items.length);
         this.Items[this.CurrentSelection].Selected = true;
-        if (this.isFading)
-            await this.fadeInItems();
+        if (this.isFading) await this.fadeInItems();
         this.IndexChange(this.CurrentSelection);
     }
 
@@ -537,11 +561,20 @@ export class UIMenu extends BaseMenu {
             await Delay(0);
             let overflow = this.CurrentSelection == 0 && this.Pagination.TotalPages > 1;
             if (this.Pagination.GoDown()) {
-                if (this.ScrollingType == MenuScrollingType.ENDLESS || (this.ScrollingType == MenuScrollingType.CLASSIC && !overflow)) {
-                    this._itemCreation(this.Pagination.GetPage(this.CurrentSelection), this.Pagination.CurrentPageIndex, true);
+                if (
+                    this.ScrollingType == MenuScrollingType.ENDLESS ||
+                    (this.ScrollingType == MenuScrollingType.CLASSIC && !overflow)
+                ) {
+                    this._itemCreation(
+                        this.Pagination.GetPage(this.CurrentSelection),
+                        this.Pagination.CurrentPageIndex,
+                        true
+                    );
                     ScaleformUI.Scaleforms._ui?.callFunction("SET_INPUT_EVENT", 9, this.delay);
-                }
-                else if (this.ScrollingType == MenuScrollingType.PAGINATED || (this.ScrollingType == MenuScrollingType.CLASSIC && overflow)) {
+                } else if (
+                    this.ScrollingType == MenuScrollingType.PAGINATED ||
+                    (this.ScrollingType == MenuScrollingType.CLASSIC && overflow)
+                ) {
                     this.isBuilding = true;
                     await this.fadeOutItems();
                     this.isFading = true;
@@ -554,13 +587,14 @@ export class UIMenu extends BaseMenu {
                     this.isBuilding = false;
                 }
             }
-        }
-        while (this.Items[this.CurrentSelection] instanceof UIMenuSeparatorItem && (this.Items[this.CurrentSelection] as UIMenuSeparatorItem).Jumpable);
+        } while (
+            this.Items[this.CurrentSelection] instanceof UIMenuSeparatorItem &&
+            (this.Items[this.CurrentSelection] as UIMenuSeparatorItem).Jumpable
+        );
         ScaleformUI.Scaleforms._ui?.callFunction("SET_CURRENT_ITEM", this.Pagination.ScaleformIndex);
         ScaleformUI.Scaleforms._ui?.callFunction("SET_COUNTER_QTTY", this.CurrentSelection + 1, this.Items.length);
         this.Items[this.CurrentSelection].Selected = true;
-        if (this.isFading)
-            await this.fadeInItems();
+        if (this.isFading) await this.fadeInItems();
         this.IndexChange(this.CurrentSelection);
     }
 
@@ -571,42 +605,37 @@ export class UIMenu extends BaseMenu {
         }
         let res = await ScaleformUI.Scaleforms._ui?.callFunctionReturnInt("SET_INPUT_EVENT", 10);
         switch (true) {
-            case this.CurrentItem instanceof UIMenuListItem:
-                {
-                    let it = this.CurrentItem as UIMenuListItem;
-                    it.Index = res;
-                    this.ListChange(it, it.Index);
-                    it.listChangedEmit();
-                    break;
-                }
-            case this.CurrentItem instanceof UIMenuDynamicListItem:
-                {
-                    let it = this.CurrentItem as UIMenuDynamicListItem;
-                    let newItem = await it.callback.toDelegate()(it, ChangeDirection.Left);
-                    it.CurrentListItem = newItem;
-                    break;
-                }
-            case this.CurrentItem instanceof UIMenuSliderItem:
-                {
-                    let it = this.CurrentItem as UIMenuSliderItem;
-                    it.Value = res;
-                    this.SliderChange(it, it.Value);
-                    break;
-                }
-            case this.CurrentItem instanceof UIMenuProgressItem:
-                {
-                    let it = this.CurrentItem as UIMenuProgressItem;
-                    it.Value = res;
-                    this.ProgressChange(it, it.Value);
-                    break;
-                }
-            case this.CurrentItem instanceof UIMenuStatsItem:
-                {
-                    let it = this.CurrentItem as UIMenuStatsItem;
-                    it.Value = res;
-                    this.StatItemChange(it, it.Value);
-                    break;
-                }
+            case this.CurrentItem instanceof UIMenuListItem: {
+                let it = this.CurrentItem as UIMenuListItem;
+                it.Index = res;
+                this.ListChange(it, it.Index);
+                it.listChangedEmit();
+                break;
+            }
+            case this.CurrentItem instanceof UIMenuDynamicListItem: {
+                let it = this.CurrentItem as UIMenuDynamicListItem;
+                let newItem = await it.callback.toDelegate()(it, ChangeDirection.Left);
+                it.CurrentListItem = newItem;
+                break;
+            }
+            case this.CurrentItem instanceof UIMenuSliderItem: {
+                let it = this.CurrentItem as UIMenuSliderItem;
+                it.Value = res;
+                this.SliderChange(it, it.Value);
+                break;
+            }
+            case this.CurrentItem instanceof UIMenuProgressItem: {
+                let it = this.CurrentItem as UIMenuProgressItem;
+                it.Value = res;
+                this.ProgressChange(it, it.Value);
+                break;
+            }
+            case this.CurrentItem instanceof UIMenuStatsItem: {
+                let it = this.CurrentItem as UIMenuStatsItem;
+                it.Value = res;
+                this.StatItemChange(it, it.Value);
+                break;
+            }
         }
     }
 
@@ -617,42 +646,37 @@ export class UIMenu extends BaseMenu {
         }
         let res = await ScaleformUI.Scaleforms._ui?.callFunctionReturnInt("SET_INPUT_EVENT", 11);
         switch (true) {
-            case this.CurrentItem instanceof UIMenuListItem:
-                {
-                    let it = this.CurrentItem as UIMenuListItem;
-                    it.Index = res;
-                    this.ListChange(it, it.Index);
-                    it.listChangedEmit();
-                    break;
-                }
-            case this.CurrentItem instanceof UIMenuDynamicListItem:
-                {
-                    let it = this.CurrentItem as UIMenuDynamicListItem;
-                    let newItem = await it.callback.toDelegate()(it, ChangeDirection.Left);
-                    it.CurrentListItem = newItem;
-                    break;
-                }
-            case this.CurrentItem instanceof UIMenuSliderItem:
-                {
-                    let it = this.CurrentItem as UIMenuSliderItem;
-                    it.Value = res;
-                    this.SliderChange(it, it.Value);
-                    break;
-                }
-            case this.CurrentItem instanceof UIMenuProgressItem:
-                {
-                    let it = this.CurrentItem as UIMenuProgressItem;
-                    it.Value = res;
-                    this.ProgressChange(it, it.Value);
-                    break;
-                }
-            case this.CurrentItem instanceof UIMenuStatsItem:
-                {
-                    let it = this.CurrentItem as UIMenuStatsItem;
-                    it.Value = res;
-                    this.StatItemChange(it, it.Value);
-                    break;
-                }
+            case this.CurrentItem instanceof UIMenuListItem: {
+                let it = this.CurrentItem as UIMenuListItem;
+                it.Index = res;
+                this.ListChange(it, it.Index);
+                it.listChangedEmit();
+                break;
+            }
+            case this.CurrentItem instanceof UIMenuDynamicListItem: {
+                let it = this.CurrentItem as UIMenuDynamicListItem;
+                let newItem = await it.callback.toDelegate()(it, ChangeDirection.Left);
+                it.CurrentListItem = newItem;
+                break;
+            }
+            case this.CurrentItem instanceof UIMenuSliderItem: {
+                let it = this.CurrentItem as UIMenuSliderItem;
+                it.Value = res;
+                this.SliderChange(it, it.Value);
+                break;
+            }
+            case this.CurrentItem instanceof UIMenuProgressItem: {
+                let it = this.CurrentItem as UIMenuProgressItem;
+                it.Value = res;
+                this.ProgressChange(it, it.Value);
+                break;
+            }
+            case this.CurrentItem instanceof UIMenuStatsItem: {
+                let it = this.CurrentItem as UIMenuStatsItem;
+                it.Value = res;
+                this.StatItemChange(it, it.Value);
+                break;
+            }
         }
     }
 
@@ -665,22 +689,20 @@ export class UIMenu extends BaseMenu {
         if (playSound) PlaySoundFrontend(-1, this.AUDIO_SELECT, this.AUDIO_LIBRARY, true);
 
         switch (true) {
-            case this.CurrentItem instanceof UIMenuCheckboxItem:
-                {
-                    let it = this.CurrentItem as UIMenuCheckboxItem;
-                    it.Checked = !it.Checked;
-                    this.CheckboxChange(it, it.Checked);
-                    it.checkEmit();
-                    break;
-                }
+            case this.CurrentItem instanceof UIMenuCheckboxItem: {
+                let it = this.CurrentItem as UIMenuCheckboxItem;
+                it.Checked = !it.Checked;
+                this.CheckboxChange(it, it.Checked);
+                it.checkEmit();
+                break;
+            }
 
-            case this.CurrentItem instanceof UIMenuListItem:
-                {
-                    let it = this.CurrentItem as UIMenuListItem;
-                    this.ListSelect(it, it.Index);
-                    it.listSelectedEmit();
-                    break;
-                }
+            case this.CurrentItem instanceof UIMenuListItem: {
+                let it = this.CurrentItem as UIMenuListItem;
+                this.ListSelect(it, it.Index);
+                it.listSelectedEmit();
+                break;
+            }
 
             default:
                 this.ItemSelect(this.CurrentItem, this.CurrentSelection);
@@ -689,19 +711,24 @@ export class UIMenu extends BaseMenu {
         }
     }
 
-
     cursorPressed: boolean = false;
     async processMouse() {
-        if (!this.Visible || this._justOpened || this.Items.length == 0 || !IsUsingKeyboard(2) || !this.MouseControlsEnabled) {
-            EnableControlAction(0, 2, true)
-            EnableControlAction(0, 1, true)
-            EnableControlAction(1, 2, true)
-            EnableControlAction(1, 1, true)
-            EnableControlAction(2, 2, true)
-            EnableControlAction(2, 1, true)
+        if (
+            !this.Visible ||
+            this._justOpened ||
+            this.Items.length == 0 ||
+            !IsUsingKeyboard(2) ||
+            !this.MouseControlsEnabled
+        ) {
+            EnableControlAction(0, 2, true);
+            EnableControlAction(0, 1, true);
+            EnableControlAction(1, 2, true);
+            EnableControlAction(1, 1, true);
+            EnableControlAction(2, 2, true);
+            EnableControlAction(2, 1, true);
             if (this._itemsDirty) {
-                this.Items.forEach(x => {
-                    x.Hovered = false
+                this.Items.forEach((x) => {
+                    x.Hovered = false;
                 });
             }
             return;
@@ -713,15 +740,20 @@ export class UIMenu extends BaseMenu {
         SetInputExclusive(2, 237);
         SetInputExclusive(2, 238);
 
-        let [success, eventType, itemId, context, unused] = GetScaleformMovieCursorSelection(ScaleformUI.Scaleforms._ui?.handle)
+        let [success, eventType, itemId, context, unused] = GetScaleformMovieCursorSelection(
+            ScaleformUI.Scaleforms._ui?.handle
+        );
         if (success && !this.isBuilding) {
             switch (eventType) {
                 case 5:
                     switch (context) {
                         case 0:
                             let item = this.Items[itemId];
-                            if ((item instanceof UIMenuSeparatorItem && (item as UIMenuSeparatorItem).Jumpable) || !this.Items[itemId].Enabled) {
-                                PlaySoundFrontend(-1, "ERROR", "HUD_FRONTEND_DEFAULT_SOUNDSET", true)
+                            if (
+                                (item instanceof UIMenuSeparatorItem && (item as UIMenuSeparatorItem).Jumpable) ||
+                                !this.Items[itemId].Enabled
+                            ) {
+                                PlaySoundFrontend(-1, "ERROR", "HUD_FRONTEND_DEFAULT_SOUNDSET", true);
                                 return;
                             }
                             if (item.Selected) {
@@ -733,7 +765,10 @@ export class UIMenu extends BaseMenu {
                                     case 1:
                                     case 3:
                                     case 4:
-                                        let value = await ScaleformUI.Scaleforms._ui?.callFunctionReturnInt("SELECT_ITEM", this.Pagination.GetScaleformIndex(this.CurrentSelection));
+                                        let value = await ScaleformUI.Scaleforms._ui?.callFunctionReturnInt(
+                                            "SELECT_ITEM",
+                                            this.Pagination.GetScaleformIndex(this.CurrentSelection)
+                                        );
                                         switch (true) {
                                             case this.Items[this.CurrentSelection] instanceof UIMenuListItem: {
                                                 let it = this.Items[this.CurrentSelection] as UIMenuListItem;
@@ -779,17 +814,25 @@ export class UIMenu extends BaseMenu {
                             return;
                     }
                     this.CurrentSelection = itemId;
-                    ScaleformUI.Scaleforms._ui?.callFunction("SET_COUNTER_QTTY", this.CurrentSelection + 1, this.Items.length);
-                    PlaySoundFrontend(-1, this.AUDIO_SELECT, this.AUDIO_LIBRARY, true)
+                    ScaleformUI.Scaleforms._ui?.callFunction(
+                        "SET_COUNTER_QTTY",
+                        this.CurrentSelection + 1,
+                        this.Items.length
+                    );
+                    PlaySoundFrontend(-1, this.AUDIO_SELECT, this.AUDIO_LIBRARY, true);
                     break;
-                case 10: {
-                    let res = await ScaleformUI.Scaleforms._ui?.callFunctionReturnString("SELECT_PANEL", this.Pagination.GetScaleformIndex(this.CurrentSelection));
-                    let split = res?.split(",");
-                    let panel = this.Items[this.CurrentSelection].Panels[Number(split[0])] as UIMenuColorPanel
-                    panel._value = Number(split[1]);
-                    this.ColorPanelChange(panel.ParentItem, panel, panel.CurrentSelection);
-                    panel.PanelChanged();
-                }
+                case 10:
+                    {
+                        let res = await ScaleformUI.Scaleforms._ui?.callFunctionReturnString(
+                            "SELECT_PANEL",
+                            this.Pagination.GetScaleformIndex(this.CurrentSelection)
+                        );
+                        let split = res?.split(",");
+                        let panel = this.Items[this.CurrentSelection].Panels[Number(split[0])] as UIMenuColorPanel;
+                        panel._value = Number(split[1]);
+                        this.ColorPanelChange(panel.ParentItem, panel, panel.CurrentSelection);
+                        panel.PanelChanged();
+                    }
                     break;
                 case 11: // panels (11 => context 1, panel_type 1) // PercentagePanel
                     this.cursorPressed = true;
@@ -797,14 +840,15 @@ export class UIMenu extends BaseMenu {
                 case 12: // panels (12 => context 1, panel_type 2) // GridPanel
                     this.cursorPressed = true;
                     break;
-                case 2: {
-                    let panel = this.Items[this.CurrentSelection].SidePanel as UIVehicleColourPickerPanel;
-                    if (itemId != -1) {
-                        panel._value = itemId;
-                        panel.PickerSelect();
-                        PlaySoundFrontend(-1, this.AUDIO_SELECT, this.AUDIO_LIBRARY, true)
+                case 2:
+                    {
+                        let panel = this.Items[this.CurrentSelection].SidePanel as UIVehicleColourPickerPanel;
+                        if (itemId != -1) {
+                            panel._value = itemId;
+                            panel.PickerSelect();
+                            PlaySoundFrontend(-1, this.AUDIO_SELECT, this.AUDIO_LIBRARY, true);
+                        }
                     }
-                }
                     break;
                 case 6: // on click released
                     this.cursorPressed = false;
@@ -832,7 +876,6 @@ export class UIMenu extends BaseMenu {
                 case 1: // dragged inside
                     this.cursorPressed = true;
                     break;
-
             }
         }
         if (this.cursorPressed) {
@@ -840,20 +883,22 @@ export class UIMenu extends BaseMenu {
                 this.menuSound = GetSoundId();
                 PlaySoundFrontend(this.menuSound, "CONTINUOUS_SLIDER", "HUD_FRONTEND_DEFAULT_SOUNDSET", true);
             }
-            let res: string = await ScaleformUI.Scaleforms._ui?.callFunctionReturnString("SET_INPUT_MOUSE_EVENT_CONTINUE");
-            let split = res.split(',');
+            let res: string = await ScaleformUI.Scaleforms._ui?.callFunctionReturnString(
+                "SET_INPUT_MOUSE_EVENT_CONTINUE"
+            );
+            let split = res.split(",");
             let selection = Number(split[0]);
             let panel: UIMenuPanel = this.Items[this.CurrentSelection].Panels[selection];
             switch (true) {
                 case panel instanceof UIMenuGridPanel:
                     let grid = panel as UIMenuGridPanel;
                     grid._value = new Vector2(Number(split[1]), Number(split[2]));
-                    this.GridPanelChange(panel.ParentItem, grid, grid.CirclePosition)
+                    this.GridPanelChange(panel.ParentItem, grid, grid.CirclePosition);
                     break;
                 case panel instanceof UIMenuPercentagePanel:
                     let perc = panel as UIMenuPercentagePanel;
                     perc._value = Number(split[1]);
-                    this.PercentagePanelChange(panel.ParentItem, perc, perc.Percentage)
+                    this.PercentagePanelChange(panel.ParentItem, perc, perc.Percentage);
                     perc.PercentagePanelChange();
                     break;
             }
@@ -861,28 +906,28 @@ export class UIMenu extends BaseMenu {
             if (!HasSoundFinished(this.menuSound)) {
                 await Delay(1);
                 StopSound(this.menuSound);
-                ReleaseSoundId(this.menuSound)
+                ReleaseSoundId(this.menuSound);
             }
         }
 
         if (this.MouseEdgeEnabled) {
             let mouseVariance = GetDisabledControlNormal(2, 239);
             if (ScreenTools.IsMouseInBounds(0, 0, 30, 1080)) {
-                if (mouseVariance < (0.05 * 0.75)) {
+                if (mouseVariance < 0.05 * 0.75) {
                     let mouseSpeed = 0.05 - (1 - mouseVariance);
                     if (mouseSpeed > 0.05) {
                         mouseSpeed = 0.05;
                     }
-                    SetGameplayCamRelativeHeading(GetGameplayCamRelativeHeading() + (70 * mouseSpeed))
+                    SetGameplayCamRelativeHeading(GetGameplayCamRelativeHeading() + 70 * mouseSpeed);
                     SetMouseCursorSprite(6);
                 }
             } else if (ScreenTools.IsMouseInBounds(1920 - 30, 0, 30, 1080)) {
-                if (mouseVariance > (1 - (0.05 * 0.75))) {
-                    let mouseSpeed = 0.05 - (1 - mouseVariance)
+                if (mouseVariance > 1 - 0.05 * 0.75) {
+                    let mouseSpeed = 0.05 - (1 - mouseVariance);
                     if (mouseSpeed > 0.05) {
-                        mouseSpeed = 0.05
+                        mouseSpeed = 0.05;
                     }
-                    SetGameplayCamRelativeHeading(GetGameplayCamRelativeHeading() + (70 * mouseSpeed))
+                    SetGameplayCamRelativeHeading(GetGameplayCamRelativeHeading() + 70 * mouseSpeed);
                     SetMouseCursorSprite(7);
                 }
             } else {
@@ -900,7 +945,13 @@ export class UIMenu extends BaseMenu {
             return;
         }
 
-        if (UpdateOnscreenKeyboard() == 0 || IsWarningMessageActive() || this.isWarningShowing() || BreadcrumbsHandler.SwitchInProgress || this.isFading) {
+        if (
+            UpdateOnscreenKeyboard() == 0 ||
+            IsWarningMessageActive() ||
+            this.isWarningShowing() ||
+            BreadcrumbsHandler.SwitchInProgress ||
+            this.isFading
+        ) {
             return;
         }
 
@@ -915,7 +966,10 @@ export class UIMenu extends BaseMenu {
         if (this.HasControlJustBeenPressed(MenuControls.Up)) {
             this.GoUp();
             this.timeBeforeOverflow = GetGameTimer();
-        } else if (this.IsControlBeingPressed(MenuControls.Up) && GetGameTimer() - this.timeBeforeOverflow > this.delayBeforeOverflow) {
+        } else if (
+            this.IsControlBeingPressed(MenuControls.Up) &&
+            GetGameTimer() - this.timeBeforeOverflow > this.delayBeforeOverflow
+        ) {
             if (GetGameTimer() - this.time > this.delay) {
                 this.buttonDelay();
                 this.GoUp();
@@ -925,7 +979,10 @@ export class UIMenu extends BaseMenu {
         if (this.HasControlJustBeenPressed(MenuControls.Down)) {
             this.GoDown();
             this.timeBeforeOverflow = GetGameTimer();
-        } else if (this.IsControlBeingPressed(MenuControls.Down) && GetGameTimer() - this.timeBeforeOverflow > this.delayBeforeOverflow) {
+        } else if (
+            this.IsControlBeingPressed(MenuControls.Down) &&
+            GetGameTimer() - this.timeBeforeOverflow > this.delayBeforeOverflow
+        ) {
             if (GetGameTimer() - this.time > this.delay) {
                 this.buttonDelay();
                 this.GoDown();
@@ -935,7 +992,10 @@ export class UIMenu extends BaseMenu {
         if (this.HasControlJustBeenPressed(MenuControls.Left)) {
             this.GoLeft();
             this.timeBeforeOverflow = GetGameTimer();
-        } else if (this.IsControlBeingPressed(MenuControls.Left) && GetGameTimer() - this.timeBeforeOverflow > this.delayBeforeOverflow) {
+        } else if (
+            this.IsControlBeingPressed(MenuControls.Left) &&
+            GetGameTimer() - this.timeBeforeOverflow > this.delayBeforeOverflow
+        ) {
             if (GetGameTimer() - this.time > this.delay) {
                 this.buttonDelay();
                 this.GoLeft();
@@ -945,7 +1005,10 @@ export class UIMenu extends BaseMenu {
         if (this.HasControlJustBeenPressed(MenuControls.Right)) {
             this.GoRight();
             this.timeBeforeOverflow = GetGameTimer();
-        } else if (this.IsControlBeingPressed(MenuControls.Right) && GetGameTimer() - this.timeBeforeOverflow > this.delayBeforeOverflow) {
+        } else if (
+            this.IsControlBeingPressed(MenuControls.Right) &&
+            GetGameTimer() - this.timeBeforeOverflow > this.delayBeforeOverflow
+        ) {
             if (GetGameTimer() - this.time > this.delay) {
                 this.buttonDelay();
                 this.GoRight();
@@ -953,10 +1016,15 @@ export class UIMenu extends BaseMenu {
         }
 
         if (this.HasControlJustBeenPressed(MenuControls.Select)) {
-            this.Select(true)
+            this.Select(true);
         }
 
-        if (this.HasControlJustBeenReleased(MenuControls.Up) || this.HasControlJustBeenReleased(MenuControls.Down) || this.HasControlJustBeenReleased(MenuControls.Left) || this.HasControlJustBeenReleased(MenuControls.Right)) {
+        if (
+            this.HasControlJustBeenReleased(MenuControls.Up) ||
+            this.HasControlJustBeenReleased(MenuControls.Down) ||
+            this.HasControlJustBeenReleased(MenuControls.Left) ||
+            this.HasControlJustBeenReleased(MenuControls.Right)
+        ) {
             this.times = 0;
             this.delay = 100;
         }
@@ -978,17 +1046,15 @@ export class UIMenu extends BaseMenu {
     }
 
     public override async draw() {
-        if (!this.Visible || this.isWarningShowing())
-            return;
-        while (!ScaleformUI.Scaleforms._ui?.isLoaded)
-            await Delay(0);
+        if (!this.Visible || this.isWarningShowing()) return;
+        while (!ScaleformUI.Scaleforms._ui?.isLoaded) await Delay(0);
         HideHudComponentThisFrame(19);
         Controls.toggleAll(!this.ControlDisablingEnabled);
         ScaleformUI.Scaleforms._ui?.render2d();
         if (this.Glare) {
             this._menuGlare.callFunction("SET_DATA_SLOT", GetGameplayCamRelativeHeading());
-            let x = (this.Offset.x / 1280) + 0.4499;
-            let y = (this.Offset.y / 720) + 0.449;
+            let x = this.Offset.x / 1280 + 0.4499;
+            let y = this.Offset.y / 720 + 0.449;
 
             DrawScaleformMovie(this._menuGlare.handle, x, y, 1.0, 1.0, 255, 255, 255, 255, 0);
         }
@@ -998,8 +1064,7 @@ export class UIMenu extends BaseMenu {
                 this.keyboard = false;
                 this._changed = true;
             }
-        }
-        else {
+        } else {
             if (!this.keyboard) {
                 this.keyboard = true;
                 this._changed = true;
@@ -1028,10 +1093,8 @@ export class UIMenu extends BaseMenu {
             this.buildUpMenuAsync();
             this.MenuOpenEv(this, null);
             this.timeBeforeOverflow = GetGameTimer();
-            if (BreadcrumbsHandler.Count == 0)
-                BreadcrumbsHandler.Forward(this, null);
-        }
-        else {
+            if (BreadcrumbsHandler.Count == 0) BreadcrumbsHandler.Forward(this, null);
+        } else {
             ScaleformUI.Scaleforms.InstructionalButtons.ClearButtonList();
             this.canBuild = false;
             this.MenuCloseEv(this);
@@ -1051,7 +1114,9 @@ export class UIMenu extends BaseMenu {
         let _animEnabled = this.EnableAnimation;
         if (this.itemless) {
             this.EnableAnimation = false;
-            while (!ScaleformUI.Scaleforms._ui?.isLoaded) { await Delay(0); }
+            while (!ScaleformUI.Scaleforms._ui?.isLoaded) {
+                await Delay(0);
+            }
             BeginScaleformMovieMethod(ScaleformUI.Scaleforms._ui?.handle, "CREATE_MENU");
             PushScaleformMovieMethodParameterString(this.Title);
             PushScaleformMovieMethodParameterString(this.Subtitle);
@@ -1079,13 +1144,29 @@ export class UIMenu extends BaseMenu {
         }
         if (!itemsOnly) {
             this.EnableAnimation = false;
-            while (!ScaleformUI.Scaleforms._ui?.isLoaded) { await Delay(0); }
-            ScaleformUI.Scaleforms._ui?.callFunction("CREATE_MENU",
-                this.Title, this.Subtitle, this.Offset.x, this.Offset.y,
-                this.AlternativeTitle, this._customTexture[0], this._customTexture[1],
-                this.MaxItemsOnScreen, this.Items.length, this.EnableAnimation,
-                this.AnimationType, this.buildingAnimation, this.counterColor.toArgb(),
-                this.descriptionFont.fontName, this.descriptionFont.fontId, this.fadingTime, false);
+            while (!ScaleformUI.Scaleforms._ui?.isLoaded) {
+                await Delay(0);
+            }
+            ScaleformUI.Scaleforms._ui?.callFunction(
+                "CREATE_MENU",
+                this.Title,
+                this.Subtitle,
+                this.Offset.x,
+                this.Offset.y,
+                this.AlternativeTitle,
+                this._customTexture[0],
+                this._customTexture[1],
+                this.MaxItemsOnScreen,
+                this.Items.length,
+                this.EnableAnimation,
+                this.AnimationType,
+                this.buildingAnimation,
+                this.counterColor.toArgb(),
+                this.descriptionFont.fontName,
+                this.descriptionFont.fontId,
+                this.fadingTime,
+                false
+            );
 
             if (this.Windows.length > 0) {
                 this.Windows.forEach((wind: UIMenuWindow) => {
@@ -1094,10 +1175,27 @@ export class UIMenu extends BaseMenu {
                         ScaleformUI.Scaleforms._ui?.callFunction("ADD_WINDOW", her.id, her.Mom, her.Dad);
                     } else if (wind instanceof UIMenuDetailsWindow) {
                         let det = wind as UIMenuDetailsWindow;
-                        ScaleformUI.Scaleforms._ui?.callFunction("ADD_WINDOW", det.id, det.DetailBottom, det.DetailMid, det.DetailTop, det.DetailLeft.Txd, det.DetailLeft.Txn, det.DetailLeft.Pos.x, det.DetailLeft.Pos.y, det.DetailLeft.Size.x, det.DetailLeft.Size.y);
+                        ScaleformUI.Scaleforms._ui?.callFunction(
+                            "ADD_WINDOW",
+                            det.id,
+                            det.DetailBottom,
+                            det.DetailMid,
+                            det.DetailTop,
+                            det.DetailLeft.Txd,
+                            det.DetailLeft.Txn,
+                            det.DetailLeft.Pos.x,
+                            det.DetailLeft.Pos.y,
+                            det.DetailLeft.Size.x,
+                            det.DetailLeft.Size.y
+                        );
                         if (det.StatWheelEnabled) {
                             det.DetailStats.forEach((stat: UIDetailStat) => {
-                                ScaleformUI.Scaleforms._ui?.callFunction("ADD_STATS_DETAILS_WINDOW_STATWHEEL", this.Windows.indexOf(det), stat.Percentage, stat.HudColor);
+                                ScaleformUI.Scaleforms._ui?.callFunction(
+                                    "ADD_STATS_DETAILS_WINDOW_STATWHEEL",
+                                    this.Windows.indexOf(det),
+                                    stat.Percentage,
+                                    stat.HudColor
+                                );
                             });
                         }
                     }
@@ -1107,9 +1205,12 @@ export class UIMenu extends BaseMenu {
             let timer = GetGameTimer();
             if (this.Items.length == 0) {
                 while (this.Items.length == 0) {
-                    await Delay(0)
+                    await Delay(0);
                     if (GetGameTimer() - timer > 150) {
-                        ScaleformUI.Scaleforms._ui?.callFunction("SET_CURRENT_ITEM", this.Pagination.GetPageIndexFromMenuIndex(this.CurrentSelection));
+                        ScaleformUI.Scaleforms._ui?.callFunction(
+                            "SET_CURRENT_ITEM",
+                            this.Pagination.GetPageIndexFromMenuIndex(this.CurrentSelection)
+                        );
                     }
                 }
             }
@@ -1124,14 +1225,15 @@ export class UIMenu extends BaseMenu {
         if (this.ScrollingType == MenuScrollingType.CLASSIC && this.Pagination.TotalPages > 1) {
             let missingItems = this.Pagination.GetMissingItems();
             if (missingItems > 0) {
-                this.Pagination.ScaleformIndex = this.Pagination.GetPageIndexFromMenuIndex(this.Pagination.CurrentPageEndIndex) + missingItems;
+                this.Pagination.ScaleformIndex =
+                    this.Pagination.GetPageIndexFromMenuIndex(this.Pagination.CurrentPageEndIndex) + missingItems;
                 this.Pagination.MinItem = this.Pagination.CurrentPageStartIndex - missingItems;
             }
         }
 
         this.Pagination.MaxItem = this.Pagination.CurrentPageEndIndex;
         while (i < max) {
-            await Delay(0)
+            await Delay(0);
             if (!this.Visible) return;
             this._itemCreation(this.Pagination.CurrentPage, i, false, true);
             i++;
@@ -1153,7 +1255,13 @@ export class UIMenu extends BaseMenu {
         this.isBuilding = false;
     }
 
-    public SetMouse(enableMouseControls: boolean, enableEdge: boolean, isWheelEnabled: boolean, resetCursorOnOpen: boolean, leftClickSelect: boolean) {
+    public SetMouse(
+        enableMouseControls: boolean,
+        enableEdge: boolean,
+        isWheelEnabled: boolean,
+        resetCursorOnOpen: boolean,
+        leftClickSelect: boolean
+    ) {
         this.MouseControlsEnabled = enableMouseControls;
         this.MouseEdgeEnabled = enableEdge;
         this.MouseWheelControlEnabled = isWheelEnabled;
@@ -1161,9 +1269,7 @@ export class UIMenu extends BaseMenu {
         this.leftClickEnabled = leftClickSelect;
         if (leftClickSelect && !this.MouseControlsEnabled) {
             this.SetKeyControl(MenuControls.Select, 24);
-
-        }
-        else {
+        } else {
             this.ResetKey(MenuControls.Select);
             this.SetKeyControl(MenuControls.Select, 201);
         }
@@ -1209,10 +1315,13 @@ export class UIMenu extends BaseMenu {
         let menuIndex = this.Pagination.GetMenuIndexFromPageIndex(page, pageIndex);
         let missing = false;
         if (!before) {
-            if (this.Pagination.GetPageItemsCount(page) < this.Pagination.ItemsPerPage && this.Pagination.TotalPages > 1) {
+            if (
+                this.Pagination.GetPageItemsCount(page) < this.Pagination.ItemsPerPage &&
+                this.Pagination.TotalPages > 1
+            ) {
                 if (this.ScrollingType == MenuScrollingType.ENDLESS) {
                     if (menuIndex > this.Pagination.TotalItems - 1) {
-                        menuIndex -= this.Pagination.TotalItems
+                        menuIndex -= this.Pagination.TotalItems;
                         this.Pagination.MaxItem = menuIndex;
                         missing = true;
                     }
@@ -1245,7 +1354,7 @@ export class UIMenu extends BaseMenu {
 
         switch (true) {
             case item instanceof UIMenuDynamicListItem:
-                let dit = item as UIMenuDynamicListItem
+                let dit = item as UIMenuDynamicListItem;
                 PushScaleformMovieMethodParameterString(dit.CurrentListItem);
                 PushScaleformMovieFunctionParameterInt(0);
                 PushScaleformMovieFunctionParameterInt(dit.MainColor.toArgb());
@@ -1255,7 +1364,7 @@ export class UIMenu extends BaseMenu {
                 EndScaleformMovieMethod();
                 break;
             case item instanceof UIMenuListItem:
-                let it = item as UIMenuListItem
+                let it = item as UIMenuListItem;
                 AddTextEntry(`listitem_${menuIndex}_list`, it.Items.join(","));
                 BeginTextCommandScaleformString(`listitem_${menuIndex}_list`);
                 EndTextCommandScaleformString();
@@ -1322,22 +1431,63 @@ export class UIMenu extends BaseMenu {
                     ScaleformUI.Scaleforms._ui?.callFunction("SET_RIGHT_BADGE", scaleformIndex, item.RightBadge);
                 break;
         }
-        ScaleformUI.Scaleforms._ui?.callFunction("SET_ITEM_LABEL_FONT", scaleformIndex, item.labelFont.fontName, item.labelFont.fontId);
-        ScaleformUI.Scaleforms._ui?.callFunction("SET_ITEM_RIGHT_LABEL_FONT", scaleformIndex, item.rightLabelFont.fontName, item.rightLabelFont.fontId);
+        ScaleformUI.Scaleforms._ui?.callFunction(
+            "SET_ITEM_LABEL_FONT",
+            scaleformIndex,
+            item.labelFont.fontName,
+            item.labelFont.fontId
+        );
+        ScaleformUI.Scaleforms._ui?.callFunction(
+            "SET_ITEM_RIGHT_LABEL_FONT",
+            scaleformIndex,
+            item.rightLabelFont.fontName,
+            item.rightLabelFont.fontId
+        );
         if (item.LeftBadge != BadgeStyle.NONE)
             ScaleformUI.Scaleforms._ui?.callFunction("SET_LEFT_BADGE", scaleformIndex, item.LeftBadge);
         if (item.SidePanel != null) {
             switch (true) {
                 case item.SidePanel instanceof UIMissionDetailsPanel:
                     let mis = item.SidePanel as UIMissionDetailsPanel;
-                    ScaleformUI.Scaleforms._ui?.callFunction("ADD_SIDE_PANEL_TO_ITEM", scaleformIndex, 0, mis.PanelSide, mis.TitleType, mis.Title, mis.TitleColor, mis.TextureDict, mis.TextureName);
+                    ScaleformUI.Scaleforms._ui?.callFunction(
+                        "ADD_SIDE_PANEL_TO_ITEM",
+                        scaleformIndex,
+                        0,
+                        mis.PanelSide,
+                        mis.TitleType,
+                        mis.Title,
+                        mis.TitleColor,
+                        mis.TextureDict,
+                        mis.TextureName
+                    );
                     mis.Items.forEach((_it: UIFreemodeDetailsItem) => {
-                        ScaleformUI.Scaleforms._ui?.callFunction("ADD_MISSION_DETAILS_DESC_ITEM", scaleformIndex, _it.Type, _it.TextLeft, _it.TextRight, _it.Icon, _it.IconColor, _it.Tick, _it._labelFont.fontName, _it._labelFont.fontId, _it._rightLabelFont.fontName, _it._rightLabelFont.fontId);
+                        ScaleformUI.Scaleforms._ui?.callFunction(
+                            "ADD_MISSION_DETAILS_DESC_ITEM",
+                            scaleformIndex,
+                            _it.Type,
+                            _it.TextLeft,
+                            _it.TextRight,
+                            _it.Icon,
+                            _it.IconColor,
+                            _it.Tick,
+                            _it._labelFont.fontName,
+                            _it._labelFont.fontId,
+                            _it._rightLabelFont.fontName,
+                            _it._rightLabelFont.fontId
+                        );
                     });
                     break;
                 case item.SidePanel instanceof UIVehicleColourPickerPanel:
                     let cp = item.SidePanel as UIVehicleColourPickerPanel;
-                    ScaleformUI.Scaleforms._ui?.callFunction("ADD_SIDE_PANEL_TO_ITEM", scaleformIndex, 1, cp.PanelSide, cp._titleType, cp.Title, cp.TitleColor);
+                    ScaleformUI.Scaleforms._ui?.callFunction(
+                        "ADD_SIDE_PANEL_TO_ITEM",
+                        scaleformIndex,
+                        1,
+                        cp.PanelSide,
+                        cp._titleType,
+                        cp.Title,
+                        cp.TitleColor
+                    );
                     break;
             }
         }
@@ -1348,22 +1498,56 @@ export class UIMenu extends BaseMenu {
             switch (true) {
                 case panel instanceof UIMenuColorPanel:
                     let cp = panel as UIMenuColorPanel;
-                    ScaleformUI.Scaleforms._ui?.callFunction("ADD_PANEL", scaleformIndex, 0, cp.Title, cp.PanelColorType, cp.CurrentSelection, cp.CustomColors != null ? cp.CustomColors.map((x: SColor) => x.toArgb()).join(",") : "");
+                    ScaleformUI.Scaleforms._ui?.callFunction(
+                        "ADD_PANEL",
+                        scaleformIndex,
+                        0,
+                        cp.Title,
+                        cp.PanelColorType,
+                        cp.CurrentSelection,
+                        cp.CustomColors != null ? cp.CustomColors.map((x: SColor) => x.toArgb()).join(",") : ""
+                    );
                     break;
                 case panel instanceof UIMenuPercentagePanel:
                     let pp = panel as UIMenuPercentagePanel;
-                    ScaleformUI.Scaleforms._ui?.callFunction("ADD_PANEL", scaleformIndex, 1, pp.Title, pp.Min, pp.Max, pp.Percentage);
+                    ScaleformUI.Scaleforms._ui?.callFunction(
+                        "ADD_PANEL",
+                        scaleformIndex,
+                        1,
+                        pp.Title,
+                        pp.Min,
+                        pp.Max,
+                        pp.Percentage
+                    );
                     break;
                 case panel instanceof UIMenuGridPanel:
                     let gp = panel as UIMenuGridPanel;
-                    ScaleformUI.Scaleforms._ui?.callFunction("ADD_PANEL", scaleformIndex, 2, gp.TopLabel, gp.RightLabel, gp.LeftLabel, gp.BottomLabel, gp.CirclePosition.x, gp.CirclePosition.y, true, gp.Type);
+                    ScaleformUI.Scaleforms._ui?.callFunction(
+                        "ADD_PANEL",
+                        scaleformIndex,
+                        2,
+                        gp.TopLabel,
+                        gp.RightLabel,
+                        gp.LeftLabel,
+                        gp.BottomLabel,
+                        gp.CirclePosition.x,
+                        gp.CirclePosition.y,
+                        true,
+                        gp.Type
+                    );
                     break;
                 case panel instanceof UIMenuStatisticsPanel:
                     let sp = panel as UIMenuStatisticsPanel;
                     ScaleformUI.Scaleforms._ui?.callFunction("ADD_PANEL", scaleformIndex, 3);
                     if (sp.Items.length > 0) {
                         sp.Items.forEach((stat: StatisticsForPanel) => {
-                            ScaleformUI.Scaleforms._ui?.callFunction("ADD_STATISTIC_TO_PANEL", scaleformIndex, pan, stat.Text, stat.Value);
+                            ScaleformUI.Scaleforms._ui?.callFunction(
+                                "ADD_STATISTIC_TO_PANEL",
+                                scaleformIndex,
+                                pan,
+                                stat.Text,
+                                stat.Value
+                            );
                         });
                     }
                     break;
@@ -1374,8 +1558,7 @@ export class UIMenu extends BaseMenu {
     public set CurrentSelection(value: number) {
         if (value < 0) {
             this.Pagination.CurrentMenuIndex = 0;
-        }
-        else if (value >= this.Items.length) {
+        } else if (value >= this.Items.length) {
             this.Pagination.CurrentMenuIndex = this.Items.length - 1;
         }
         this.Items[this.CurrentSelection].Selected = false;
@@ -1386,7 +1569,10 @@ export class UIMenu extends BaseMenu {
         this.Pagination.ScaleformIndex = this.Pagination.GetScaleformIndex(value);
 
         if (this._visible)
-            ScaleformUI.Scaleforms._ui?.callFunction("SET_CURRENT_ITEM", this.Pagination.GetScaleformIndex(this.Pagination.CurrentMenuIndex));
+            ScaleformUI.Scaleforms._ui?.callFunction(
+                "SET_CURRENT_ITEM",
+                this.Pagination.GetScaleformIndex(this.Pagination.CurrentMenuIndex)
+            );
 
         this.Items[this.CurrentSelection].Selected = true;
     }
@@ -1404,7 +1590,12 @@ export class UIMenu extends BaseMenu {
     public set Title(value: string) {
         this.title = value;
         if (this._visible)
-            ScaleformUI.Scaleforms._ui?.callFunction("UPDATE_TITLE_SUBTITLE", this.title, this.subtitle, this.AlternativeTitle);
+            ScaleformUI.Scaleforms._ui?.callFunction(
+                "UPDATE_TITLE_SUBTITLE",
+                this.title,
+                this.subtitle,
+                this.AlternativeTitle
+            );
     }
     public get Title(): string {
         return this.title;
@@ -1413,7 +1604,12 @@ export class UIMenu extends BaseMenu {
     public set Subtitle(value: string) {
         this.subtitle = value;
         if (this._visible)
-            ScaleformUI.Scaleforms._ui?.callFunction("UPDATE_TITLE_SUBTITLE", this.title, this.subtitle, this.AlternativeTitle);
+            ScaleformUI.Scaleforms._ui?.callFunction(
+                "UPDATE_TITLE_SUBTITLE",
+                this.title,
+                this.subtitle,
+                this.AlternativeTitle
+            );
     }
     public get Subtitle(): string {
         return this.subtitle;
@@ -1421,13 +1617,11 @@ export class UIMenu extends BaseMenu {
 
     public set CounterColor(value: SColor) {
         this.counterColor = value;
-        if (this._visible)
-            ScaleformUI.Scaleforms._ui?.callFunction("SET_COUNTER_COLOR", this.counterColor);
+        if (this._visible) ScaleformUI.Scaleforms._ui?.callFunction("SET_COUNTER_COLOR", this.counterColor);
     }
     public get CounterColor(): SColor {
         return this.counterColor;
     }
-
 
     public set CanPlayerCloseMenu(value: boolean) {
         this.canPlayerCloseMenu = value;
@@ -1437,9 +1631,7 @@ export class UIMenu extends BaseMenu {
                 new InstructionalButton(UIMenu._backTextLocalized, -1, 177, 177, -1)
             ];
         } else {
-            this.instructionalButtons = [
-                new InstructionalButton(UIMenu._selectTextLocalized, -1, 176, 176, -1),
-            ];
+            this.instructionalButtons = [new InstructionalButton(UIMenu._selectTextLocalized, -1, 176, 176, -1)];
         }
         if (this.Visible) {
             ScaleformUI.Scaleforms.InstructionalButtons.SetInstructionalButtons(this.instructionalButtons);

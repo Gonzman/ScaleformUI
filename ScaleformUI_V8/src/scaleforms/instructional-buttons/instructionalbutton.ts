@@ -1,6 +1,6 @@
 import type { UIMenuItem } from "menus/UIMenu/items/uimenuitem";
-import { InstructionalButtonSelectedEventBuilder } from '../../menus/UIMenu/emitters/emitters';
-import type { InstructionalButtonSelectedEvent } from '../../menus/UIMenu/emitters/emitters';
+import { InstructionalButtonSelectedEventBuilder } from "../../menus/UIMenu/emitters/emitters";
+import type { InstructionalButtonSelectedEvent } from "../../menus/UIMenu/emitters/emitters";
 
 export enum PadCheck {
     Any = 0,
@@ -41,49 +41,53 @@ export enum InputGroup {
     INPUTGROUP_CURSOR = 28,
     INPUTGROUP_CURSOR_SCROLL = 29,
     INPUTGROUP_SNIPER_ZOOM_SECONDARY = 30,
-    INPUTGROUP_VEH_HYDRAULICS_CONTROL = 31,
-};
+    INPUTGROUP_VEH_HYDRAULICS_CONTROL = 31
+}
 
 export class InstructionalButton {
     Text: string;
-    ItemBind?: UIMenuItem
-    GamepadButton: number
-    KeyboardButton: number
+    ItemBind?: UIMenuItem;
+    GamepadButton: number;
+    KeyboardButton: number;
     InputGroupButton: InputGroup = InputGroup.UNUSED;
-    GamepadButtons: number[] = []
-    KeyboardButtons: number[] = []
+    GamepadButtons: number[] = [];
+    KeyboardButtons: number[] = [];
     PadCheck: PadCheck = PadCheck.Any;
-    public get IsUsingController(): boolean { return !IsUsingKeyboard(2); }
+    public get IsUsingController(): boolean {
+        return !IsUsingKeyboard(2);
+    }
     _InstructionalButtonSelected = new InstructionalButtonSelectedEventBuilder();
 
-    constructor(text: string, padcheck: number, gamepadControls: number | number[], keyboardControls: number | number[], inputGroup: InputGroup) {
+    constructor(
+        text: string,
+        padcheck: number,
+        gamepadControls: number | number[],
+        keyboardControls: number | number[],
+        inputGroup: InputGroup
+    ) {
         this.Text = text;
-        this.GamepadButtons = [],
-            this.GamepadButton = -1,
-            this.KeyboardButtons = [],
-            this.KeyboardButton = -1,
-            this.PadCheck = padcheck
+        (this.GamepadButtons = []),
+            (this.GamepadButton = -1),
+            (this.KeyboardButtons = []),
+            (this.KeyboardButton = -1),
+            (this.PadCheck = padcheck);
 
         if (Array.isArray(gamepadControls)) {
             if (padcheck == 0 || padcheck == -1) {
-                this.GamepadButtons = gamepadControls
+                this.GamepadButtons = gamepadControls;
             }
         } else {
-            if (padcheck == 0 || padcheck == -1)
-                this.GamepadButton = gamepadControls
-            else
-                this.GamepadButton = -1;
+            if (padcheck == 0 || padcheck == -1) this.GamepadButton = gamepadControls;
+            else this.GamepadButton = -1;
         }
 
         if (Array.isArray(keyboardControls)) {
             if (padcheck == 0 || padcheck == -1) {
-                this.KeyboardButtons = keyboardControls
+                this.KeyboardButtons = keyboardControls;
             }
         } else {
-            if (padcheck == 0 || padcheck == -1)
-                this.KeyboardButton = keyboardControls
-            else
-                this.KeyboardButton = -1;
+            if (padcheck == 0 || padcheck == -1) this.KeyboardButton = keyboardControls;
+            else this.KeyboardButton = -1;
         }
         this.InputGroupButton = inputGroup;
     }
@@ -101,24 +105,20 @@ export class InstructionalButton {
             let retVal = "";
             if (this.IsUsingController) {
                 for (let i = this.GamepadButtons.length - 1; i > -1; i--) {
-                    if (i == 0)
-                        retVal += GetControlInstructionalButton(2, this.GamepadButtons[i], true);
-                    else
-                        retVal += GetControlInstructionalButton(2, this.GamepadButtons[i], true) + "%";
+                    if (i == 0) retVal += GetControlInstructionalButton(2, this.GamepadButtons[i], true);
+                    else retVal += GetControlInstructionalButton(2, this.GamepadButtons[i], true) + "%";
                 }
-            }
-            else {
+            } else {
                 for (let i = this.KeyboardButtons.length - 1; i > -1; i--) {
-                    if (i == 0)
-                        retVal += GetControlInstructionalButton(2, this.KeyboardButtons[i], true);
-                    else
-                        retVal += GetControlInstructionalButton(2, this.KeyboardButtons[i], true) + "%";
+                    if (i == 0) retVal += GetControlInstructionalButton(2, this.KeyboardButtons[i], true);
+                    else retVal += GetControlInstructionalButton(2, this.KeyboardButtons[i], true) + "%";
                 }
             }
             return retVal;
-        }
-        else if (this.InputGroupButton != InputGroup.UNUSED) return `~${this.InputGroupButton}~`;
-        return this.IsUsingController ? GetControlInstructionalButton(2, this.GamepadButton, true) : GetControlInstructionalButton(0, this.KeyboardButton, true);
+        } else if (this.InputGroupButton != InputGroup.UNUSED) return `~${this.InputGroupButton}~`;
+        return this.IsUsingController
+            ? GetControlInstructionalButton(2, this.GamepadButton, true)
+            : GetControlInstructionalButton(0, this.KeyboardButton, true);
     }
 
     InvokeEvent(control: InstructionalButton) {

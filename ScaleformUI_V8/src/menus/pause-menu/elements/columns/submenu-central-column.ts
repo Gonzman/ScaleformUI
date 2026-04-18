@@ -30,8 +30,20 @@ export class SubmenuCentralColumn extends PM_Column {
             await Delay(0);
         } while (this.isJumpableSetting(this.Items[this.Index] as SettingsItem));
         (this.Items[this.Index] as SettingsItem).Selected = true;
-        ScaleformUI.Scaleforms._pauseMenu._pause?.callFunction("SET_COLUMN_HIGHLIGHT", this.position as number, this.index, true, true);
-        this.SetColumnScroll(this.Index + 1, this.Items.length, this.VisibleItems, "", this.Items.length < this.VisibleItems);
+        ScaleformUI.Scaleforms._pauseMenu._pause?.callFunction(
+            "SET_COLUMN_HIGHLIGHT",
+            this.position as number,
+            this.index,
+            true,
+            true
+        );
+        this.SetColumnScroll(
+            this.Index + 1,
+            this.Items.length,
+            this.VisibleItems,
+            "",
+            this.Items.length < this.VisibleItems
+        );
     }
 
     public override async GoDown(): Promise<void> {
@@ -43,8 +55,20 @@ export class SubmenuCentralColumn extends PM_Column {
             await Delay(0);
         } while (this.isJumpableSetting(this.Items[this.Index] as SettingsItem));
         (this.Items[this.Index] as SettingsItem).Selected = true;
-        ScaleformUI.Scaleforms._pauseMenu._pause?.callFunction("SET_COLUMN_HIGHLIGHT", this.position as number, this.index, true, true);
-        this.SetColumnScroll(this.Index + 1, this.Items.length, this.VisibleItems, "", this.Items.length < this.VisibleItems);
+        ScaleformUI.Scaleforms._pauseMenu._pause?.callFunction(
+            "SET_COLUMN_HIGHLIGHT",
+            this.position as number,
+            this.index,
+            true,
+            true
+        );
+        this.SetColumnScroll(
+            this.Index + 1,
+            this.Items.length,
+            this.VisibleItems,
+            "",
+            this.Items.length < this.VisibleItems
+        );
     }
 
     public override GoLeft(): void {
@@ -115,7 +139,13 @@ export class SubmenuCentralColumn extends PM_Column {
                 this.getSettingsExtra(item),
                 this.getSettingsExtra2(item)
             );
-            this.SetColumnScroll(this.Index + 1, this.Items.length, this.VisibleItems, "", this.Items.length < this.VisibleItems);
+            this.SetColumnScroll(
+                this.Index + 1,
+                this.Items.length,
+                this.VisibleItems,
+                "",
+                this.Items.length < this.VisibleItems
+            );
             return;
         }
 

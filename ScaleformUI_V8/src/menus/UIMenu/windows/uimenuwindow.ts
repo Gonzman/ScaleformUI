@@ -1,11 +1,11 @@
 import type { UIMenu } from "../uimenu";
 
-export class UIMenuWindow{
+export class UIMenuWindow {
     public ParentMenu!: UIMenu;
-    id:number = 0;
-    public UpdateParent(){}
-    public Draw(){}
-    public SetParentMenu(menu:UIMenu){
+    id: number = 0;
+    public UpdateParent() {}
+    public Draw() {}
+    public SetParentMenu(menu: UIMenu) {
         this.ParentMenu = menu;
     }
 }

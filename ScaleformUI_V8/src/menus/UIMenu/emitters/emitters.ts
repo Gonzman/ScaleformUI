@@ -4,10 +4,10 @@ import type { UIMenuItem } from "../items/uimenuitem";
 import type { UIMenuCheckboxItem } from "../items/uimenucheckboxitem";
 import type { ChangeDirection, UIMenuDynamicListItem } from "../items/uimenudynamiclistitem";
 import type { UIMenuListItem } from "../items/uimenulistitem";
-import type { UIMenuProgressItem } from '../items/uimenuprogressitem';
+import type { UIMenuProgressItem } from "../items/uimenuprogressitem";
 import type { UIMenuSliderItem } from "../items/uimenuslideritem";
 import type { UIMenuStatsItem } from "../items/uimenustatsitem";
-import type { InstructionalButton } from '../../../scaleforms/instructional-buttons/instructionalbutton';
+import type { InstructionalButton } from "../../../scaleforms/instructional-buttons/instructionalbutton";
 import type { UIMenuColorPanel } from "../panels/uimenucolorpanel";
 import type { UIVehicleColourPickerPanel } from "../sidepanels/ColorPicker/uivehiclecolourpickerpanel";
 import type { UIMenuPercentagePanel } from "../panels/uimenupercentagepanel";
@@ -73,7 +73,7 @@ export interface VehicleColorPickerSelectEvent {
     (menuItem: UIMenuItem, panel: UIVehicleColourPickerPanel, index: number): Promise<void>;
 }
 export interface PercentagePanelChangedEvent {
-    (menuItem: UIMenuItem, panel: UIMenuPercentagePanel, value:  number): Promise<void>;
+    (menuItem: UIMenuItem, panel: UIMenuPercentagePanel, value: number): Promise<void>;
 }
 export interface GridPanelChangedEvent {
     (menuItem: UIMenuItem, panel: UIMenuGridPanel, value: Vector2): Promise<void>;
@@ -84,8 +84,8 @@ export interface MenuOpenedEvent {
 export interface MenuClosedEvent {
     (menu: UIMenu): Promise<void>;
 }
-export interface InstructionalButtonSelectedEvent{
-    (control:InstructionalButton) : Promise<void>
+export interface InstructionalButtonSelectedEvent {
+    (control: InstructionalButton): Promise<void>;
 }
 
 //builders
@@ -261,7 +261,7 @@ export class SliderChangedEventBuilder extends DelegateBuilder {
     }
 
     toDelegate(): SliderChangedEvent {
-        return async (menu: UIMenu, sliderItem:UIMenuSliderItem, newIndex: number) => {
+        return async (menu: UIMenu, sliderItem: UIMenuSliderItem, newIndex: number) => {
             await super.toDelegate()(menu, sliderItem, newIndex);
         };
     }
@@ -278,7 +278,7 @@ export class ListSelectedEventBuilder extends DelegateBuilder {
     }
 
     toDelegate(): ListSelectedEvent {
-        return async (menu: UIMenu, listItem:UIMenuListItem, newIndex: number) => {
+        return async (menu: UIMenu, listItem: UIMenuListItem, newIndex: number) => {
             await super.toDelegate()(menu, listItem, newIndex);
         };
     }
@@ -295,7 +295,7 @@ export class CheckboxChangeEventBuilder extends DelegateBuilder {
     }
 
     toDelegate(): CheckboxChangeEvent {
-        return async (menu: UIMenu, checkboxItem:UIMenuCheckboxItem, checked: boolean) => {
+        return async (menu: UIMenu, checkboxItem: UIMenuCheckboxItem, checked: boolean) => {
             await super.toDelegate()(menu, checkboxItem, checked);
         };
     }
@@ -312,7 +312,7 @@ export class ItemSelectEventBuilder extends DelegateBuilder {
     }
 
     toDelegate(): ItemSelectEvent {
-        return async (menu: UIMenu, item:UIMenuItem, newIndex: number) => {
+        return async (menu: UIMenu, item: UIMenuItem, newIndex: number) => {
             await super.toDelegate()(menu, item, newIndex);
         };
     }
@@ -329,7 +329,7 @@ export class ItemActivatedEventBuilder extends DelegateBuilder {
     }
 
     toDelegate(): ItemActivatedEvent {
-        return async (menu: UIMenu, item:UIMenuItem) => {
+        return async (menu: UIMenu, item: UIMenuItem) => {
             await super.toDelegate()(menu, item);
         };
     }
@@ -363,7 +363,7 @@ export class OnProgressSelectedBuilder extends DelegateBuilder {
     }
 
     toDelegate(): OnProgressSelected {
-        return async (menu: UIMenu, item:UIMenuProgressItem, newIndex: number) => {
+        return async (menu: UIMenu, item: UIMenuProgressItem, newIndex: number) => {
             await super.toDelegate()(menu, item, newIndex);
         };
     }
@@ -380,7 +380,7 @@ export class StatItemProgressChangeBuilder extends DelegateBuilder {
     }
 
     toDelegate(): StatItemProgressChange {
-        return async (menu: UIMenu, item:UIMenuStatsItem, newIndex: number) => {
+        return async (menu: UIMenu, item: UIMenuStatsItem, newIndex: number) => {
             await super.toDelegate()(menu, item, newIndex);
         };
     }
@@ -397,7 +397,7 @@ export class ColorPanelChangedEventBuilder extends DelegateBuilder {
     }
 
     toDelegate(): ColorPanelChangedEvent {
-        return async (item: UIMenuItem, panel:UIMenuColorPanel, newIndex: number) => {
+        return async (item: UIMenuItem, panel: UIMenuColorPanel, newIndex: number) => {
             await super.toDelegate()(item, panel, newIndex);
         };
     }
@@ -414,7 +414,7 @@ export class VehicleColorPickerSelectEventBuilder extends DelegateBuilder {
     }
 
     toDelegate(): VehicleColorPickerSelectEvent {
-        return async (item: UIMenuItem, panel:UIVehicleColourPickerPanel, newIndex: number) => {
+        return async (item: UIMenuItem, panel: UIVehicleColourPickerPanel, newIndex: number) => {
             await super.toDelegate()(item, panel, newIndex);
         };
     }
@@ -431,7 +431,7 @@ export class PercentagePanelChangedEventBuilder extends DelegateBuilder {
     }
 
     toDelegate(): PercentagePanelChangedEvent {
-        return async (item: UIMenuItem, panel:UIMenuPercentagePanel, newIndex: number) => {
+        return async (item: UIMenuItem, panel: UIMenuPercentagePanel, newIndex: number) => {
             await super.toDelegate()(item, panel, newIndex);
         };
     }
@@ -448,7 +448,7 @@ export class GridPanelChangedEventBuilder extends DelegateBuilder {
     }
 
     toDelegate(): GridPanelChangedEvent {
-        return async (item: UIMenuItem, panel:UIMenuGridPanel, newIndex: Vector2) => {
+        return async (item: UIMenuItem, panel: UIMenuGridPanel, newIndex: Vector2) => {
             await super.toDelegate()(item, panel, newIndex);
         };
     }
@@ -465,7 +465,7 @@ export class MenuOpenedEventBuilder extends DelegateBuilder {
     }
 
     toDelegate(): MenuOpenedEvent {
-        return async (menu: UIMenu, data:any) => {
+        return async (menu: UIMenu, data: any) => {
             await super.toDelegate()(menu, data);
         };
     }
