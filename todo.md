@@ -33,13 +33,13 @@ Port the C# ScaleformUI main project into the TypeScript V8 codebase.
 - [x] `Menus/BreadcrumbsHandler.cs` => `src/menus/breadcrumbs-handler.ts`
 - [x] `Menus/MenuBase.cs` => `src/menus/menu.base.ts`
 - [x] `Menus/MenuHandler.cs` => `src/menus/menu-handler.ts`
-- [ ] `Menus/Pause Menus/PauseMenuBase.cs`
-- [ ] `Menus/Pause Menus/Elements/Columns/Column.cs`
-- [ ] `Menus/Pause Menus/Elements/Columns/MissionsListColumn.cs`
-- [ ] `Menus/Pause Menus/Elements/Columns/PlayerListColumn.cs`
-- [ ] `Menus/Pause Menus/Elements/Columns/SettingsListColumn.cs`
-- [ ] `Menus/Pause Menus/Elements/Columns/StoreListColumn.cs`
-- [ ] `Menus/Pause Menus/Elements/CrewTag.cs`
+- [x] `Menus/Pause Menus/PauseMenuBase.cs`
+- [x] `Menus/Pause Menus/Elements/Columns/Column.cs`
+- [x] `Menus/Pause Menus/Elements/Columns/MissionsListColumn.cs`
+- [x] `Menus/Pause Menus/Elements/Columns/PlayerListColumn.cs`
+- [x] `Menus/Pause Menus/Elements/Columns/SettingsListColumn.cs`
+- [x] `Menus/Pause Menus/Elements/Columns/StoreListColumn.cs`
+- [x] `Menus/Pause Menus/Elements/CrewTag.cs`
 - [x] `Menus/Pause Menus/Elements/Items/FakeBlip.cs` => `src/menus/pause-menu/elements/items/fake-blip.ts`
 - [x] `Menus/Pause Menus/Elements/Items/FriendItem.cs` => `src/menus/pause-menu/elements/items/friend-item.ts`
 - [x] `Menus/Pause Menus/Elements/Items/LobbyItem.cs` => `src/menus/pause-menu/elements/items/lobby-item.ts`
@@ -67,7 +67,7 @@ Port the C# ScaleformUI main project into the TypeScript V8 codebase.
 - [x] `Menus/Pause Menus/PauseMenu/Tabs/SubmenuTab.cs` => `src/menus/pause-menu/tabs/submenu-tab.ts`
 - [x] `Menus/Pause Menus/PauseMenu/Tabs/TabLeftItem.cs` => `src/menus/pause-menu/items/tab-left-item.ts`
 - [x] `Menus/Pause Menus/PauseMenu/Tabs/TextTab.cs` => `src/menus/pause-menu/tabs/text-tab.ts`
-- [x] `Menus/Pause Menus/PauseMenu/Tabs/Submenu.ts` => `src/menus/pause-menu/tabs/submenu.ts` https://github.com/manups4e/ScaleformUI/issues/245 ==> IDEA: With new Pause Menu update incoming you can achieve this feature by clearing and rebuilding dynamically each Tab's columns. (The same way R\* does) (keeping it opened as reference)
+- [ ] `Menus/Pause Menus/PauseMenu/Tabs/Submenu.ts` => `src/menus/pause-menu/tabs/submenu.ts` https://github.com/manups4e/ScaleformUI/issues/245 ==> IDEA: With new Pause Menu update incoming you can achieve this feature by clearing and rebuilding dynamically each Tab's columns. (The same way R\* does) (keeping it opened as reference)
 
 ### Radial menu
 
