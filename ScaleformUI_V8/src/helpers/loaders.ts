@@ -4,9 +4,10 @@ export const waitUntilReturns = <T extends (...args: any) => any>(
     checker: () => any,
     untilReturns: Awaited<ReturnType<T>> | Awaited<ReturnType<T>>[],
     checkTo: number
-) => new Promise(async (res) => {
+) =>
+    new Promise(async (res) => {
         await dofunc();
-        const untilReturnsArray = Array.isArray(untilReturns) ? untilReturns : [untilReturns]
+        const untilReturnsArray = Array.isArray(untilReturns) ? untilReturns : [untilReturns];
         const tick = setInterval(async () => {
             const cres = await checker();
             if (untilReturnsArray.includes(cres)) {
@@ -14,15 +15,14 @@ export const waitUntilReturns = <T extends (...args: any) => any>(
                 clearInterval(tick);
                 return;
             }
-        }, checkTo)
-    })
+        }, checkTo);
+    });
 
-export const noop = () => {}
+export const noop = () => {};
 
 export const loadPedHeadshot = async (ped: number) => {
-    const handle = RegisterPedheadshot(PlayerPedId())
-    await waitUntilReturns(noop, () => IsPedheadshotValid(handle) && IsPedheadshotReady(handle), [true, 1], 0)
-    return handle
-}
+    await waitUntilReturns(noop, () => IsPedheadshotValid(ped) && IsPedheadshotReady(ped), [true, 1], 0);
+    return ped;
+};
 
-export const Delay = (ms: number) => new Promise(res => setTimeout(res, ms))
+export const Delay = (ms: number) => new Promise((res) => setTimeout(res, ms));

@@ -1,7 +1,4 @@
-import {isOneOfEnum} from "../helpers/collections";
-
-export enum CrewTagHierarchy
-{
+export enum CrewTagHierarchy {
     Leader = 0,
     Commissioner = 1,
     Liutenant = 3,
