@@ -2,7 +2,7 @@
 
 import { spawn } from 'child_process';
 import { existsSync } from 'fs';
-import { rm, mkdir } from 'fs/promises';
+import { rm, mkdir, cp } from 'fs/promises';
 import path from 'path';
 
 const projectRoot = path.resolve(import.meta.dirname, '..');
@@ -58,7 +58,11 @@ async function main() {
         // Step 4: Bundle with Bun from temp to dist
         console.log('📦 Creating bundle...');
         await runCommand('bunx', ['bun', 'build', '.build-tmp/index.js', '--outdir', 'dist', '--target', 'bun']);
-        
+
+        // Step 4b: Copy individual JS files from .build-tmp to dist
+        console.log('📂 Copying individual JS files to dist...');
+        await cp(tempDir, distDir, { recursive: true, filter: (src) => !src.endsWith('.d.ts') });
+
         // Step 5: Generate TypeScript declarations
         console.log('📜 Generating TypeScript declarations...');
         await runCommand('bunx', ['tsc', '--project', 'tsconfig.build.json']);
