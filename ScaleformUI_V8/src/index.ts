@@ -1,1 +1,1 @@
-import "./examples/pause-menu-command-example";
+import "./__generated__/bundle-entry";

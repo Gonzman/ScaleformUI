@@ -1,0 +1,19 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "target": "ES2020",
+        "module": "ESNext",
+        "moduleResolution": "Node",
+        "noEmit": false,
+        "declaration": false,
+        "outDir": "./.build-tmp",
+        "rootDir": "./src",
+        "noUnusedLocals": false,
+        "noUnusedParameters": false,
+        "inlineSourceMap": false,
+        "sourceMap": false,
+        "types": ["@citizenfx/client", "@types/node"]
+    },
+    "include": ["src/**/*.ts"],
+    "exclude": ["node_modules", "dist", "src/**/*.test.ts", "src/examples/**"]
+}
