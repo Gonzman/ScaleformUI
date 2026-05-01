@@ -22,7 +22,8 @@ export class PlayerListTab extends BaseTab {
     }
 
     public SetupLeftColumn(column: PM_Column): void {
-        if (column instanceof MissionDetailsPanel) throw new Error("You cannot set the mission details column as the left column.");
+        if (column instanceof MissionDetailsPanel)
+            throw new Error("You cannot set the mission details column as the left column.");
         column.position = PM_COLUMNS.LEFT;
         this.LeftColumn = column;
         this.LeftColumn.Parent = this;
@@ -30,7 +31,8 @@ export class PlayerListTab extends BaseTab {
     }
 
     public SetupCenterColumn(column: PM_Column): void {
-        if (column instanceof MissionDetailsPanel) throw new Error("You cannot set the mission details column as the center column.");
+        if (column instanceof MissionDetailsPanel)
+            throw new Error("You cannot set the mission details column as the center column.");
         column.position = PM_COLUMNS.MIDDLE;
         this.CenterColumn = column;
         this.CenterColumn.Parent = this;
@@ -54,13 +56,17 @@ export class PlayerListTab extends BaseTab {
         const col = this.GetColumnAtPosition(index);
         if (!col) {
             if ((index as number) < PM_COLUMNS.RIGHT) {
-                this.switchColumnInternal(((index as number) + ((index as number) < this.CurrentColumnIndex ? -1 : 1)) as PM_COLUMNS);
+                this.switchColumnInternal(
+                    ((index as number) + ((index as number) < this.CurrentColumnIndex ? -1 : 1)) as PM_COLUMNS
+                );
             }
             return;
         }
 
-        if (this.LeftColumn instanceof PlayerListColumn && this.LeftColumn.CurrentItem?.KeepPanelVisible) canHideShow = false;
-        else if (this.CenterColumn instanceof PlayerListColumn && this.CenterColumn.CurrentItem?.KeepPanelVisible) canHideShow = false;
+        if (this.LeftColumn instanceof PlayerListColumn && this.LeftColumn.CurrentItem?.KeepPanelVisible)
+            canHideShow = false;
+        else if (this.CenterColumn instanceof PlayerListColumn && this.CenterColumn.CurrentItem?.KeepPanelVisible)
+            canHideShow = false;
 
         if (canHideShow) {
             if (this.Parent?.Visible) {
@@ -90,8 +96,14 @@ export class PlayerListTab extends BaseTab {
         ScaleformUI.Scaleforms._pauseMenu._pause?.callFunction("SET_MENU_LEVEL", this.CurrentColumnIndex + 1);
         ScaleformUI.Scaleforms._pauseMenu._pause?.callFunction("MENU_SHIFT_DEPTH", 0, true, true);
         if (this.Parent) this.Parent.focusLevel = this.CurrentColumnIndex + 1;
-        ScaleformUI.Scaleforms._pauseMenu._pause?.callFunction("SET_COLUMN_HIGHLIGHT", col.position as number, col.Index, true, true);
-        col.Items[col.Index].Selected = true;
+        ScaleformUI.Scaleforms._pauseMenu._pause?.callFunction(
+            "SET_COLUMN_HIGHLIGHT",
+            col.position as number,
+            col.Index,
+            true,
+            true
+        );
+        if (col.Items[col.Index]) col.Items[col.Index].Selected = true;
     }
 
     public override StateChange(_state: number): void {
@@ -101,13 +113,25 @@ export class PlayerListTab extends BaseTab {
     public override GoUp(): void {
         if (!this.Focused || !this.CurrentColumn) return;
         this.CurrentColumn.GoUp();
-        this.CurrentColumn.SetColumnScroll(this.CurrentColumn.Index + 1, this.CurrentColumn.Items.length, this.CurrentColumn.VisibleItems, "", this.CurrentColumn.Items.length < this.CurrentColumn.VisibleItems);
+        this.CurrentColumn.SetColumnScroll(
+            this.CurrentColumn.Index + 1,
+            this.CurrentColumn.Items.length,
+            this.CurrentColumn.VisibleItems,
+            "",
+            this.CurrentColumn.Items.length < this.CurrentColumn.VisibleItems
+        );
     }
 
     public override GoDown(): void {
         if (!this.Focused || !this.CurrentColumn) return;
         this.CurrentColumn.GoDown();
-        this.CurrentColumn.SetColumnScroll(this.CurrentColumn.Index + 1, this.CurrentColumn.Items.length, this.CurrentColumn.VisibleItems, "", this.CurrentColumn.Items.length < this.CurrentColumn.VisibleItems);
+        this.CurrentColumn.SetColumnScroll(
+            this.CurrentColumn.Index + 1,
+            this.CurrentColumn.Items.length,
+            this.CurrentColumn.VisibleItems,
+            "",
+            this.CurrentColumn.Items.length < this.CurrentColumn.VisibleItems
+        );
     }
 
     public override MouseEvent(eventType: number, context: number, index: number): void {
@@ -129,20 +153,35 @@ export class PlayerListTab extends BaseTab {
             return;
         }
 
-        const target = this.CurrentColumnIndex === context ? this.GetColumnAtPosition(this.CurrentColumnIndex) : this.GetColumnAtPosition(context);
+        const target =
+            this.CurrentColumnIndex === context
+                ? this.GetColumnAtPosition(this.CurrentColumnIndex)
+                : this.GetColumnAtPosition(context);
         if (this.CurrentColumnIndex !== context) this.switchColumnInternal(context as PM_COLUMNS);
         this.applyMouseSelection(target, index);
     }
 
-    public override GoLeft(): void { if (this.Focused) this.CurrentColumn?.GoLeft(); }
-    public override GoRight(): void { if (this.Focused) this.CurrentColumn?.GoRight(); }
-    public override Select(): void { if (this.Focused) this.CurrentColumn?.Select(); }
+    public override GoLeft(): void {
+        if (this.Focused) this.CurrentColumn?.GoLeft();
+    }
+    public override GoRight(): void {
+        if (this.Focused) this.CurrentColumn?.GoRight();
+    }
+    public override Select(): void {
+        if (this.Focused) this.CurrentColumn?.Select();
+    }
 
     public override GoBack(): void {
         if (!this.Focused || this.CurrentColumnIndex <= 0) return;
         let col = this.GetColumnAtPosition(this.CurrentColumnIndex);
         if (col?.Items[col.Index]) col.Items[col.Index].Selected = false;
-        ScaleformUI.Scaleforms._pauseMenu._pause?.callFunction("SET_COLUMN_FOCUS", this.CurrentColumnIndex, false, false, false);
+        ScaleformUI.Scaleforms._pauseMenu._pause?.callFunction(
+            "SET_COLUMN_FOCUS",
+            this.CurrentColumnIndex,
+            false,
+            false,
+            false
+        );
         this.switchColumnInternal((this.CurrentColumnIndex - 1) as PM_COLUMNS);
         col = this.GetColumnAtPosition(this.CurrentColumnIndex);
         if (!col && this.CurrentColumnIndex > 0) return this.GoBack();
@@ -193,15 +232,27 @@ export class PlayerListTab extends BaseTab {
             col.Focused = true;
             col.CurrentItem.Selected = true;
         }
-        ScaleformUI.Scaleforms._pauseMenu._pause?.callFunction("SET_COLUMN_HIGHLIGHT", col.position as number, col.Index, true, false);
+        ScaleformUI.Scaleforms._pauseMenu._pause?.callFunction(
+            "SET_COLUMN_HIGHLIGHT",
+            col.position as number,
+            col.Index,
+            true,
+            false
+        );
     }
 
     public override UnFocus(): void {
         super.UnFocus();
         ClearPedInPauseMenu();
-        if (this.LeftColumn) { this.LeftColumn.Focused = false; this.LeftColumn.Items[this.LeftColumn.Index].Selected = false; }
-        if (this.CenterColumn) { this.CenterColumn.Focused = false; this.CenterColumn.Items[this.CenterColumn.Index].Selected = false; }
-        if (this.RightColumn) {
+        if (this.LeftColumn?.Items[this.LeftColumn.Index]) {
+            this.LeftColumn.Focused = false;
+            this.LeftColumn.Items[this.LeftColumn.Index].Selected = false;
+        }
+        if (this.CenterColumn?.Items[this.CenterColumn.Index]) {
+            this.CenterColumn.Focused = false;
+            this.CenterColumn.Items[this.CenterColumn.Index].Selected = false;
+        }
+        if (this.RightColumn?.Items[this.RightColumn.Index]) {
             this.RightColumn.Focused = false;
             this.RightColumn.Items[this.RightColumn.Index].Selected = false;
             if (!this.RightColumn.ColumnVisible) this.RightColumn.ColumnVisible = true;

@@ -7,25 +7,29 @@ type MethodKeys<T> = {
  * @param after
  * @constructor
  */
-export const ProxySetters = <T extends InstanceType<any>>(proxyMethod: MethodKeys<T>, after = true) => (target: any): any => {
-    const props = Object.getOwnPropertyNames(target.prototype)
-    props.forEach(method => {
-        const descriptor = Object.getOwnPropertyDescriptor(target.prototype, method);
-        if (descriptor && typeof descriptor.set === "function") {
-            const originalSetter = descriptor.set;
-            if (after) {
-                descriptor.set = function(value: any) {
-                    originalSetter.apply(this, [value]);
-                    (this as unknown as T)[proxyMethod](method)
-                };
-            } else {
-                descriptor.set = function(value: any) {
-                    (this as unknown as T)[proxyMethod](method)
-                    return originalSetter.apply(this, [value]);
-                };
-            }
+export const ProxySetters =
+    <T extends InstanceType<any>>(proxyMethod: MethodKeys<T>, after = true) =>
+    (target: any): any => {
+        const props = Object.getOwnPropertyNames(target.prototype);
+        props.forEach((method) => {
+            const descriptor = Object.getOwnPropertyDescriptor(target.prototype, method);
+            if (descriptor && typeof descriptor.set === "function") {
+                const originalSetter = descriptor.set;
+                if (after) {
+                    descriptor.set = function (value: any) {
+                        originalSetter.apply(this, [value]);
+                        const proxyTarget = this as Record<string, (methodName: string) => unknown>;
+                        proxyTarget[proxyMethod as string](method);
+                    };
+                } else {
+                    descriptor.set = function (value: any) {
+                        const proxyTarget = this as Record<string, (methodName: string) => unknown>;
+                        proxyTarget[proxyMethod as string](method);
+                        return originalSetter.apply(this, [value]);
+                    };
+                }
 
-            Object.defineProperty(target.prototype, method, descriptor);
-        }
-    })
-}
+                Object.defineProperty(target.prototype, method, descriptor);
+            }
+        });
+    };

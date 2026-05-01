@@ -1,4 +1,3 @@
-import { Delay } from "helpers/loaders";
 import { ScaleformUI } from "scaleforms/scaleformui/main";
 import { KeymapItem } from "../items/keymap-item";
 import { StatsTabItem, StatItemType } from "../items/stats-tab-item";
@@ -21,14 +20,15 @@ export class SubmenuCentralColumn extends PM_Column {
         this.sendItem(index, "UPDATE_SLOT");
     }
 
-    public override async GoUp(): Promise<void> {
+    public override GoUp(): void {
         if (this.currentColumnType !== LeftItemType.Settings || !this.Items.length) return;
         (this.Items[this.Index] as SettingsItem).Selected = false;
+        let attempts = 0;
         do {
             this.index--;
             if (this.index < 0) this.index = this.Items.length - 1;
-            await Delay(0);
-        } while (this.isJumpableSetting(this.Items[this.Index] as SettingsItem));
+            attempts++;
+        } while (attempts < this.Items.length && this.isJumpableSetting(this.Items[this.Index] as SettingsItem));
         (this.Items[this.Index] as SettingsItem).Selected = true;
         ScaleformUI.Scaleforms._pauseMenu._pause?.callFunction(
             "SET_COLUMN_HIGHLIGHT",
@@ -46,14 +46,15 @@ export class SubmenuCentralColumn extends PM_Column {
         );
     }
 
-    public override async GoDown(): Promise<void> {
+    public override GoDown(): void {
         if (this.currentColumnType !== LeftItemType.Settings || !this.Items.length) return;
         (this.Items[this.Index] as SettingsItem).Selected = false;
+        let attempts = 0;
         do {
             this.index++;
             if (this.index >= this.Items.length) this.index = 0;
-            await Delay(0);
-        } while (this.isJumpableSetting(this.Items[this.Index] as SettingsItem));
+            attempts++;
+        } while (attempts < this.Items.length && this.isJumpableSetting(this.Items[this.Index] as SettingsItem));
         (this.Items[this.Index] as SettingsItem).Selected = true;
         ScaleformUI.Scaleforms._pauseMenu._pause?.callFunction(
             "SET_COLUMN_HIGHLIGHT",

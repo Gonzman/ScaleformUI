@@ -3,6 +3,7 @@ import { ScaleformFonts } from "elements/scaleform-fonts";
 import { SColor } from "elements/scolor";
 import { BreadcrumbsHandler } from "menus/breadcrumbs-handler";
 import { replaceRstarColorsWith } from "../../../elements/color";
+import { isNullOrWhiteSpace } from "helpers/string.extensons";
 import { BadgeStyle } from "elements/badge";
 import { ItemChangeCallbackBuilder, UIMenuItemChangeCallback } from "../emitters/emitters";
 import type { UIMenu } from "../uimenu";

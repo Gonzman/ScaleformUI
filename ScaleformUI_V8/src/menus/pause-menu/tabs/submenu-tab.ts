@@ -37,28 +37,54 @@ export class SubmenuTab extends BaseTab {
     public override StateChange(state: number): void {
         this.Parent?._pause._pause?.callFunction("MENU_STATE", this.currentItemType);
         this.CenterColumn.Items = [];
-        if (state !== 0) this.CenterColumn.Items = [...(this.LeftColumn.Items[this.LeftColumn.Index] as TabLeftItem).ItemList];
-        this.CenterColumn.Items.forEach((item: any) => item.ParentColumn = this.CenterColumn);
+        if (state !== 0)
+            this.CenterColumn.Items = [...(this.LeftColumn.Items[this.LeftColumn.Index] as TabLeftItem).ItemList];
+        this.CenterColumn.Items.forEach((item: any) => (item.ParentColumn = this.CenterColumn));
+        this.syncCenterSelection(true);
         switch (this.currentItemType) {
             case LeftItemType.Statistics:
                 this.CenterColumn.VisibleItems = 16;
                 this.CenterColumn.InitColumnScroll(true, 2, ScrollType.UP_DOWN, ScrollArrowsPosition.CENTER);
-                this.CenterColumn.SetColumnScroll(-1, -1, -1, "", this.CenterColumn.Items.length < this.CenterColumn.VisibleItems);
+                this.CenterColumn.SetColumnScroll(
+                    -1,
+                    -1,
+                    -1,
+                    "",
+                    this.CenterColumn.Items.length < this.CenterColumn.VisibleItems
+                );
                 break;
             case LeftItemType.Settings:
                 this.CenterColumn.VisibleItems = 16;
                 this.CenterColumn.InitColumnScroll(true, 2, ScrollType.ALL, ScrollArrowsPosition.RIGHT);
-                this.CenterColumn.SetColumnScroll(this.CenterColumn.Index + 1, this.CenterColumn.Items.length, this.CenterColumn.VisibleItems, "", this.CenterColumn.Items.length < this.CenterColumn.VisibleItems);
+                this.CenterColumn.SetColumnScroll(
+                    this.CenterColumn.Index + 1,
+                    this.CenterColumn.Items.length,
+                    this.CenterColumn.VisibleItems,
+                    "",
+                    this.CenterColumn.Items.length < this.CenterColumn.VisibleItems
+                );
                 break;
             case LeftItemType.Info:
                 this.CenterColumn.VisibleItems = 10;
                 this.CenterColumn.InitColumnScroll(true, 2, ScrollType.UP_DOWN, ScrollArrowsPosition.CENTER);
-                this.CenterColumn.SetColumnScroll(-1, -1, -1, "", this.CenterColumn.Items.length < this.CenterColumn.VisibleItems);
+                this.CenterColumn.SetColumnScroll(
+                    -1,
+                    -1,
+                    -1,
+                    "",
+                    this.CenterColumn.Items.length < this.CenterColumn.VisibleItems
+                );
                 break;
             case LeftItemType.Keymap:
                 this.CenterColumn.VisibleItems = 15;
                 this.CenterColumn.InitColumnScroll(true, 2, ScrollType.UP_DOWN, ScrollArrowsPosition.CENTER);
-                this.CenterColumn.SetColumnScroll(-1, -1, -1, "", this.CenterColumn.Items.length < this.CenterColumn.VisibleItems);
+                this.CenterColumn.SetColumnScroll(
+                    -1,
+                    -1,
+                    -1,
+                    "",
+                    this.CenterColumn.Items.length < this.CenterColumn.VisibleItems
+                );
                 break;
             default:
                 this.CenterColumn.VisibleItems = 0;
@@ -79,7 +105,13 @@ export class SubmenuTab extends BaseTab {
         if (this.CurrentColumnIndex === 1) {
             this.CenterColumn.GoUp();
             if (this.CenterColumn.currentColumnType === LeftItemType.Settings) {
-                this.CenterColumn.SetColumnScroll(this.CenterColumn.Index + 1, this.CenterColumn.Items.length, this.CenterColumn.VisibleItems, "", this.CenterColumn.Items.length < this.CenterColumn.VisibleItems);
+                this.CenterColumn.SetColumnScroll(
+                    this.CenterColumn.Index + 1,
+                    this.CenterColumn.Items.length,
+                    this.CenterColumn.VisibleItems,
+                    "",
+                    this.CenterColumn.Items.length < this.CenterColumn.VisibleItems
+                );
             }
         }
     }
@@ -97,7 +129,13 @@ export class SubmenuTab extends BaseTab {
         if (this.CurrentColumnIndex === 1) {
             this.CenterColumn.GoDown();
             if (this.CenterColumn.currentColumnType === LeftItemType.Settings) {
-                this.CenterColumn.SetColumnScroll(this.CenterColumn.Index + 1, this.CenterColumn.Items.length, this.CenterColumn.VisibleItems, "", this.CenterColumn.Items.length < this.CenterColumn.VisibleItems);
+                this.CenterColumn.SetColumnScroll(
+                    this.CenterColumn.Index + 1,
+                    this.CenterColumn.Items.length,
+                    this.CenterColumn.VisibleItems,
+                    "",
+                    this.CenterColumn.Items.length < this.CenterColumn.VisibleItems
+                );
             }
         }
     }
@@ -110,15 +148,15 @@ export class SubmenuTab extends BaseTab {
         if (this.CurrentColumnIndex === context) {
             if (this.CurrentColumn?.Index !== index) {
                 if (this.CurrentColumnIndex === 0) {
-                    this.LeftColumn.Items[this.LeftColumn.Index].Selected = false;
-                    this.LeftColumn.Index = index;
-                    this.LeftColumn.Items[this.LeftColumn.Index].Selected = true;
+                    this.setSelectedSafe(this.LeftColumn.Items, this.LeftColumn.Index, false);
+                    this.LeftColumn.Index = this.clampIndex(this.LeftColumn.Items, index);
+                    this.setSelectedSafe(this.LeftColumn.Items, this.LeftColumn.Index, true);
                     this.StateChange(this.currentItemType);
                     this.Refresh(false);
                 } else {
-                    this.CenterColumn.Items[this.CenterColumn.Index].Selected = false;
-                    this.CenterColumn.Index = index;
-                    this.CenterColumn.Items[this.CenterColumn.Index].Selected = true;
+                    this.setSelectedSafe(this.CenterColumn.Items, this.CenterColumn.Index, false);
+                    this.CenterColumn.Index = this.clampIndex(this.CenterColumn.Items, index);
+                    this.setSelectedSafe(this.CenterColumn.Items, this.CenterColumn.Index, true);
                 }
                 return;
             }
@@ -131,7 +169,7 @@ export class SubmenuTab extends BaseTab {
                 }
                 this.CurrentColumnIndex++;
                 if (!leftItem.ItemList.every((x: any) => !x.Enabled)) {
-                    while (!((this.CenterColumn.Items[this.CenterColumn.Index] as SettingsItem).Enabled)) {
+                    while (!(this.CenterColumn.Items[this.CenterColumn.Index] as SettingsItem).Enabled) {
                         await Delay(0);
                         this.CenterColumn.Index++;
                     }
@@ -150,26 +188,34 @@ export class SubmenuTab extends BaseTab {
             return;
         }
 
-        if (context > this.CurrentColumnIndex) { this.Parent && this.Parent.FocusLevel++; this.CurrentColumnIndex++; }
-        else if (context < this.CurrentColumnIndex) { this.Parent && this.Parent.FocusLevel--; this.CurrentColumnIndex--; }
+        if (context > this.CurrentColumnIndex) {
+            this.Parent && this.Parent.FocusLevel++;
+            this.CurrentColumnIndex++;
+        } else if (context < this.CurrentColumnIndex) {
+            this.Parent && this.Parent.FocusLevel--;
+            this.CurrentColumnIndex--;
+        }
 
         if (this.CurrentColumnIndex === 0) {
-            this.LeftColumn.Items[this.LeftColumn.Index].Selected = false;
-            this.LeftColumn.Index = index;
-            this.LeftColumn.Items[this.LeftColumn.Index].Selected = true;
+            this.setSelectedSafe(this.LeftColumn.Items, this.LeftColumn.Index, false);
+            this.LeftColumn.Index = this.clampIndex(this.LeftColumn.Items, index);
+            this.setSelectedSafe(this.LeftColumn.Items, this.LeftColumn.Index, true);
             this.StateChange(this.currentItemType);
             this.Refresh(false);
         } else {
-            this.CenterColumn.Items[this.CenterColumn.Index].Selected = false;
-            this.CenterColumn.Index = index;
-            this.CenterColumn.Items[this.CenterColumn.Index].Selected = true;
+            this.setSelectedSafe(this.CenterColumn.Items, this.CenterColumn.Index, false);
+            this.CenterColumn.Index = this.clampIndex(this.CenterColumn.Items, index);
+            this.setSelectedSafe(this.CenterColumn.Items, this.CenterColumn.Index, true);
         }
     }
 
     public MouseScroll(dir: number): void {
         const hoveredColumn = this.Parent?.hoveredColumn ?? 0;
         if (this.CurrentColumnIndex === 0) {
-            if (hoveredColumn === 1 && (this.currentItemType === LeftItemType.Info || this.currentItemType === LeftItemType.Statistics)) {
+            if (
+                hoveredColumn === 1 &&
+                (this.currentItemType === LeftItemType.Info || this.currentItemType === LeftItemType.Statistics)
+            ) {
                 PlaySoundFrontend(-1, "NAV_UP_DOWN", "HUD_FRONTEND_DEFAULT_SOUNDSET", true);
                 return;
             }
@@ -186,7 +232,13 @@ export class SubmenuTab extends BaseTab {
                 else this.CenterColumn.GoDown();
             }
             if (this.CenterColumn.currentColumnType === LeftItemType.Settings) {
-                this.CenterColumn.SetColumnScroll(this.CenterColumn.Index + 1, this.CenterColumn.Items.length, this.CenterColumn.VisibleItems, "", this.CenterColumn.Items.length < this.CenterColumn.VisibleItems);
+                this.CenterColumn.SetColumnScroll(
+                    this.CenterColumn.Index + 1,
+                    this.CenterColumn.Items.length,
+                    this.CenterColumn.VisibleItems,
+                    "",
+                    this.CenterColumn.Items.length < this.CenterColumn.VisibleItems
+                );
             }
             PlaySoundFrontend(-1, "NAV_UP_DOWN", "HUD_FRONTEND_DEFAULT_SOUNDSET", true);
         }
@@ -215,7 +267,7 @@ export class SubmenuTab extends BaseTab {
             }
             this.CurrentColumnIndex++;
             if (!leftItem.ItemList.every((x: any) => !x.Enabled)) {
-                while (!((this.CenterColumn.Items[this.CenterColumn.Index] as SettingsItem).Enabled)) {
+                while (!(this.CenterColumn.Items[this.CenterColumn.Index] as SettingsItem).Enabled) {
                     await Delay(0);
                     this.CenterColumn.Index++;
                 }
@@ -244,13 +296,13 @@ export class SubmenuTab extends BaseTab {
         super.Focus();
         this.LeftColumn.Index = this.LeftColumn.index;
         this.LeftColumn.HighlightColumn(true, false, true);
-        this.LeftColumn.Items[this.LeftColumn.Index].Selected = true;
+        this.setSelectedSafe(this.LeftColumn.Items, this.LeftColumn.Index, true);
         this.Refresh(true);
     }
 
     public override UnFocus(): void {
         super.UnFocus();
-        this.LeftColumn.Items[this.LeftColumn.Index].Selected = false;
+        this.setSelectedSafe(this.LeftColumn.Items, this.LeftColumn.Index, false);
     }
 
     public override Refresh(highlightOldIndex: boolean): void {
@@ -260,7 +312,13 @@ export class SubmenuTab extends BaseTab {
 
         if (this.currentItemType === LeftItemType.Keymap) {
             const selected = this.LeftColumn.Items[this.LeftColumn.Index] as TabLeftItem;
-            this.Parent?._pause._pause?.callFunction("SET_COLUMN_TITLE", 1, selected.RightTitle, selected.KeymapRightLabel_1, selected.KeymapRightLabel_2);
+            this.Parent?._pause._pause?.callFunction(
+                "SET_COLUMN_TITLE",
+                1,
+                selected.RightTitle,
+                selected.KeymapRightLabel_1,
+                selected.KeymapRightLabel_2
+            );
             this.Parent?._pause._pause?.callFunction("SET_COLUMN_FOCUS", 1, false, false, false);
         } else if (this.currentItemType === LeftItemType.Settings && highlightOldIndex) {
             this.Parent?._pause._pause?.callFunction("SET_COLUMN_HIGHLIGHT", 1, this.CenterColumn.Index, true, true);
@@ -274,7 +332,7 @@ export class SubmenuTab extends BaseTab {
         this.CenterColumn.Items = [];
         if (this.currentItemType !== LeftItemType.Empty) {
             this.CenterColumn.Items = [...item.ItemList];
-            this.CenterColumn.Items.forEach((it: any) => it.ParentColumn = this.CenterColumn);
+            this.CenterColumn.Items.forEach((it: any) => (it.ParentColumn = this.CenterColumn));
         }
         this.Parent?._pause._pause?.callFunction("SET_MENU_LEVEL", 1);
         this.Parent?._pause._pause?.callFunction("MENU_STATE", this.currentItemType);
@@ -286,10 +344,17 @@ export class SubmenuTab extends BaseTab {
     public override ShowColumns(): void {
         this.LeftColumn.ShowColumn();
         this.CenterColumn.ShowColumn();
-        if (this.currentItemType === LeftItemType.Settings) this.Parent?._pause._pause?.callFunction("SET_COLUMN_STATE", 0);
+        if (this.currentItemType === LeftItemType.Settings)
+            this.Parent?._pause._pause?.callFunction("SET_COLUMN_STATE", 0);
         this.Parent?._pause._pause?.callFunction("SET_COLUMN_FOCUS", 0, false, false, false);
         this.LeftColumn.InitColumnScroll(true, 1, ScrollType.UP_DOWN, ScrollArrowsPosition.RIGHT);
-        this.LeftColumn.SetColumnScroll(this.LeftColumn.Index, this.LeftColumn.Items.length, 16, "", this.LeftColumn.Items.length < 16);
+        this.LeftColumn.SetColumnScroll(
+            this.LeftColumn.Index,
+            this.LeftColumn.Items.length,
+            16,
+            "",
+            this.LeftColumn.Items.length < 16
+        );
     }
 
     public override SetDataSlot(slot: PM_COLUMNS, index: number): void {
@@ -310,9 +375,46 @@ export class SubmenuTab extends BaseTab {
             this.Parent._pause._pause?.callFunction("SET_MENU_LEVEL", this.CurrentColumnIndex + 1);
             this.Parent._pause._pause?.callFunction("MENU_SHIFT_DEPTH", 0, true, true);
             this.Parent.focusLevel = this.CurrentColumnIndex + 1;
-            this.Parent._pause._pause?.callFunction("SET_COLUMN_HIGHLIGHT", col.position as number, col.Index, true, true);
-            col.Items[col.Index].Selected = true;
+            this.Parent._pause._pause?.callFunction(
+                "SET_COLUMN_HIGHLIGHT",
+                col.position as number,
+                col.Index,
+                true,
+                true
+            );
+            this.setSelectedSafe(col.Items, col.Index, true);
         }
+    }
+
+    private clampIndex(items: any[], index: number): number {
+        if (!items.length) return 0;
+        if (index < 0) return 0;
+        if (index >= items.length) return items.length - 1;
+        return index;
+    }
+
+    private setSelectedSafe(items: any[], index: number, selected: boolean): void {
+        const item = items[index];
+        if (item) {
+            item.Selected = selected;
+        }
+    }
+
+    private syncCenterSelection(resetIndex: boolean): void {
+        if (!this.CenterColumn.Items.length) {
+            this.CenterColumn.Index = 0;
+            return;
+        }
+
+        if (resetIndex) {
+            this.CenterColumn.Index = 0;
+        } else {
+            this.CenterColumn.Index = this.clampIndex(this.CenterColumn.Items, this.CenterColumn.Index);
+        }
+
+        this.CenterColumn.Items.forEach((item: any, idx: number) => {
+            item.Selected = idx === this.CenterColumn.Index;
+        });
     }
 }
 

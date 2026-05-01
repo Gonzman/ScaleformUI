@@ -44,7 +44,6 @@ class Scaleforms {
 }
 
 export const ScaleformUI = new Main();
-ScaleformUI.Scaleforms = new Scaleforms();
 
 // Add event handler for "onResourceStop"
 on("onResourceStop", (resName: string) => {

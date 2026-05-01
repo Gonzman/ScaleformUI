@@ -276,12 +276,12 @@ export class TabView extends PauseMenuBase {
         } else if (IsDisabledControlJustPressed(2, 205)) {
             if (!this.IsCorona) {
                 if (this.FocusLevel > 0) this.FocusLevel = 0;
-                this.Index--;
+                this.Index++;
             }
         } else if (IsDisabledControlJustPressed(2, 206)) {
             if (!this.IsCorona) {
                 if (this.FocusLevel > 0) this.FocusLevel = 0;
-                this.Index++;
+                this.Index--;
             }
         } else if (IsDisabledControlJustReleased(2, 201)) {
             if (this.focusLevel === 0) {

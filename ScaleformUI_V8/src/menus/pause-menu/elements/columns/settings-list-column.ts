@@ -155,7 +155,7 @@ export class SettingsListColumn extends PM_Column {
         switch (item._itemId) {
             case 1:
                 const dit = item as any;
-                AddTextEntry("SCUI_SETTCOL_RLBL", dit.CurrentListItem);
+                AddTextEntry("SCUI_SETTCOL_RLBL", dit.CurrentListItem == null ? "" : `${dit.CurrentListItem}`);
                 BeginTextCommandScaleformString("SCUI_SETTCOL_RLBL");
                 EndTextCommandScaleformString_2();
                 break;
@@ -181,7 +181,7 @@ export class SettingsListColumn extends PM_Column {
         }
 
         ScaleformMovieMethodAddParamBool(item.Enabled);
-        AddTextEntry("SCUI_SETTCOL_LBL", item.Label);
+        AddTextEntry("SCUI_SETTCOL_LBL", item.Label == null ? "" : `${item.Label}`);
         BeginTextCommandScaleformString("SCUI_SETTCOL_LBL");
         EndTextCommandScaleformString_2();
         ScaleformMovieMethodAddParamBool(item.BlinkDescription);

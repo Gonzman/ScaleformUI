@@ -1,7 +1,5 @@
 import { Singleton } from "../../helpers/singleton.decorator";
 import { Scaleform, ScaleformHandler } from "../scaleform";
-import { cache } from "@babel/traverse";
-import scope = cache.scope;
 import { Delay, noop, waitUntilReturns } from "../../helpers/loaders";
 import { HudColor } from "../../elements/color";
 

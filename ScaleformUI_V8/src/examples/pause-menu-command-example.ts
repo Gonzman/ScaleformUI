@@ -47,14 +47,15 @@ function buildPauseMenuExample(): TabView {
 
 function buildTextTab(): TextTab {
     const textTab = new TextTab("TEXTTAB", "This is the title!", SColor.HUD_Freemode);
-    const txd = "scaleformui";
+    const runtimeTxdName = "scui_pause_example";
+    const runtimeTxdHandle = CreateRuntimeTxd(runtimeTxdName);
     const backgroundDui = CreateDui("https://giphy.com/embed/sxwk9hGlsULcYm6hDX", 1280, 720);
-    CreateRuntimeTextureFromDuiHandle(txd as any, "pausebigbg", GetDuiHandle(backgroundDui));
+    CreateRuntimeTextureFromDuiHandle(runtimeTxdHandle, "pausebigbg", GetDuiHandle(backgroundDui));
     const rightPic = CreateDui("https://i.giphy.com/sEU384ODAcnSg.webp", 288, 430);
-    CreateRuntimeTextureFromDuiHandle(txd as any, "rightPic", GetDuiHandle(rightPic));
+    CreateRuntimeTextureFromDuiHandle(runtimeTxdHandle, "rightPic", GetDuiHandle(rightPic));
 
-    textTab.UpdateBackground(txd, "pausebigbg");
-    textTab.AddPicture(txd, "rightPic");
+    textTab.UpdateBackground(runtimeTxdName, "pausebigbg");
+    textTab.AddPicture(runtimeTxdName, "rightPic");
 
     const lines = [
         "~y~Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",

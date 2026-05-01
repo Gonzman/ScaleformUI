@@ -10,6 +10,10 @@ export interface ScaleformHandler {
     destroy(): Promise<void>;
 }
 
+type ArgbColorLike = {
+    toArgb: () => number;
+};
+
 export class Scaleform {
     private deleted = false;
     private constructor(
@@ -22,7 +26,12 @@ export class Scaleform {
     }
 
     public static requestWideScreen(name: string) {
-        return new Scaleform(name, RequestScaleformMovieInstance(name));
+        try {
+            return new Scaleform(name, RequestScaleformMovieInstance(name));
+        } catch {
+            // Some runtimes can throw here during early startup; fall back to regular request.
+            return new Scaleform(name, RequestScaleformMovie(name));
+        }
     }
 
     public callFunction(
@@ -170,7 +179,7 @@ export class Scaleform {
             } else if (arg instanceof ScaleformLabel) {
                 BeginTextCommandScaleformString(arg.Label);
                 EndTextCommandScaleformString();
-            } else if (arg instanceof SColor) {
+            } else if (arg instanceof SColor || this.isArgbColorLike(arg)) {
                 ScaleformMovieMethodAddParamInt(arg.toArgb());
             } else {
                 throw new Error(
@@ -178,6 +187,10 @@ export class Scaleform {
                 );
             }
         }
+    }
+
+    private isArgbColorLike(value: unknown): value is ArgbColorLike {
+        return typeof value === "object" && value !== null && typeof (value as ArgbColorLike).toArgb === "function";
     }
 
     private addStringArg(arg: string) {

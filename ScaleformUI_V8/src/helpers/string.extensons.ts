@@ -1,3 +1,3 @@
-function isNullOrWhiteSpace(value: string | null): boolean {
-    return value === null || value.trim() === '';
+export function isNullOrWhiteSpace(value: string | null): boolean {
+    return value === null || value.trim() === "";
 }

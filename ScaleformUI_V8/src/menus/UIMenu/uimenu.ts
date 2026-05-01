@@ -1,6 +1,7 @@
 import { BaseMenu } from "menus/menu.base";
 import { PaginationHandler } from "./pagination-handler";
 import { SColor } from "elements/scolor";
+import { isNullOrWhiteSpace } from "helpers/string.extensons";
 import { UIMenuItem } from "./items/uimenuitem";
 import { MenuAnimationType, MenuBuildingAnimation } from "elements/animations";
 import { MenuScrollingType } from "elements/scrolling-type";
