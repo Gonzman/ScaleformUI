@@ -31,11 +31,35 @@ export class PauseMenuHandler {
     }
 
     load() {
-        if (this._header == null) this._header = Scaleform.requestWideScreen("pausemenuheader");
-        if (this._pause == null) this._pause = Scaleform.requestWideScreen("ScaleformUIPause");
-        if (this._lobby == null) this._lobby = Scaleform.requestWideScreen("lobbymenu");
-        if (this._pauseBG == null) this._pauseBG = Scaleform.requestWideScreen("store_background");
+        try {
+            console.log(
+                "[ScaleformUI] pausemenu.load() - before: header=",
+                this._header?.handle,
+                "pause=",
+                this._pause?.handle,
+                "lobby=",
+                this._lobby?.handle,
+                "pauseBG=",
+                this._pauseBG?.handle
+            );
+        } catch (e) {}
+        if (this._header == null || !this._header.isValid)
+            this._header = Scaleform.requestWideScreen("pausemenuheader");
+        if (this._pause == null || !this._pause.isValid) this._pause = Scaleform.requestWideScreen("ScaleformUIPause");
+        if (this._lobby == null || !this._lobby.isValid) this._lobby = Scaleform.requestWideScreen("lobbymenu");
+        if (this._pauseBG == null || !this._pauseBG.isValid)
+            this._pauseBG = Scaleform.requestWideScreen("store_background");
         this.Loaded = !!(this._header?.isLoaded && this._pause?.isLoaded && this._pauseBG?.isLoaded);
+        try {
+            console.log(
+                "[ScaleformUI] pausemenu.load() - after: header=",
+                this._header?.handle,
+                "pause=",
+                this._pause?.handle,
+                "loaded=",
+                this.Loaded
+            );
+        } catch (e) {}
     }
 
     fadeInMenus() {
@@ -337,6 +361,14 @@ export class PauseMenuHandler {
     }
 
     dispose() {
+        try {
+            console.log("[ScaleformUI] pausemenu.dispose() - clearing handles", {
+                header: this._header?.handle,
+                pause: this._pause?.handle,
+                lobby: this._lobby?.handle,
+                pauseBG: this._pauseBG?.handle
+            });
+        } catch (e) {}
         this._pause?.callFunction("CLEAR_ALL");
         this._header?.callFunction("CLEAR_ALL");
         this._lobby?.callFunction("CLEAR_ALL");

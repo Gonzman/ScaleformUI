@@ -128,8 +128,19 @@ export class TabView extends PauseMenuBase {
         super.Visible = value;
         this._pause.Visible = value;
         SetPauseMenuActive(value);
+        try {
+            console.log(
+                "[ScaleformUI] Pause Visible=",
+                value,
+                " header=",
+                this._pause._header?.handle,
+                " pause=",
+                this._pause._pause?.handle
+            );
+        } catch (e) {}
 
         if (value) {
+            this._pause.load();
             ActivateFrontendMenu(GetHashKey("FE_MENU_VERSION_EMPTY_NO_BACKGROUND"), true, -1);
             if (this.ShowBlur) {
                 AnimpostfxStop("PauseMenuOut");
@@ -232,14 +243,71 @@ export class TabView extends PauseMenuBase {
             this._pause._header?.handle ?? 0
         );
         if (successHeader && !this.IsCorona) {
-            if (eventTypeH === 5 && contextH === -1) {
+            try {
+                console.log("[ScaleformUI] HeaderCursor", {
+                    successHeader,
+                    eventTypeH,
+                    itemIdH,
+                    contextH,
+                    headerHandle: this._pause._header?.handle
+                });
+            } catch (e) {}
+
+            const headerIndexCandidates = [itemIdH, contextH, itemIdH - 1, contextH - 1];
+            const clickedTabIndex =
+                headerIndexCandidates.find(
+                    (value) => Number.isInteger(value) && value >= 0 && value < this.Tabs.length
+                ) ?? -1;
+
+            if ((eventTypeH === 5 || eventTypeH === 6) && clickedTabIndex >= 0) {
+                try {
+                    console.log("[ScaleformUI] SelectTabAttempt", {
+                        clickedTabIndex,
+                        tabsLength: this.Tabs.length,
+                        currentIndex: this.Index,
+                        focusLevel: this.FocusLevel,
+                        headerHandle: this._pause._header?.handle,
+                        pauseHandle: this._pause._pause?.handle
+                    });
+                } catch (e) {}
+
                 this.FocusLevel = 0;
-                this.CurrentTab.UnFocus();
-                this._pause.selectTab(itemIdH);
-                this.Index = itemIdH;
+                try {
+                    this._pause.selectTab(clickedTabIndex);
+                } catch (err) {
+                    try {
+                        console.error("[ScaleformUI] selectTab error", err);
+                    } catch (e) {}
+                }
+
+                try {
+                    this.Index = clickedTabIndex;
+                } catch (err) {
+                    try {
+                        console.error("[ScaleformUI] set Index error", err);
+                    } catch (e) {}
+                }
+
                 this.FocusLevel = 1;
-                this.Tabs[this.Index].Focus();
-                PlaySoundFrontend(-1, "SELECT", "HUD_FRONTEND_DEFAULT_SOUNDSET", true);
+                try {
+                    PlaySoundFrontend(-1, "SELECT", "HUD_FRONTEND_DEFAULT_SOUNDSET", true);
+                } catch (e) {}
+
+                try {
+                    console.log("[ScaleformUI] SelectTabDone", { newIndex: this.Index, focusLevel: this.FocusLevel });
+                } catch (e) {}
+
+                try {
+                    console.log("[ScaleformUI] PostSelectState", {
+                        Visible: this.Visible,
+                        currentPauseMenu: MenuHandler._currentPauseMenu ? true : false,
+                        tabVisible: this.Tabs[this.Index] ? this.Tabs[this.Index].Visible : null,
+                        headerValid: this._pause._header?.isValid,
+                        pauseValid: this._pause._pause?.isValid
+                    });
+                } catch (e) {}
+
+                return;
             } else if (eventTypeH === 6 && contextH === 1000) {
                 this.FocusLevel = 0;
                 this.Tabs[this.Index].UnFocus();
@@ -299,7 +367,6 @@ export class TabView extends PauseMenuBase {
                     this.CurrentTab.currentItemType === LeftItemType.Statistics)
             ) {
                 PlaySoundFrontend(-1, TabView.AUDIO_UPDOWN, TabView.AUDIO_LIBRARY, true);
-                this._pause._pause?.callFunction("SET_COLUMN_INPUT_EVENT", 1, 8);
             }
         } else if (IsDisabledControlJustPressed(2, 242)) {
             if (this.CurrentTab instanceof TextTab) {
@@ -311,7 +378,6 @@ export class TabView extends PauseMenuBase {
                     this.CurrentTab.currentItemType === LeftItemType.Statistics)
             ) {
                 PlaySoundFrontend(-1, TabView.AUDIO_UPDOWN, TabView.AUDIO_LIBRARY, true);
-                this._pause._pause?.callFunction("SET_COLUMN_INPUT_EVENT", 1, 9);
             }
         }
     }

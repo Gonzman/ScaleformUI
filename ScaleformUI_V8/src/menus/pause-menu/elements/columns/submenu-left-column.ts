@@ -14,6 +14,7 @@ export class SubmenuLeftColumn extends PM_Column {
     }
 
     public AddItem(item: TabLeftItem): void {
+        item.ItemIndex = this.Items.length;
         this.Items.push(item);
     }
 
@@ -27,31 +28,47 @@ export class SubmenuLeftColumn extends PM_Column {
 
     public override GoUp(): void {
         if (!this.Items.length) return;
-        this.Items[this.Index].Selected = false;
+        try {
+            this.Items[this.Index].Selected = false;
+        } catch (e) {
+            /* ignore */
+        }
         this.index--;
         if (this.index < 0) this.index = this.Items.length - 1;
-        this.Items[this.Index].Selected = true;
-        this.populateCenterFromSelection();
+        try {
+            this.Items[this.Index].Selected = true;
+        } catch (e) {
+            /* ignore */
+        }
+        this.refreshCenterFromSelection();
     }
 
     public override GoDown(): void {
         if (!this.Items.length) return;
-        this.Items[this.Index].Selected = false;
+        try {
+            this.Items[this.Index].Selected = false;
+        } catch (e) {
+            /* ignore */
+        }
         this.index++;
         if (this.index >= this.Items.length) this.index = 0;
-        this.Items[this.Index].Selected = true;
-        this.populateCenterFromSelection();
+        try {
+            this.Items[this.Index].Selected = true;
+        } catch (e) {
+            /* ignore */
+        }
+        this.refreshCenterFromSelection();
     }
 
-    private populateCenterFromSelection(): void {
+    private refreshCenterFromSelection(): void {
         const tab: any = this.Parent;
         const center = tab?.CenterColumn;
         if (!center) return;
-        center.Items = [];
+        center.Items.length = 0;
         if (this.currentItemType !== LeftItemType.Empty) {
             const leftItem = this.Items[this.Index] as TabLeftItem;
-            center.Items = [...leftItem.ItemList];
-            center.Items.forEach((item: any) => item.ParentColumn = center);
+            center.Items.push(...leftItem.ItemList);
+            center.Items.forEach((item: any) => (item.ParentColumn = center));
         }
         if (tab?.Visible && tab?.Parent?.Visible) {
             ScaleformUI.Scaleforms._pauseMenu._pause?.callFunction("MENU_STATE", this.currentItemType);
