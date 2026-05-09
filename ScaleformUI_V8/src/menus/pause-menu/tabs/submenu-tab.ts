@@ -94,12 +94,16 @@ export class SubmenuTab extends BaseTab {
 
     public override GoUp(): void {
         if (!this.Focused) return;
+        if (!this.consumeVerticalNavigation(-1)) return;
+        if (this.currentItemType !== LeftItemType.Settings && this.CurrentColumnIndex !== 0) {
+            this.CurrentColumnIndex = 0;
+            if (this.Parent && this.Parent.FocusLevel > 1) this.Parent.FocusLevel = 1;
+        }
         if (this.CurrentColumnIndex === 0) {
             this.LeftColumn.GoUp();
             this.CenterColumn.currentColumnType = this.currentItemType;
             this.StateChange(this.currentItemType);
             this.Refresh(false);
-            this.Parent?._pause._pause?.callFunction("SET_COLUMN_INPUT_EVENT", this.CurrentColumnIndex, 8);
             return;
         }
         if (this.CurrentColumnIndex === 1) {
@@ -118,12 +122,16 @@ export class SubmenuTab extends BaseTab {
 
     public override GoDown(): void {
         if (!this.Focused) return;
+        if (!this.consumeVerticalNavigation(1)) return;
+        if (this.currentItemType !== LeftItemType.Settings && this.CurrentColumnIndex !== 0) {
+            this.CurrentColumnIndex = 0;
+            if (this.Parent && this.Parent.FocusLevel > 1) this.Parent.FocusLevel = 1;
+        }
         if (this.CurrentColumnIndex === 0) {
             this.LeftColumn.GoDown();
             this.CenterColumn.currentColumnType = this.currentItemType;
             this.StateChange(this.currentItemType);
             this.Refresh(false);
-            this.Parent?._pause._pause?.callFunction("SET_COLUMN_INPUT_EVENT", this.CurrentColumnIndex, 9);
             return;
         }
         if (this.CurrentColumnIndex === 1) {
@@ -294,6 +302,8 @@ export class SubmenuTab extends BaseTab {
 
     public override Focus(): void {
         super.Focus();
+        this.CurrentColumnIndex = 0;
+        if (this.Parent && this.Parent.FocusLevel > 1) this.Parent.FocusLevel = 1;
         this.LeftColumn.Index = this.LeftColumn.index;
         this.LeftColumn.HighlightColumn(true, false, true);
         this.setSelectedSafe(this.LeftColumn.Items, this.LeftColumn.Index, true);

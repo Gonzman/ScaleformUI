@@ -158,9 +158,11 @@ export class PlayerListColumn extends PM_Column {
             this.index--;
             if (this.index < 0) this.index = this.Items.length - 1;
             ScaleformUI.Scaleforms._pauseMenu._pause?.callFunction(
-                "SET_COLUMN_INPUT_EVENT",
+                "SET_COLUMN_HIGHLIGHT",
                 this.position as number,
-                8
+                this.index,
+                false,
+                false
             );
             try {
                 this.CurrentItem.Selected = true;
@@ -183,9 +185,11 @@ export class PlayerListColumn extends PM_Column {
             this.index++;
             if (this.index >= this.Items.length) this.index = 0;
             ScaleformUI.Scaleforms._pauseMenu._pause?.callFunction(
-                "SET_COLUMN_INPUT_EVENT",
+                "SET_COLUMN_HIGHLIGHT",
                 this.position as number,
-                9
+                this.index,
+                false,
+                false
             );
             try {
                 this.CurrentItem.Selected = true;

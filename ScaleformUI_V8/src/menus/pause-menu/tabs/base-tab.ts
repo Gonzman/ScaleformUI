@@ -31,6 +31,8 @@ export class BaseTab {
     public Active = false;
     public Parent: TabView | null = null;
     public CurrentColumnIndex = 0;
+    private lastVerticalNavAt = 0;
+    private lastVerticalNavDir = 0;
 
     constructor(name: string, color: SColor) {
         this.Title = name;
@@ -64,6 +66,16 @@ export class BaseTab {
     public GoBack(): void {}
     public MouseEvent(_eventType: number, _context: number, _index: number): void {}
     public StateChange(_state: number): void {}
+
+    protected consumeVerticalNavigation(dir: -1 | 1, minIntervalMs: number = 60): boolean {
+        const now = GetGameTimer();
+        if (this.lastVerticalNavDir === dir && now - this.lastVerticalNavAt < minIntervalMs) {
+            return false;
+        }
+        this.lastVerticalNavAt = now;
+        this.lastVerticalNavDir = dir;
+        return true;
+    }
 
     public GetColumnAtPosition(position: PM_COLUMNS | number): PM_Column | null {
         const pos = typeof position === "number" ? position as PM_COLUMNS : position;

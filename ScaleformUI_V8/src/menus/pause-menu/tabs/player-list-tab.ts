@@ -112,6 +112,7 @@ export class PlayerListTab extends BaseTab {
 
     public override GoUp(): void {
         if (!this.Focused || !this.CurrentColumn) return;
+        if (!this.consumeVerticalNavigation(-1)) return;
         this.CurrentColumn.GoUp();
         this.CurrentColumn.SetColumnScroll(
             this.CurrentColumn.Index + 1,
@@ -124,6 +125,7 @@ export class PlayerListTab extends BaseTab {
 
     public override GoDown(): void {
         if (!this.Focused || !this.CurrentColumn) return;
+        if (!this.consumeVerticalNavigation(1)) return;
         this.CurrentColumn.GoDown();
         this.CurrentColumn.SetColumnScroll(
             this.CurrentColumn.Index + 1,

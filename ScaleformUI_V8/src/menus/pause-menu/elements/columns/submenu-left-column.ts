@@ -28,36 +28,16 @@ export class SubmenuLeftColumn extends PM_Column {
 
     public override GoUp(): void {
         if (!this.Items.length) return;
-        try {
-            this.Items[this.Index].Selected = false;
-        } catch (e) {
-            /* ignore */
-        }
-        this.index--;
-        if (this.index < 0) this.index = this.Items.length - 1;
-        try {
-            this.Items[this.Index].Selected = true;
-        } catch (e) {
-            /* ignore */
-        }
+        this.Index = this.Index - 1;
         this.refreshCenterFromSelection();
+        this.SetColumnScroll(this.Index + 1, this.Items.length, this.VisibleItems, "", this.Items.length < this.VisibleItems);
     }
 
     public override GoDown(): void {
         if (!this.Items.length) return;
-        try {
-            this.Items[this.Index].Selected = false;
-        } catch (e) {
-            /* ignore */
-        }
-        this.index++;
-        if (this.index >= this.Items.length) this.index = 0;
-        try {
-            this.Items[this.Index].Selected = true;
-        } catch (e) {
-            /* ignore */
-        }
+        this.Index = this.Index + 1;
         this.refreshCenterFromSelection();
+        this.SetColumnScroll(this.Index + 1, this.Items.length, this.VisibleItems, "", this.Items.length < this.VisibleItems);
     }
 
     private refreshCenterFromSelection(): void {

@@ -277,9 +277,11 @@ export class SettingsListColumn extends PM_Column {
                 await Delay(0);
             } while (this.CurrentItem && this.CurrentItem.Jumpable);
             ScaleformUI.Scaleforms._pauseMenu._pause?.callFunction(
-                "SET_COLUMN_INPUT_EVENT",
+                "SET_COLUMN_HIGHLIGHT",
                 this.position as number,
-                8
+                this.index,
+                false,
+                false
             );
             AddTextEntry("PAUSEMENU_Current_Description", this.CurrentItem?.Description ?? "");
             try {
@@ -303,9 +305,11 @@ export class SettingsListColumn extends PM_Column {
                 await Delay(0);
             } while (this.CurrentItem && this.CurrentItem.Jumpable);
             ScaleformUI.Scaleforms._pauseMenu._pause?.callFunction(
-                "SET_COLUMN_INPUT_EVENT",
+                "SET_COLUMN_HIGHLIGHT",
                 this.position as number,
-                9
+                this.index,
+                false,
+                false
             );
             AddTextEntry("PAUSEMENU_Current_Description", this.CurrentItem?.Description ?? "");
             try {
