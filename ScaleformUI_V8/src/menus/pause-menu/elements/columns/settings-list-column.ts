@@ -3,8 +3,9 @@ import { ScaleformUI } from "scaleforms/scaleformui/main";
 import { ChangeDirection } from "../../../UIMenu/items/uimenudynamiclistitem";
 import { SColor } from "elements/scolor";
 import { Delay } from "helpers/loaders";
+import SettingsItem from "../items/settings-items/settings-item";
 
-export type SettingItemSelected = (item: any, index: number) => void;
+export type SettingItemSelected = (item: SettingsItem, index: number) => void;
 export type IndexChanged = (index: number) => void;
 
 export class SettingsListColumn extends PM_Column {
@@ -28,14 +29,14 @@ export class SettingsListColumn extends PM_Column {
         }
     }
 
-    public AddItem(item: any): void {
+    public AddItem(item: SettingsItem): void {
         this.AddSettings(item);
     }
 
-    public AddSettings(item: any): void {
-        const it: any = item as any;
+    public AddSettings(item: SettingsItem): void {
+        const it: SettingsItem = item;
         try {
-            if (it.mainColor === SColor.HUD_Panel_light) {
+            if (it.MainColor === SColor.HUD_Panel_light) {
                 it.MainColor = SColor.HUD_Pause_bg;
             }
         } catch (e) {}
@@ -50,7 +51,7 @@ export class SettingsListColumn extends PM_Column {
         }
     }
 
-    public RemoveItem(item: any): void {
+    public RemoveItem(item: SettingsItem): void {
         const idx = this.Items.indexOf(item);
         if (idx >= 0) this.RemoveSlot(idx);
     }
@@ -119,7 +120,7 @@ export class SettingsListColumn extends PM_Column {
         if (this.visible) this.SendItemToScaleform(index, false, false, true);
     }
 
-    public AddItemAt(item: any, idx: number): void {
+    public AddItemAt(item: SettingsItem, idx: number): void {
         if (!this.visible) return;
         if (idx >= this.Items.length) return;
         this.Items.splice(idx, 0, item);
@@ -150,98 +151,98 @@ export class SettingsListColumn extends PM_Column {
         ScaleformMovieMethodAddParamInt(i);
         ScaleformMovieMethodAddParamInt(0);
         ScaleformMovieMethodAddParamInt(0);
-        ScaleformMovieMethodAddParamInt(item._itemId);
+        ScaleformMovieMethodAddParamInt(item._itemId ?? 0);
 
         switch (item._itemId) {
             case 1:
-                const dit = item as any;
+                const dit: any = item;
                 AddTextEntry("SCUI_SETTCOL_RLBL", dit.CurrentListItem == null ? "" : `${dit.CurrentListItem}`);
                 BeginTextCommandScaleformString("SCUI_SETTCOL_RLBL");
                 EndTextCommandScaleformString_2();
                 break;
             case 2:
-                const check = item as any;
-                ScaleformMovieMethodAddParamBool(check.Checked);
+                const check: any = item;
+                ScaleformMovieMethodAddParamBool(check.Checked ?? false);
                 break;
             case 3:
-                const prItem = item as any;
-                ScaleformMovieMethodAddParamInt(prItem.Value);
+                const prItem: any = item;
+                ScaleformMovieMethodAddParamInt(prItem.Value ?? 0);
                 break;
             case 4:
-                const slItem = item as any;
-                ScaleformMovieMethodAddParamInt(slItem.Value);
+                const slItem: any = item;
+                ScaleformMovieMethodAddParamInt(slItem.Value ?? 0);
                 break;
             case 5:
-                const statsItem = item as any;
-                ScaleformMovieMethodAddParamInt(statsItem.Value);
+                const statsItem: any = item;
+                ScaleformMovieMethodAddParamInt(statsItem.Value ?? 0);
                 break;
             default:
                 ScaleformMovieMethodAddParamInt(0);
                 break;
         }
 
-        ScaleformMovieMethodAddParamBool(item.Enabled);
+        ScaleformMovieMethodAddParamBool(item.Enabled ?? false);
         AddTextEntry("SCUI_SETTCOL_LBL", item.Label == null ? "" : `${item.Label}`);
         BeginTextCommandScaleformString("SCUI_SETTCOL_LBL");
         EndTextCommandScaleformString_2();
-        ScaleformMovieMethodAddParamBool(item.BlinkDescription);
+        ScaleformMovieMethodAddParamBool(item.BlinkDescription ?? false);
 
         // The C# implementation encodes many different branches; we simplify by attempting to follow it
-        if ((item as any)._itemId === 1) {
+        if (item._itemId === 1) {
             // dynamic list
-            ScaleformMovieMethodAddParamInt(item.MainColor?.ArgbValue ?? 0);
-            ScaleformMovieMethodAddParamInt(item.HighlightColor?.ArgbValue ?? 0);
+            ScaleformMovieMethodAddParamInt(item.MainColor?.getArgbValue() ?? 0);
+            ScaleformMovieMethodAddParamInt(item.HighlightColor?.getArgbValue() ?? 0);
             ScaleformMovieMethodAddParamInt(item.LeftBadge ?? 0);
             ScaleformMovieMethodAddParamPlayerNameString(item.customLeftBadge?.Key ?? "");
             ScaleformMovieMethodAddParamPlayerNameString(item.customLeftBadge?.Value ?? "");
-            ScaleformMovieMethodAddParamPlayerNameString(item.labelFont?.FontName ?? "");
-            ScaleformMovieMethodAddParamPlayerNameString(item.rightLabelFont?.FontName ?? "");
-        } else if ((item as any)._itemId === 2) {
+            ScaleformMovieMethodAddParamPlayerNameString(item.labelFont?.fontName ?? "");
+            ScaleformMovieMethodAddParamPlayerNameString(item.rightLabelFont?.fontName ?? "");
+        } else if (item._itemId === 2) {
             // checkbox
             ScaleformMovieMethodAddParamInt(item.Style ?? 0);
-            ScaleformMovieMethodAddParamInt(item.MainColor?.ArgbValue ?? 0);
-            ScaleformMovieMethodAddParamInt(item.HighlightColor?.ArgbValue ?? 0);
+            ScaleformMovieMethodAddParamInt(item.MainColor?.getArgbValue() ?? 0);
+            ScaleformMovieMethodAddParamInt(item.HighlightColor?.getArgbValue() ?? 0);
             ScaleformMovieMethodAddParamInt(item.LeftBadge ?? 0);
             ScaleformMovieMethodAddParamPlayerNameString(item.customLeftBadge?.Key ?? "");
             ScaleformMovieMethodAddParamPlayerNameString(item.customLeftBadge?.Value ?? "");
-            ScaleformMovieMethodAddParamPlayerNameString(item.labelFont?.FontName ?? "");
-        } else if ((item as any)._itemId === 3) {
+            ScaleformMovieMethodAddParamPlayerNameString(item.labelFont?.fontName ?? "");
+        } else if (item._itemId === 3) {
             // slider
             ScaleformMovieMethodAddParamInt(item._max ?? 0);
             ScaleformMovieMethodAddParamInt(item._multiplier ?? 0);
-            ScaleformMovieMethodAddParamInt(item.MainColor?.ArgbValue ?? 0);
-            ScaleformMovieMethodAddParamInt(item.HighlightColor?.ArgbValue ?? 0);
-            ScaleformMovieMethodAddParamInt(item.SliderColor?.ArgbValue ?? 0);
+            ScaleformMovieMethodAddParamInt(item.MainColor?.getArgbValue() ?? 0);
+            ScaleformMovieMethodAddParamInt(item.HighlightColor?.getArgbValue() ?? 0);
+            ScaleformMovieMethodAddParamInt(item.SliderColor?.getArgbValue() ?? 0);
             ScaleformMovieMethodAddParamBool(item._heritage ?? false);
             ScaleformMovieMethodAddParamInt(item.LeftBadge ?? 0);
             ScaleformMovieMethodAddParamPlayerNameString(item.customLeftBadge?.Key ?? "");
             ScaleformMovieMethodAddParamPlayerNameString(item.customLeftBadge?.Value ?? "");
-            ScaleformMovieMethodAddParamPlayerNameString(item.labelFont?.FontName ?? "");
-        } else if ((item as any)._itemId === 4) {
+            ScaleformMovieMethodAddParamPlayerNameString(item.labelFont?.fontName ?? "");
+        } else if (item._itemId === 4) {
             // progress
             ScaleformMovieMethodAddParamInt(item._max ?? 0);
             ScaleformMovieMethodAddParamInt(item._multiplier ?? 0);
-            ScaleformMovieMethodAddParamInt(item.MainColor?.ArgbValue ?? 0);
-            ScaleformMovieMethodAddParamInt(item.HighlightColor?.ArgbValue ?? 0);
-            ScaleformMovieMethodAddParamInt(item.SliderColor?.ArgbValue ?? 0);
+            ScaleformMovieMethodAddParamInt(item.MainColor?.getArgbValue() ?? 0);
+            ScaleformMovieMethodAddParamInt(item.HighlightColor?.getArgbValue() ?? 0);
+            ScaleformMovieMethodAddParamInt(item.SliderColor?.getArgbValue() ?? 0);
             ScaleformMovieMethodAddParamInt(item.LeftBadge ?? 0);
             ScaleformMovieMethodAddParamPlayerNameString(item.customLeftBadge?.Key ?? "");
             ScaleformMovieMethodAddParamPlayerNameString(item.customLeftBadge?.Value ?? "");
-            ScaleformMovieMethodAddParamPlayerNameString(item.labelFont?.FontName ?? "");
-        } else if ((item as any)._itemId === 5) {
+            ScaleformMovieMethodAddParamPlayerNameString(item.labelFont?.fontName ?? "");
+        } else if (item._itemId === 5) {
             ScaleformMovieMethodAddParamInt(item.Type ?? 0);
-            ScaleformMovieMethodAddParamInt(item.SliderColor?.ArgbValue ?? 0);
-            ScaleformMovieMethodAddParamInt(item.MainColor?.ArgbValue ?? 0);
-            ScaleformMovieMethodAddParamInt(item.HighlightColor?.ArgbValue ?? 0);
-        } else if ((item as any) instanceof Object && (item as any)._itemId === 9999) {
+            ScaleformMovieMethodAddParamInt(item.SliderColor?.getArgbValue() ?? 0);
+            ScaleformMovieMethodAddParamInt(item.MainColor?.getArgbValue() ?? 0);
+            ScaleformMovieMethodAddParamInt(item.HighlightColor?.getArgbValue() ?? 0);
+        } else if (item instanceof Object && item._itemId === 9999) {
             // separator adaptation
             ScaleformMovieMethodAddParamBool(item.Jumpable ?? false);
-            ScaleformMovieMethodAddParamInt(item.MainColor?.ArgbValue ?? 0);
-            ScaleformMovieMethodAddParamInt(item.HighlightColor?.ArgbValue ?? 0);
-            ScaleformMovieMethodAddParamPlayerNameString(item.labelFont?.FontName ?? "");
+            ScaleformMovieMethodAddParamInt(item.MainColor?.getArgbValue() ?? 0);
+            ScaleformMovieMethodAddParamInt(item.HighlightColor?.getArgbValue() ?? 0);
+            ScaleformMovieMethodAddParamPlayerNameString(item.labelFont?.fontName ?? "");
         } else {
-            ScaleformMovieMethodAddParamInt(item.MainColor?.ArgbValue ?? 0);
-            ScaleformMovieMethodAddParamInt(item.HighlightColor?.ArgbValue ?? 0);
+            ScaleformMovieMethodAddParamInt(item.MainColor?.getArgbValue() ?? 0);
+            ScaleformMovieMethodAddParamInt(item.HighlightColor?.getArgbValue() ?? 0);
             BeginTextCommandScaleformString("CELL_EMAIL_BCON");
             AddTextComponentScaleform(item.RightLabel ?? "");
             EndTextCommandScaleformString_2();
@@ -251,8 +252,8 @@ export class SettingsListColumn extends PM_Column {
             ScaleformMovieMethodAddParamInt(item.RightBadge ?? 0);
             ScaleformMovieMethodAddParamPlayerNameString(item.customRightBadge?.Key ?? "");
             ScaleformMovieMethodAddParamPlayerNameString(item.customRightBadge?.Value ?? "");
-            ScaleformMovieMethodAddParamPlayerNameString(item.labelFont?.FontName ?? "");
-            ScaleformMovieMethodAddParamPlayerNameString(item.rightLabelFont?.FontName ?? "");
+            ScaleformMovieMethodAddParamPlayerNameString(item.labelFont?.fontName ?? "");
+            ScaleformMovieMethodAddParamPlayerNameString(item.rightLabelFont?.fontName ?? "");
         }
 
         ScaleformMovieMethodAddParamBool(item.KeepTextColorWhite ?? false);
@@ -327,13 +328,13 @@ export class SettingsListColumn extends PM_Column {
             item.Checked = !item.Checked;
             item.checkEmit?.();
         } else if (item._itemId === 3) {
-            item.Value--;
+            item.Value = (item.Value ?? 0) - 1;
         } else if (item._itemId === 4) {
-            item.Value--;
+            item.Value = (item.Value ?? 0) - 1;
         } else if (item._itemId === 5) {
-            item.Value--;
+            item.Value = (item.Value ?? 0) - 1;
         } else if (typeof item.listChangedEmit === "function") {
-            item.Index--;
+            item.Index = (item.Index ?? 0) - 1;
             item.listChangedEmit();
         } else if (item.callback?.toDelegate) {
             try {
@@ -357,13 +358,13 @@ export class SettingsListColumn extends PM_Column {
             item.Checked = !item.Checked;
             item.checkEmit?.();
         } else if (item._itemId === 3) {
-            item.Value++;
+            item.Value = (item.Value ?? 0) + 1;
         } else if (item._itemId === 4) {
-            item.Value++;
+            item.Value = (item.Value ?? 0) + 1;
         } else if (item._itemId === 5) {
-            item.Value++;
+            item.Value = (item.Value ?? 0) + 1;
         } else if (typeof item.listChangedEmit === "function") {
-            item.Index++;
+            item.Index = (item.Index ?? 0) + 1;
             item.listChangedEmit();
         } else if (item.callback?.toDelegate) {
             try {
@@ -452,45 +453,52 @@ export class SettingsListColumn extends PM_Column {
     public UpdateItemLabels(index: number, leftLabel: string, rightLabel: string): void {
         if (this.visible) {
             if (index >= this.Items.length) return;
-            this.Items[index].Label = leftLabel;
-            this.Items[index].SetRightLabel?.(rightLabel);
+            const item: any = this.Items[index];
+            item.Label = leftLabel;
+            item.SetRightLabel?.(rightLabel);
         }
     }
 
     public UpdateItemBlinkDescription(index: number, blink: boolean): void {
         if (this.visible) {
             if (index >= this.Items.length) return;
-            this.Items[index].BlinkDescription = blink;
+            const item: any = this.Items[index];
+            item.BlinkDescription = blink;
         }
     }
     public UpdateItemLabel(index: number, label: string): void {
         if (this.visible) {
             if (index >= this.Items.length) return;
-            this.Items[index].Label = label;
+            const item: any = this.Items[index];
+            item.Label = label;
         }
     }
     public UpdateItemRightLabel(index: number, label: string): void {
         if (this.visible) {
             if (index >= this.Items.length) return;
-            this.Items[index].SetRightLabel?.(label);
+            const item: any = this.Items[index];
+            item.SetRightLabel?.(label);
         }
     }
-    public UpdateItemLeftBadge(index: number, badge: any): void {
+    public UpdateItemLeftBadge(index: number, badge: number): void {
         if (this.visible) {
             if (index >= this.Items.length) return;
-            this.Items[index].SetLeftBadge?.(badge);
+            const item: any = this.Items[index];
+            item.SetLeftBadge?.(badge);
         }
     }
-    public UpdateItemRightBadge(index: number, badge: any): void {
+    public UpdateItemRightBadge(index: number, badge: number): void {
         if (this.visible) {
             if (index >= this.Items.length) return;
-            this.Items[index].SetRightBadge?.(badge);
+            const item: any = this.Items[index];
+            item.SetRightBadge?.(badge);
         }
     }
     public EnableItem(index: number, enable: boolean): void {
         if (this.visible) {
             if (index >= this.Items.length) return;
-            this.Items[index].Enabled = enable;
+            const item: any = this.Items[index];
+            item.Enabled = enable;
         }
     }
 
@@ -500,12 +508,12 @@ export class SettingsListColumn extends PM_Column {
             try {
                 this.CurrentItem.Selected = false;
             } catch (e) {}
-            this._unfilteredItems = [...this.Items];
+            this._unfilteredItems = [...(this.Items as any)];
             this._unfilteredSelection = this.CurrentSelection;
             this.Clear();
-            const list: any[] = this._unfilteredItems as any[];
+            const list: any[] = this._unfilteredItems;
             list.sort(compare);
-            this.Items = [...list];
+            this.Items = [...list] as any;
             if (this.visible) {
                 this.Populate();
                 this.ShowColumn();
@@ -520,9 +528,9 @@ export class SettingsListColumn extends PM_Column {
         if (!this.visible) return;
         if (!predicate) throw new Error("predicate is null");
         try {
-            this._unfilteredItems = [...this.Items];
+            this._unfilteredItems = [...(this.Items as any)];
             this._unfilteredSelection = this.CurrentSelection;
-            const filteredItems = this.Items.filter((it) => predicate(it));
+            const filteredItems = (this.Items as any[]).filter((it) => predicate(it));
             if (!filteredItems.length) {
                 console.debug("ScaleformUI - No items were found, resetting the filter");
                 this._unfilteredItems = [];
@@ -533,7 +541,7 @@ export class SettingsListColumn extends PM_Column {
                 this.Items[this.CurrentSelection].Selected = false;
             } catch (e) {}
             this.Clear();
-            this.Items = [...filteredItems];
+            this.Items = [...filteredItems] as any;
             this.CurrentSelection = 0;
             if (this.visible) {
                 this.Populate();
@@ -554,7 +562,7 @@ export class SettingsListColumn extends PM_Column {
                     this.CurrentItem.Selected = false;
                 } catch (e) {}
                 this.Clear();
-                this.Items = [...this._unfilteredItems];
+                this.Items = [...this._unfilteredItems] as any;
                 this.CurrentSelection = this._unfilteredSelection;
                 if (this.visible) {
                     this.Populate();

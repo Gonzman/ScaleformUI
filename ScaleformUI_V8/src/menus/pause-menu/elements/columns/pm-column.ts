@@ -1,5 +1,6 @@
 import { SColor } from "elements/scolor";
 import { ScaleformUI } from "scaleforms/scaleformui/main";
+import { PauseMenuItem } from "../items";
 
 export enum PM_COLUMNS {
     LEFT,
@@ -27,7 +28,7 @@ export class PM_Column {
     public type: number = -1;
     private columnVisible: boolean = false;
 
-    public Items: any[] = [];
+    public Items: PauseMenuItem[] = [];
     public VisibleItems: number = 0;
     public Focused: boolean = false;
     public CaptionLeft: string = "";

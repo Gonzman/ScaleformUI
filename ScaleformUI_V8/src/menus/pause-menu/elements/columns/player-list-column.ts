@@ -1,14 +1,16 @@
 import PM_Column, { PLT_COLUMNS } from "./pm-column";
 import { ScaleformUI } from "scaleforms/scaleformui/main";
+import { LobbyItem } from "../items/lobby-item";
 
 export type PlayerItemSelected = (item: any, index: number) => void;
 export type IndexChanged = (index: number) => void;
 
 export class PlayerListColumn extends PM_Column {
     public OnIndexChanged?: IndexChanged;
-    private _unfilteredItems: any[] = [];
+    private _unfilteredItems: LobbyItem[] = [];
     private _unfilteredSelection: number = 0;
     public OnPlayerItemActivated?: PlayerItemSelected;
+    public override Items: LobbyItem[] = [];
 
     constructor(label: string, maxItems: number = 16) {
         super(-1);

@@ -5,6 +5,7 @@ import { SColor } from "elements/scolor";
 import { ScaleformUI } from "scaleforms/scaleformui/main";
 import PM_Column, { PLT_COLUMNS, PM_COLUMNS } from "../columns/pm-column";
 import type { CrewTag } from "../items/friend-item";
+import { PauseMenuItem } from "../items";
 
 export interface MissionDetailsItem {
     Label: ScaleformLabel | string;
@@ -30,7 +31,11 @@ export class MissionDetailsPanel extends PM_Column {
     public set Title(value: string) {
         this.title = value;
         if (this.visible) {
-            ScaleformUI.Scaleforms._pauseMenu._pause?.callFunction("SET_COLUMN_TITLE", this.position as number, this.title);
+            ScaleformUI.Scaleforms._pauseMenu._pause?.callFunction(
+                "SET_COLUMN_TITLE",
+                this.position as number,
+                this.title
+            );
         }
     }
 
@@ -83,12 +88,21 @@ export class MissionDetailsPanel extends PM_Column {
         }
     }
 
-    public SendItemToScaleform(i: number, update: boolean = false, newItem: boolean = false, isSlot: boolean = false): void {
+    private getItem(index: number): MissionDetailsItem {
+        return this.Items[index] as unknown as MissionDetailsItem;
+    }
+
+    public SendItemToScaleform(
+        i: number,
+        update: boolean = false,
+        newItem: boolean = false,
+        isSlot: boolean = false
+    ): void {
         if (!this.visible || i >= this.Items.length) return;
         const pause = ScaleformUI.Scaleforms._pauseMenu._pause;
         if (!pause) return;
 
-        const item = this.Items[i] as MissionDetailsItem;
+        const item = this.getItem(i);
         let sfMethod = "SET_DATA_SLOT";
         if (update) sfMethod = "UPDATE_SLOT";
         if (newItem) sfMethod = "SET_DATA_SLOT_SPLICE";
@@ -111,7 +125,9 @@ export class MissionDetailsPanel extends PM_Column {
         switch (item.Type) {
             case 2:
                 PushScaleformMovieFunctionParameterInt(item.Icon ?? 0);
-                PushScaleformMovieFunctionParameterInt(item.IconColor?.getArgbValue() ?? SColor.HUD_None.getArgbValue());
+                PushScaleformMovieFunctionParameterInt(
+                    item.IconColor?.getArgbValue() ?? SColor.HUD_None.getArgbValue()
+                );
                 PushScaleformMovieFunctionParameterBool(item.Tick ?? false);
                 break;
             case 3:
@@ -119,7 +135,9 @@ export class MissionDetailsPanel extends PM_Column {
                 PushScaleformMovieFunctionParameterBool(false);
                 break;
         }
-        PushScaleformMovieFunctionParameterString(item.LabelFont?.fontName ?? ScaleformFonts.CHALET_LONDON_NINETEENSIXTY.fontName);
+        PushScaleformMovieFunctionParameterString(
+            item.LabelFont?.fontName ?? ScaleformFonts.CHALET_LONDON_NINETEENSIXTY.fontName
+        );
         PushScaleformMovieFunctionParameterString(
             item._rightLabelFont?.fontName ?? ScaleformFonts.CHALET_LONDON_NINETEENSIXTY.fontName
         );
@@ -142,7 +160,7 @@ export class MissionDetailsPanel extends PM_Column {
     }
 
     public override AddItem(item: MissionDetailsItem): void {
-        this.Items.push(item);
+        this.Items.push(item as unknown as PauseMenuItem);
         if (this.visible && this.Items.length <= this.VisibleItems) {
             this.AddSlot(this.Items.length - 1);
         }
