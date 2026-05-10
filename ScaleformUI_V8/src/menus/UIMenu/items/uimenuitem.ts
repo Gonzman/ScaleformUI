@@ -11,6 +11,8 @@ import type { UIMenuPanel } from "../panels/uimenupanel";
 import type { UIMenuSidePanel } from "../sidepanels/uimenusidepanel";
 import type { UIMissionDetailsPanel } from "../sidepanels/DetailsPanel/uimissiondetailspanel";
 import { PauseMenuItem } from "menus/pause-menu/elements/items";
+import { MainView } from "menus/lobby-menu/main-view";
+import { TabView } from "menus/pause-menu/tab-view";
 
 const ScaleformUI = {
     get Scaleforms() {
@@ -18,9 +20,6 @@ const ScaleformUI = {
             .Scaleforms;
     }
 };
-
-class MainView {}
-class TabView {}
 
 export class UIMenuItem extends PauseMenuItem {
     public Parent: UIMenu | null = null;
@@ -101,21 +100,23 @@ export class UIMenuItem extends PauseMenuItem {
                 this._formatLeftLabel
             );
         }
-        if (this.ParentColumn && this.ParentColumn.Parent && this.ParentColumn.Parent.Visible) {
-            if (this.ParentColumn.Parent instanceof MainView)
+        this.withPauseMenuContext(
+            (itemIndex) => {
                 ScaleformUI.Scaleforms._pauseMenu._lobby?.callFunction(
                     "UPDATE_SETTINGS_ITEM_LABEL",
-                    this.ParentColumn.Pagination.GetScaleformIndex(this.ParentColumn.Items.indexOf(this)),
+                    itemIndex,
                     this._formatLeftLabel
                 );
-            else if (this.ParentColumn.Parent instanceof TabView)
+            },
+            (tabIndex, itemIndex) => {
                 ScaleformUI.Scaleforms._pauseMenu._pause?.callFunction(
                     "UPDATE_PLAYERS_TAB_SETTINGS_ITEM_LABEL",
-                    this.ParentColumn.ParentTab,
-                    this.ParentColumn.Pagination.GetScaleformIndex(this.ParentColumn.Items.indexOf(this)),
+                    tabIndex,
+                    itemIndex,
                     this._formatLeftLabel
                 );
-        }
+            }
+        );
     }
 
     set RightLabel(value: string) {
@@ -138,21 +139,23 @@ export class UIMenuItem extends PauseMenuItem {
                 this._formatRightLabel
             );
         }
-        if (this.ParentColumn != null && this.ParentColumn.Parent.Visible) {
-            if (this.ParentColumn.Parent instanceof MainView)
+        this.withPauseMenuContext(
+            (itemIndex) => {
                 ScaleformUI.Scaleforms._pauseMenu._lobby?.callFunction(
                     "UPDATE_SETTINGS_ITEM_LABEL_RIGHT",
-                    this.ParentColumn.Pagination.GetScaleformIndex(this.ParentColumn.Items.indexOf(this)),
+                    itemIndex,
                     this._formatRightLabel
                 );
-            else if (this.ParentColumn.Parent instanceof TabView)
+            },
+            (tabIndex, itemIndex) => {
                 ScaleformUI.Scaleforms._pauseMenu._pause?.callFunction(
                     "UPDATE_PLAYERS_TAB_SETTINGS_ITEM_LABEL_RIGHT",
-                    this.ParentColumn.ParentTab,
-                    this.ParentColumn.Pagination.GetScaleformIndex(this.ParentColumn.Items.indexOf(this)),
+                    tabIndex,
+                    itemIndex,
                     this._formatRightLabel
                 );
-        }
+            }
+        );
     }
     public get RightLabel(): string {
         return this._rightLabel;
@@ -270,23 +273,25 @@ export class UIMenuItem extends PauseMenuItem {
                 value.fontId
             );
         }
-        if (this.ParentColumn && this.ParentColumn.Parent && this.ParentColumn.Parent.Visible) {
-            if (this.ParentColumn.Parent instanceof MainView)
+        this.withPauseMenuContext(
+            (itemIndex) => {
                 ScaleformUI.Scaleforms._pauseMenu._lobby?.callFunction(
                     "SET_SETTINGS_ITEM_LABEL_FONT",
-                    this.ParentColumn.Pagination.GetScaleformIndex(this.ParentColumn.Items.indexOf(this)),
+                    itemIndex,
                     value.fontName,
                     value.fontId
                 );
-            else if (this.ParentColumn.Parent instanceof TabView)
+            },
+            (tabIndex, itemIndex) => {
                 ScaleformUI.Scaleforms._pauseMenu._pause?.callFunction(
                     "SET_PLAYERS_TAB_SETTINGS_ITEM_LABEL_FONT",
-                    this.ParentColumn.ParentTab,
-                    this.ParentColumn.Pagination.GetScaleformIndex(this.ParentColumn.Items.indexOf(this)),
+                    tabIndex,
+                    itemIndex,
                     value.fontName,
                     value.fontId
                 );
-        }
+            }
+        );
     }
     public get LabelFont(): ItemFont {
         return this.labelFont;
@@ -306,23 +311,25 @@ export class UIMenuItem extends PauseMenuItem {
                 value.fontId
             );
         }
-        if (this.ParentColumn && this.ParentColumn.Parent && this.ParentColumn.Parent.Visible) {
-            if (this.ParentColumn.Parent instanceof MainView)
+        this.withPauseMenuContext(
+            (itemIndex) => {
                 ScaleformUI.Scaleforms._pauseMenu._lobby?.callFunction(
                     "SET_SETTINGS_ITEM_RIGHT_LABEL_FONT",
-                    this.ParentColumn.Pagination.GetScaleformIndex(this.ParentColumn.Items.indexOf(this)),
+                    itemIndex,
                     value.fontName,
                     value.fontId
                 );
-            else if (this.ParentColumn.Parent instanceof TabView)
+            },
+            (tabIndex, itemIndex) => {
                 ScaleformUI.Scaleforms._pauseMenu._pause?.callFunction(
                     "SET_PLAYERS_TAB_SETTINGS_ITEM_RIGHT_LABEL_FONT",
-                    this.ParentColumn.ParentTab,
-                    this.ParentColumn.Pagination.GetScaleformIndex(this.ParentColumn.Items.indexOf(this)),
+                    tabIndex,
+                    itemIndex,
                     value.fontName,
                     value.fontId
                 );
-        }
+            }
+        );
     }
     public get RightLabelFont(): ItemFont {
         return this.rightLabelFont;
@@ -341,21 +348,23 @@ export class UIMenuItem extends PauseMenuItem {
                 value
             );
         }
-        if (this.ParentColumn != null && this.ParentColumn.Parent.Visible) {
-            if (this.ParentColumn.Parent instanceof MainView)
+        this.withPauseMenuContext(
+            (itemIndex) => {
                 ScaleformUI.Scaleforms._pauseMenu._lobby?.callFunction(
                     "UPDATE_SETTINGS_ITEM_BLINK_DESC",
-                    this.ParentColumn.Pagination.GetScaleformIndex(this.ParentColumn.Items.indexOf(this)),
+                    itemIndex,
                     value
                 );
-            else if (this.ParentColumn.Parent instanceof TabView)
+            },
+            (tabIndex, itemIndex) => {
                 ScaleformUI.Scaleforms._pauseMenu._pause?.callFunction(
                     "UPDATE_PLAYERS_TAB_SETTINGS_ITEM_BLINK_DESC",
-                    this.ParentColumn.ParentTab,
-                    this.ParentColumn.Pagination.GetScaleformIndex(this.ParentColumn.Items.indexOf(this)),
+                    tabIndex,
+                    itemIndex,
                     value
                 );
-        }
+            }
+        );
     }
     public get BlinkDescription(): boolean {
         return this.blinkDescription;
@@ -389,23 +398,25 @@ export class UIMenuItem extends PauseMenuItem {
                 this._formatRightLabel
             );
         }
-        if (this.ParentColumn && this.ParentColumn.Parent && this.ParentColumn.Parent.Visible) {
-            if (this.ParentColumn.Parent instanceof MainView)
+        this.withPauseMenuContext(
+            (itemIndex) => {
                 ScaleformUI.Scaleforms._pauseMenu._lobby?.callFunction(
                     "UPDATE_SETTINGS_ITEM_LABELS",
-                    this.ParentColumn.Pagination.GetScaleformIndex(this.ParentColumn.Items.indexOf(this)),
+                    itemIndex,
                     this._formatLeftLabel,
                     this._formatRightLabel
                 );
-            else if (this.ParentColumn.Parent instanceof TabView)
+            },
+            (tabIndex, itemIndex) => {
                 ScaleformUI.Scaleforms._pauseMenu._pause?.callFunction(
                     "UPDATE_PLAYERS_TAB_SETTINGS_ITEM_LABELS",
-                    this.ParentColumn.ParentTab,
-                    this.ParentColumn.Pagination.GetScaleformIndex(this.ParentColumn.Items.indexOf(this)),
+                    tabIndex,
+                    itemIndex,
                     this._formatLeftLabel,
                     this._formatRightLabel
                 );
-        }
+            }
+        );
     }
 
     public get Selected(): boolean {
@@ -431,44 +442,31 @@ export class UIMenuItem extends PauseMenuItem {
             EndTextCommandScaleformString_2();
             EndScaleformMovieMethod();
         }
-        if (this.ParentColumn && this.ParentColumn.Parent && this.ParentColumn.Parent.Visible) {
-            if (this.ParentColumn.Parent instanceof MainView) {
-                AddTextEntry(
-                    `lobbymenu_desc_${this.ParentColumn.Pagination.GetScaleformIndex(this.ParentColumn.Items.indexOf(this))}`,
-                    this.description
-                );
+        this.withPauseMenuContext(
+            (itemIndex) => {
+                AddTextEntry(`lobbymenu_desc_${itemIndex}`, this.description);
                 const lobby = ScaleformUI.Scaleforms._pauseMenu._lobby;
                 if (lobby) {
                     BeginScaleformMovieMethod(lobby.handle, "UPDATE_SETTINGS_ITEM_DESCRIPTION");
-                    ScaleformMovieMethodAddParamInt(
-                        this.ParentColumn.Pagination.GetScaleformIndex(this.ParentColumn.Items.indexOf(this))
-                    );
-                    BeginTextCommandScaleformString(
-                        `lobbymenu_desc_${this.ParentColumn.Pagination.GetScaleformIndex(this.ParentColumn.Items.indexOf(this))}`
-                    );
+                    ScaleformMovieMethodAddParamInt(itemIndex);
+                    BeginTextCommandScaleformString(`lobbymenu_desc_${itemIndex}`);
                     EndTextCommandScaleformString_2();
                     EndScaleformMovieMethod();
                 }
-            } else if (this.ParentColumn.Parent instanceof TabView) {
-                AddTextEntry(
-                    `pausemenu_${this.ParentColumn.ParentTab}_desc_${this.ParentColumn.Pagination.GetScaleformIndex(this.ParentColumn.Items.indexOf(this))}`,
-                    this.description
-                );
+            },
+            (tabIndex, itemIndex) => {
+                AddTextEntry(`pausemenu_${tabIndex}_desc_${itemIndex}`, this.description);
                 const pause = ScaleformUI.Scaleforms._pauseMenu._pause;
                 if (pause) {
                     BeginScaleformMovieMethod(pause.handle, "UPDATE_PLAYERS_TAB_SETTINGS_ITEM_DESCRIPTION");
-                    ScaleformMovieMethodAddParamInt(this.ParentColumn.ParentTab);
-                    ScaleformMovieMethodAddParamInt(
-                        this.ParentColumn.Pagination.GetScaleformIndex(this.ParentColumn.Items.indexOf(this))
-                    );
-                    BeginTextCommandScaleformString(
-                        `pausemenu_${this.ParentColumn.ParentTab}_desc_${this.ParentColumn.Pagination.GetScaleformIndex(this.ParentColumn.Items.indexOf(this))}`
-                    );
+                    ScaleformMovieMethodAddParamInt(tabIndex);
+                    ScaleformMovieMethodAddParamInt(itemIndex);
+                    BeginTextCommandScaleformString(`pausemenu_${tabIndex}_desc_${itemIndex}`);
                     EndTextCommandScaleformString_2();
                     EndScaleformMovieMethod();
                 }
             }
-        }
+        );
     }
     public get Description(): string {
         return this.description;
@@ -495,35 +493,36 @@ export class UIMenuItem extends PauseMenuItem {
                 this._enabled
             );
         }
-        if (this.ParentColumn && this.ParentColumn.Parent && this.ParentColumn.Parent.Visible) {
-            if (this.ParentColumn.Parent instanceof MainView) {
+        this.withPauseMenuContext(
+            (itemIndex) => {
                 ScaleformUI.Scaleforms._pauseMenu._lobby?.callFunction(
                     "UPDATE_SETTINGS_ITEM_LABELS",
-                    this.ParentColumn.Pagination.GetScaleformIndex(this.ParentColumn.Items.indexOf(this)),
+                    itemIndex,
                     this._formatLeftLabel,
                     this._formatRightLabel
                 );
                 ScaleformUI.Scaleforms._pauseMenu._lobby?.callFunction(
                     "ENABLE_SETTINGS_ITEM",
-                    this.ParentColumn.Pagination.GetScaleformIndex(this.ParentColumn.Items.indexOf(this)),
+                    itemIndex,
                     this._enabled
                 );
-            } else if (this.ParentColumn.Parent instanceof TabView) {
+            },
+            (tabIndex, itemIndex) => {
                 ScaleformUI.Scaleforms._pauseMenu._pause?.callFunction(
                     "UPDATE_PLAYERS_TAB_SETTINGS_ITEM_LABELS",
-                    this.ParentColumn.ParentTab,
-                    this.ParentColumn.Pagination.GetScaleformIndex(this.ParentColumn.Items.indexOf(this)),
+                    tabIndex,
+                    itemIndex,
                     this._formatLeftLabel,
                     this._formatRightLabel
                 );
                 ScaleformUI.Scaleforms._pauseMenu._pause?.callFunction(
                     "ENABLE_PLAYERS_TAB_SETTINGS_ITEM",
-                    this.ParentColumn.ParentTab,
-                    this.ParentColumn.Pagination.GetScaleformIndex(this.ParentColumn.Items.indexOf(this)),
+                    tabIndex,
+                    itemIndex,
                     this._enabled
                 );
             }
-        }
+        );
     }
 
     public SetLeftBadge(icon: BadgeStyle) {
@@ -539,22 +538,19 @@ export class UIMenuItem extends PauseMenuItem {
                 icon
             );
         }
-        if (this.ParentColumn && this.ParentColumn.Parent && this.ParentColumn.Parent.Visible) {
-            if (this.ParentColumn.Parent instanceof MainView) {
-                ScaleformUI.Scaleforms._pauseMenu._lobby?.callFunction(
-                    "SET_SETTINGS_ITEM_LEFT_BADGE",
-                    this.ParentColumn.Pagination.GetScaleformIndex(this.ParentColumn.Items.indexOf(this)),
-                    icon
-                );
-            } else if (this.ParentColumn.Parent instanceof TabView) {
+        this.withPauseMenuContext(
+            (itemIndex) => {
+                ScaleformUI.Scaleforms._pauseMenu._lobby?.callFunction("SET_SETTINGS_ITEM_LEFT_BADGE", itemIndex, icon);
+            },
+            (tabIndex, itemIndex) => {
                 ScaleformUI.Scaleforms._pauseMenu._pause?.callFunction(
                     "SET_PLAYERS_TAB_SETTINGS_ITEM_LEFT_BADGE",
-                    this.ParentColumn.ParentTab,
-                    this.ParentColumn.Pagination.GetScaleformIndex(this.ParentColumn.Items.indexOf(this)),
+                    tabIndex,
+                    itemIndex,
                     icon
                 );
             }
-        }
+        );
     }
 
     public SetRightBadge(icon: BadgeStyle) {
@@ -570,22 +566,23 @@ export class UIMenuItem extends PauseMenuItem {
                 icon
             );
         }
-        if (this.ParentColumn && this.ParentColumn.Parent && this.ParentColumn.Parent.Visible) {
-            if (this.ParentColumn.Parent instanceof MainView) {
+        this.withPauseMenuContext(
+            (itemIndex) => {
                 ScaleformUI.Scaleforms._pauseMenu._lobby?.callFunction(
                     "SET_SETTINGS_ITEM_RIGHT_BADGE",
-                    this.ParentColumn.Pagination.GetScaleformIndex(this.ParentColumn.Items.indexOf(this)),
+                    itemIndex,
                     icon
                 );
-            } else if (this.ParentColumn.Parent instanceof TabView) {
+            },
+            (tabIndex, itemIndex) => {
                 ScaleformUI.Scaleforms._pauseMenu._pause?.callFunction(
                     "SET_PLAYERS_TAB_SETTINGS_ITEM_RIGHT_BADGE",
-                    this.ParentColumn.ParentTab,
-                    this.ParentColumn.Pagination.GetScaleformIndex(this.ParentColumn.Items.indexOf(this)),
+                    tabIndex,
+                    itemIndex,
                     icon
                 );
             }
-        }
+        );
     }
 
     public SetRightLabel(text: string) {
@@ -609,6 +606,34 @@ export class UIMenuItem extends PauseMenuItem {
                 this.Parent.Pagination.GetScaleformIndex(this.Parent.MenuItems.indexOf(this)),
                 index
             );
+        }
+    }
+
+    private getParentColumnItemIndex(): number | null {
+        if (!this.ParentColumn) return null;
+        const index = this.ParentColumn.Items.indexOf(this);
+        return index >= 0 ? index : null;
+    }
+
+    private withPauseMenuContext(
+        lobbyHandler: (itemIndex: number) => void,
+        pauseHandler: (tabIndex: number, itemIndex: number) => void
+    ): void {
+        const parentTab = this.ParentTab ?? this.ParentColumn?.Parent ?? null;
+        if (!parentTab || !parentTab.Visible) return;
+        const parentView = parentTab.Parent;
+        const itemIndex = this.getParentColumnItemIndex();
+        if (!parentView || itemIndex === null) return;
+
+        if (parentView instanceof MainView) {
+            lobbyHandler(itemIndex);
+            return;
+        }
+
+        if (parentView instanceof TabView) {
+            const tabIndex = parentView.Tabs.indexOf(parentTab);
+            if (tabIndex < 0) return;
+            pauseHandler(tabIndex, itemIndex);
         }
     }
 
