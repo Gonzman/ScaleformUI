@@ -10,6 +10,7 @@ import type { UIMenu } from "../uimenu";
 import type { UIMenuPanel } from "../panels/uimenupanel";
 import type { UIMenuSidePanel } from "../sidepanels/uimenusidepanel";
 import type { UIMissionDetailsPanel } from "../sidepanels/DetailsPanel/uimissiondetailspanel";
+import { PauseMenuItem } from "menus/pause-menu/elements/items";
 
 const ScaleformUI = {
     get Scaleforms() {
@@ -18,25 +19,15 @@ const ScaleformUI = {
     }
 };
 
-type SettingsListColumn = {
-    Parent: { Visible: boolean };
-    ParentTab: number;
-    Pagination: { GetScaleformIndex(index: number): number };
-    Items: any[];
-};
-
 class MainView {}
 class TabView {}
 
-export class UIMenuItem {
+export class UIMenuItem extends PauseMenuItem {
     public Parent: UIMenu | null = null;
-    public ParentColumn: SettingsListColumn | null = null;
     public Panels: UIMenuPanel[] = [];
     public SidePanel: UIMenuSidePanel | UIMissionDetailsPanel | null = null;
     public ItemData: any;
     public Hovered: boolean = false;
-    private _selected: boolean = false;
-    private _label: string = "";
     private _rightLabel: string = "";
     private _enabled: boolean;
     private _leftBadge: BadgeStyle = BadgeStyle.NONE;
@@ -49,7 +40,6 @@ export class UIMenuItem {
     private description: string;
     private _activatedEmitter = new ItemChangeCallbackBuilder();
     private _highlighedEmitter = new ItemChangeCallbackBuilder();
-    labelFont: ItemFont = ScaleformFonts.CHALET_LONDON_NINETEENSIXTY;
     rightLabelFont: ItemFont = ScaleformFonts.CHALET_LONDON_NINETEENSIXTY;
     _itemId: number = 0;
     _formatLeftLabel: string = "";
@@ -58,11 +48,13 @@ export class UIMenuItem {
     constructor(
         text: string,
         description?: string,
+        labelFont?: ItemFont,
         mainColor?: SColor,
         highlightColor?: SColor,
         textColor?: SColor,
         highlightedTextColor?: SColor
     ) {
+        super(text, labelFont);
         this._enabled = true;
         this.mainColor = mainColor ?? SColor.HUD_Panel_light;
         this.highlightColor = highlightColor ?? SColor.HUD_White;
@@ -90,7 +82,7 @@ export class UIMenuItem {
 
     //MEMBERS
     public set Label(_label: string) {
-        this._label = _label;
+        super.Label = _label;
         this._formatLeftLabel = _label.startsWith("~") ? _label : "~s~" + _label;
         if (this._selected) {
             this._formatLeftLabel = this._formatLeftLabel.replace("~w~", "~l~");
@@ -109,7 +101,7 @@ export class UIMenuItem {
                 this._formatLeftLabel
             );
         }
-        if (this.ParentColumn != null && this.ParentColumn.Parent.Visible) {
+        if (this.ParentColumn && this.ParentColumn.Parent && this.ParentColumn.Parent.Visible) {
             if (this.ParentColumn.Parent instanceof MainView)
                 ScaleformUI.Scaleforms._pauseMenu._lobby?.callFunction(
                     "UPDATE_SETTINGS_ITEM_LABEL",
@@ -124,9 +116,6 @@ export class UIMenuItem {
                     this._formatLeftLabel
                 );
         }
-    }
-    public get Label(): string {
-        return this._label;
     }
 
     set RightLabel(value: string) {
@@ -281,7 +270,7 @@ export class UIMenuItem {
                 value.fontId
             );
         }
-        if (this.ParentColumn != null && this.ParentColumn.Parent.Visible) {
+        if (this.ParentColumn && this.ParentColumn.Parent && this.ParentColumn.Parent.Visible) {
             if (this.ParentColumn.Parent instanceof MainView)
                 ScaleformUI.Scaleforms._pauseMenu._lobby?.callFunction(
                     "SET_SETTINGS_ITEM_LABEL_FONT",
@@ -317,7 +306,7 @@ export class UIMenuItem {
                 value.fontId
             );
         }
-        if (this.ParentColumn != null && this.ParentColumn.Parent.Visible) {
+        if (this.ParentColumn && this.ParentColumn.Parent && this.ParentColumn.Parent.Visible) {
             if (this.ParentColumn.Parent instanceof MainView)
                 ScaleformUI.Scaleforms._pauseMenu._lobby?.callFunction(
                     "SET_SETTINGS_ITEM_RIGHT_LABEL_FONT",
@@ -400,7 +389,7 @@ export class UIMenuItem {
                 this._formatRightLabel
             );
         }
-        if (this.ParentColumn != null && this.ParentColumn.Parent.Visible) {
+        if (this.ParentColumn && this.ParentColumn.Parent && this.ParentColumn.Parent.Visible) {
             if (this.ParentColumn.Parent instanceof MainView)
                 ScaleformUI.Scaleforms._pauseMenu._lobby?.callFunction(
                     "UPDATE_SETTINGS_ITEM_LABELS",
@@ -442,7 +431,7 @@ export class UIMenuItem {
             EndTextCommandScaleformString_2();
             EndScaleformMovieMethod();
         }
-        if (this.ParentColumn != null && this.ParentColumn.Parent.Visible) {
+        if (this.ParentColumn && this.ParentColumn.Parent && this.ParentColumn.Parent.Visible) {
             if (this.ParentColumn.Parent instanceof MainView) {
                 AddTextEntry(
                     `lobbymenu_desc_${this.ParentColumn.Pagination.GetScaleformIndex(this.ParentColumn.Items.indexOf(this))}`,
@@ -488,7 +477,7 @@ export class UIMenuItem {
     public set Enabled(value: boolean) {
         this._enabled = value;
         if (!value) this._formatLeftLabel = replaceRstarColorsWith(this._formatLeftLabel, "~c~");
-        else this.Label = this._label;
+        else this.Label = super.Label;
         if (
             this.Parent !== null &&
             this.Parent.Visible &&
@@ -506,7 +495,7 @@ export class UIMenuItem {
                 this._enabled
             );
         }
-        if (this.ParentColumn != null && this.ParentColumn.Parent.Visible) {
+        if (this.ParentColumn && this.ParentColumn.Parent && this.ParentColumn.Parent.Visible) {
             if (this.ParentColumn.Parent instanceof MainView) {
                 ScaleformUI.Scaleforms._pauseMenu._lobby?.callFunction(
                     "UPDATE_SETTINGS_ITEM_LABELS",
@@ -550,7 +539,7 @@ export class UIMenuItem {
                 icon
             );
         }
-        if (this.ParentColumn != null && this.ParentColumn.Parent.Visible) {
+        if (this.ParentColumn && this.ParentColumn.Parent && this.ParentColumn.Parent.Visible) {
             if (this.ParentColumn.Parent instanceof MainView) {
                 ScaleformUI.Scaleforms._pauseMenu._lobby?.callFunction(
                     "SET_SETTINGS_ITEM_LEFT_BADGE",
@@ -581,7 +570,7 @@ export class UIMenuItem {
                 icon
             );
         }
-        if (this.ParentColumn != null && this.ParentColumn.Parent.Visible) {
+        if (this.ParentColumn && this.ParentColumn.Parent && this.ParentColumn.Parent.Visible) {
             if (this.ParentColumn.Parent instanceof MainView) {
                 ScaleformUI.Scaleforms._pauseMenu._lobby?.callFunction(
                     "SET_SETTINGS_ITEM_RIGHT_BADGE",
