@@ -1,15 +1,22 @@
 import { ItemFont } from "elements/ItemFont";
 import { ScaleformFonts } from "elements/scaleform-fonts";
-import { PM_Column } from "../columns";
-import { BaseTab } from "menus/pause-menu/tabs";
-import { TabLeftItem } from "menus/pause-menu/items";
+import type { PM_Column } from "../columns";
+import type { BaseTab } from "menus/pause-menu/tabs";
+import type { TabLeftItem } from "menus/pause-menu/items/tab-left-item";
+
+export interface PauseMenuColumnLike {
+    visible?: boolean;
+    UpdateSlot?(index: number): void;
+    Items: PauseMenuItem[];
+    Parent?: BaseTab | null;
+}
 
 export class PauseMenuItem {
     public labelFont: ItemFont = ScaleformFonts.CHALET_LONDON_NINETEENSIXTY;
     private _label: string;
     public ParentLeftItem: TabLeftItem | null = null;
     public ParentTab: BaseTab | null = null;
-    public ParentColumn: PM_Column | null = null;
+    public ParentColumn: PauseMenuColumnLike | null = null;
     protected _selected: boolean = false;
 
     constructor(label: string, labelFont?: ItemFont) {

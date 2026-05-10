@@ -10,9 +10,7 @@ import type { UIMenu } from "../uimenu";
 import type { UIMenuPanel } from "../panels/uimenupanel";
 import type { UIMenuSidePanel } from "../sidepanels/uimenusidepanel";
 import type { UIMissionDetailsPanel } from "../sidepanels/DetailsPanel/uimissiondetailspanel";
-import { PauseMenuItem } from "menus/pause-menu/elements/items";
-import { MainView } from "menus/lobby-menu/main-view";
-import { TabView } from "menus/pause-menu/tab-view";
+import PauseMenuItem from "menus/pause-menu/elements/items/pause-menu-item";
 
 const ScaleformUI = {
     get Scaleforms() {
@@ -619,18 +617,21 @@ export class UIMenuItem extends PauseMenuItem {
         lobbyHandler: (itemIndex: number) => void,
         pauseHandler: (tabIndex: number, itemIndex: number) => void
     ): void {
-        const parentTab = this.ParentTab ?? this.ParentColumn?.Parent ?? null;
+        const parentTab = this.ParentTab ?? (this.ParentColumn as { Parent?: import("menus/pause-menu/tabs").BaseTab | null } | null)?.Parent ?? null;
         if (!parentTab || !parentTab.Visible) return;
         const parentView = parentTab.Parent;
         const itemIndex = this.getParentColumnItemIndex();
         if (!parentView || itemIndex === null) return;
 
-        if (parentView instanceof MainView) {
+        const { MainView: LazyMainView } = require("menus/lobby-menu/main-view") as typeof import("menus/lobby-menu/main-view");
+        const { TabView: LazyTabView } = require("menus/pause-menu/tab-view") as typeof import("menus/pause-menu/tab-view");
+
+        if (parentView instanceof LazyMainView) {
             lobbyHandler(itemIndex);
             return;
         }
 
-        if (parentView instanceof TabView) {
+        if (parentView instanceof LazyTabView) {
             const tabIndex = parentView.Tabs.indexOf(parentTab);
             if (tabIndex < 0) return;
             pauseHandler(tabIndex, itemIndex);

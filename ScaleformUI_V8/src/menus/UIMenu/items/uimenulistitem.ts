@@ -49,7 +49,7 @@ export class UIMenuListItem extends UIMenuItem {
         textColor: SColor,
         highlightTextColor: SColor
     ) {
-        super(text, description, mainColor, higlightColor, textColor, highlightTextColor);
+        super(text, description, undefined, mainColor, higlightColor, textColor, highlightTextColor);
         this._itemId = 1;
         this._items = items;
         this.Index = index;

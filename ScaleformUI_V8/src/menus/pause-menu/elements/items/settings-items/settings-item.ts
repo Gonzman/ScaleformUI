@@ -2,6 +2,7 @@ import { BadgeStyle } from "elements/badge";
 import { ItemFont } from "elements/ItemFont";
 import { ScaleformFonts } from "elements/scaleform-fonts";
 import { SColor } from "elements/scolor";
+import type { PauseMenuColumnLike } from "../pause-menu-item";
 import PauseMenuItem from "../pause-menu-item";
 
 export enum SettingsItemType {
@@ -25,11 +26,7 @@ export interface StringPair {
 
 export type SettingsItemSelected = (item: SettingsItem) => void;
 
-interface SettingsParentColumn {
-    visible?: boolean;
-    UpdateSlot?: (index: number) => void;
-    Items: PauseMenuItem[];
-}
+type SettingsParentColumn = PauseMenuColumnLike;
 
 export class SettingsItem extends PauseMenuItem {
     private rightLabel: string;

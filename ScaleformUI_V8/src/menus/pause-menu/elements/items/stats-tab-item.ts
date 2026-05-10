@@ -1,6 +1,7 @@
 import { ItemFont } from "elements/ItemFont";
 import { ScaleformFonts } from "elements/scaleform-fonts";
 import { SColor } from "elements/scolor";
+import type { PauseMenuColumnLike } from "./pause-menu-item";
 import PauseMenuItem from "./pause-menu-item";
 
 export enum StatItemType {
@@ -8,11 +9,7 @@ export enum StatItemType {
     ColoredBar,
 }
 
-interface PauseColumnParent {
-    visible?: boolean;
-    UpdateSlot?: (index: number) => void;
-    Items: PauseMenuItem[];
-}
+type PauseColumnParent = PauseMenuColumnLike;
 
 export class StatsTabItem extends PauseMenuItem {
     private rightLabel: string = "";

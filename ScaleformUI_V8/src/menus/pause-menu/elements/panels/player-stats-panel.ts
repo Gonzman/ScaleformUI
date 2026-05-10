@@ -5,6 +5,7 @@ import { SColor } from "elements/scolor";
 import { ScaleformUI } from "scaleforms/scaleformui/main";
 import PM_Column, { PM_COLUMNS } from "../columns/pm-column";
 import type { CrewTag, FriendItem } from "../items/friend-item";
+import type { BaseTab } from "menus/pause-menu/tabs";
 import PauseMenuItem from "../items/pause-menu-item";
 import type { MissionDetailsItem } from "./mission-details-panel";
 
@@ -111,7 +112,7 @@ export class PlayerStatsPanel extends PM_Column {
         }
 
         this.position = parentItem.ClonePed == null ? PM_COLUMNS.EXTRA3 : PM_COLUMNS.EXTRA4;
-        this.Parent = (parentItem.ParentColumn as { Parent?: unknown } | null)?.Parent ?? null;
+        this.Parent = (parentItem.ParentColumn as { Parent?: BaseTab | null } | null)?.Parent ?? null;
         this.Populate();
         this.ShowColumn();
     }

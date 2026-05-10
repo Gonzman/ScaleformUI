@@ -58,7 +58,7 @@ export class TabLeftItem extends PauseMenuItem {
         this.MainColor = mainColor;
         this.HighlightColor = highlightColor;
         if (labelFont) this.labelFont = labelFont;
-        this.internalItem = new UIMenuItem(label, "", SColor.HUD_Pause_bg, SColor.HUD_White);
+        this.internalItem = new UIMenuItem(label, "", this.labelFont, SColor.HUD_Pause_bg, SColor.HUD_White);
     }
 
     public override get Label(): string {

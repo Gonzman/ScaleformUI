@@ -9,6 +9,16 @@ const projectRoot = path.resolve(import.meta.dirname, '..');
 const distDir = path.join(projectRoot, 'dist');
 const tempDir = path.join(projectRoot, '.build-tmp');
 const scriptsDir = path.join(projectRoot, 'scripts');
+const clientBundlePath = path.join(
+    projectRoot,
+    'server',
+    'txData',
+    'FiveMBasicServerCFXDefault_E3ABCD.base',
+    'resources',
+    'ScaleformUI',
+    'client',
+    'index.js'
+);
 
 // Helper to run commands and wait for completion
 function runCommand(command, args = [], cwd = projectRoot) {
@@ -76,6 +86,11 @@ async function main() {
         if (existsSync(tempDir)) {
             await rm(tempDir, { recursive: true, force: true });
         }
+
+        // Step 8: Publish the client bundle into the server resource tree.
+        console.log('🚚 Publishing client bundle to server resource...');
+        await mkdir(path.dirname(clientBundlePath), { recursive: true });
+        await cp(path.join(distDir, 'index.js'), clientBundlePath);
         
         console.log('✅ Build completed successfully!');
         

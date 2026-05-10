@@ -1,20 +1,11 @@
 import { Delay } from "helpers/loaders";
 import PauseMenuItem from "./pause-menu-item";
+import type { PauseMenuColumnLike } from "./pause-menu-item";
 
 interface PlayerStatsPanelLike {
     UpdatePanel?(overrideVisibility?: boolean): void;
     ShowColumn?(): void;
     ColumnVisible?: boolean;
-}
-
-interface PlayerListColumnLike {
-    visible?: boolean;
-    Parent?: {
-        Parent?: {
-            FocusLevel?: number;
-        };
-        Visible?: boolean;
-    };
 }
 
 export class LobbyItem extends PauseMenuItem {
@@ -27,7 +18,7 @@ export class LobbyItem extends PauseMenuItem {
     private _clonePedLighting: boolean = false;
     private keepPanelVisible: boolean = false;
     public Hovered: boolean = false;
-    public ParentColumn: PlayerListColumnLike | null = null;
+    public ParentColumn: PauseMenuColumnLike | null = null;
     public Panel?: PlayerStatsPanelLike;
 
     constructor(label: string) {

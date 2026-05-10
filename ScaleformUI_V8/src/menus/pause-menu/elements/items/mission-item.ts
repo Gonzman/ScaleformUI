@@ -1,6 +1,7 @@
 import { BadgeStyle } from "elements/badge";
 import { HudColor } from "elements/color";
 import { SColor } from "elements/scolor";
+import type { PauseMenuColumnLike } from "./pause-menu-item";
 import PauseMenuItem from "./pause-menu-item";
 
 export type MissionActivated = (tab: unknown, column: unknown, item: MissionItem) => void;
@@ -17,11 +18,7 @@ export class MissionItem extends PauseMenuItem {
     public customRightBadge: StringPair;
     public rIcChecked: boolean = false;
     public Jumpable: boolean = false;
-    public ParentColumn: {
-        visible?: boolean;
-        UpdateSlot?: (index: number) => void;
-        Items: MissionItem[];
-    } | null = null;
+    public override ParentColumn: PauseMenuColumnLike | null = null;
     public MainColor: SColor = SColor.FromHudColor(HudColor.HUD_COLOUR_PAUSE_BG);
     public HighlightColor: SColor = SColor.FromHudColor(HudColor.HUD_COLOUR_WHITE);
     public LeftIcon: number = BadgeStyle.NONE;

@@ -1,4 +1,5 @@
 import PauseMenuItem from "./pause-menu-item";
+import type { PauseMenuColumnLike } from "./pause-menu-item";
 
 export type StoreItemActivated = (tab: unknown, column: unknown, index: number) => void;
 
@@ -6,11 +7,7 @@ export class StoreItem extends PauseMenuItem {
     public textureName: string;
     public textureDictionary: string;
     public description: string = "";
-    public ParentColumn: {
-        visible?: boolean;
-        UpdateSlot?: (index: number) => void;
-        Items: StoreItem[];
-    } | null = null;
+    public override ParentColumn: PauseMenuColumnLike | null = null;
     public Enabled: boolean = true;
     public Hovered: boolean = false;
     private activatedCallbacks: StoreItemActivated[] = [];
