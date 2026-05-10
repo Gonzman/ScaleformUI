@@ -1,6 +1,7 @@
 import { SColor } from "elements/scolor";
 import { ScaleformUI } from "scaleforms/scaleformui/main";
 import { PauseMenuItem } from "../items";
+import { BaseTab } from "menus/pause-menu/tabs";
 
 export enum PM_COLUMNS {
     LEFT,
@@ -35,7 +36,7 @@ export class PM_Column {
     public CaptionRight: string = "";
     public Label: string = "";
     public Color: SColor = SColor.HUD_Freemode;
-    public Parent: any = null;
+    public Parent: BaseTab | null = null;
 
     constructor(position: PM_COLUMNS | number) {
         this.position = typeof position === "number" ? (position as PM_COLUMNS) : position;
