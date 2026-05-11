@@ -1,6 +1,7 @@
 import PM_Column, { PLT_COLUMNS } from "./pm-column";
 import { ScaleformUI } from "scaleforms/scaleformui/main";
 import { LobbyItem } from "../items/lobby-item";
+import { FriendItem, PauseMenuItem } from "../items";
 
 export type PlayerItemSelected = (item: any, index: number) => void;
 export type IndexChanged = (index: number) => void;
@@ -27,10 +28,10 @@ export class PlayerListColumn extends PM_Column {
         }
     }
 
-    public AddItem(item: any): void {
-        this.AddPlayer(item);
+    public AddItem(item: PauseMenuItem): void {
+        this.AddPlayer(item as FriendItem);
     }
-    public AddPlayer(item: any): void {
+    public AddPlayer(item: FriendItem): void {
         item.ParentColumn = this;
         this.Items.push(item);
         if (this.visible) {
@@ -50,7 +51,7 @@ export class PlayerListColumn extends PM_Column {
         this.SendItemToScaleform(index, false, false, true);
     }
 
-    public RemoveItem(item: any): void {
+    public RemoveItem(item: FriendItem): void {
         const idx = this.Items.indexOf(item);
         if (idx >= 0) this.RemoveSlot(idx);
     }
@@ -198,7 +199,7 @@ export class PlayerListColumn extends PM_Column {
                 this.CurrentItem.CreateClonedPed?.();
             } catch (e) {}
             try {
-                this.CurrentItem.Panel?.UpdatePanel(true);
+                this.CurrentItem.Panel?.UpdatePanel!(true);
             } catch (e) {}
             this.IndexChangedEvent();
         } catch (e) {
@@ -234,8 +235,8 @@ export class PlayerListColumn extends PM_Column {
         }
     }
 
-    public get CurrentItem(): any {
-        return this.Items[this.CurrentSelection];
+    public get CurrentItem(): FriendItem {
+        return this.Items[this.CurrentSelection] as FriendItem;
     }
 
     public get CurrentSelection(): number {
@@ -255,7 +256,7 @@ export class PlayerListColumn extends PM_Column {
             this.CurrentItem.CreateClonedPed?.();
         } catch (e) {}
         try {
-            this.CurrentItem.Panel?.UpdatePanel(true);
+            this.CurrentItem.Panel?.UpdatePanel!(true);
         } catch (e) {}
         if (this.visible)
             ScaleformUI.Scaleforms._pauseMenu._pause?.callFunction(
@@ -268,7 +269,7 @@ export class PlayerListColumn extends PM_Column {
         this.IndexChangedEvent();
     }
 
-    public SortPlayers(compare: (a: any, b: any) => number): void {
+    public SortPlayers(compare: (a: LobbyItem, b: LobbyItem) => number): void {
         try {
             try {
                 this.CurrentItem.Selected = false;
@@ -276,7 +277,7 @@ export class PlayerListColumn extends PM_Column {
             this._unfilteredItems = [...this.Items];
             this._unfilteredSelection = this.CurrentSelection;
             this.Clear();
-            const list: any[] = this._unfilteredItems as any[];
+            const list: LobbyItem[] = this._unfilteredItems;
             list.sort(compare);
             this.Items = [...list];
             if (this.visible) {
@@ -289,7 +290,7 @@ export class PlayerListColumn extends PM_Column {
         }
     }
 
-    public FilterPlayers(predicate: (it: any) => boolean): void {
+    public FilterPlayers(predicate: (it: LobbyItem) => boolean): void {
         if (!predicate) throw new Error("predicate is null");
         try {
             this._unfilteredItems = [...this.Items];

@@ -4,10 +4,10 @@ import { SColor } from "elements/scolor";
 import { ScaleformUI } from "scaleforms/scaleformui/main";
 
 export class UIDetailImage {
-    public Txd: string
-    public Txn: string
-    public Pos: Vector2
-    public Size: Vector2
+    public Txd: string;
+    public Txn: string;
+    public Pos: Vector2;
+    public Size: Vector2;
 
     constructor(txd: string, txn: string, pos: Vector2, size: Vector2) {
         this.Txd = txd;
@@ -26,7 +26,6 @@ export class UIDetailStat {
     }
 }
 
-
 export class UIMenuDetailsWindow extends UIMenuWindow {
     public DetailTop: string;
     public DetailMid: string;
@@ -35,27 +34,45 @@ export class UIMenuDetailsWindow extends UIMenuWindow {
     public StatWheelEnabled: boolean;
     public DetailStats: UIDetailStat[];
 
-    constructor(...args: any[]) {
+    constructor(detailTop: string, detailMid: string, detailBottom: string);
+
+    constructor(detailTop: string, detailMid: string, detailBottom: string, detailLeft: UIDetailImage);
+
+    constructor(
+        detailTop: string,
+        detailMid: string,
+        detailBottom: string,
+        statWheelEnabled: boolean,
+        detailStats: UIDetailStat[]
+    );
+
+    // Implementation
+    constructor(
+        detailTop: string,
+        detailMid: string,
+        detailBottom: string,
+        arg4?: UIDetailImage | boolean,
+        arg5?: UIDetailStat[]
+    ) {
         super();
+
         this.id = 1;
-        this.DetailTop = args[0];
-        this.DetailMid = args[1];
-        this.DetailBottom = args[2];
+
+        this.DetailTop = detailTop;
+        this.DetailMid = detailMid;
+        this.DetailBottom = detailBottom;
+
         this.StatWheelEnabled = false;
         this.DetailLeft = new UIDetailImage("", "", Vector2.zero, Vector2.zero);
         this.DetailStats = [];
 
-        if (args.length === 3 || args.length === 4) {
-            if (args.length === 4) {
-                this.DetailLeft = args[3] || this.DetailLeft;
-            }
-        } else if (args.length === 5) {
-            this.StatWheelEnabled = args[3];
-            this.DetailStats = args[4] as UIDetailStat[];
-            this.DetailLeft = this.DetailLeft;
+        if (arg4 instanceof UIDetailImage) {
+            this.DetailLeft = arg4;
+        } else if (typeof arg4 === "boolean") {
+            this.StatWheelEnabled = arg4;
+            this.DetailStats = arg5 ?? [];
         }
     }
-
     public UpdateLabels(top: string, mid: string, bot: string, leftDetail: UIDetailImage) {
         this.DetailTop = top;
         this.DetailMid = mid;
@@ -64,9 +81,28 @@ export class UIMenuDetailsWindow extends UIMenuWindow {
         if (this.ParentMenu != undefined && this.ParentMenu.Visible) {
             let wid = this.ParentMenu.Windows.indexOf(this);
             if (!this.StatWheelEnabled)
-                ScaleformUI.Scaleforms._ui?.callFunction("UPDATE_DETAILS_WINDOW_VALUES", wid, this.DetailBottom, this.DetailMid, this.DetailTop, this.DetailLeft.Txd, this.DetailLeft.Txn, this.DetailLeft.Pos.x, this.DetailLeft.Pos.y, this.DetailLeft.Size.x, this.DetailLeft.Size.y);
+                ScaleformUI.Scaleforms._ui?.callFunction(
+                    "UPDATE_DETAILS_WINDOW_VALUES",
+                    wid,
+                    this.DetailBottom,
+                    this.DetailMid,
+                    this.DetailTop,
+                    this.DetailLeft.Txd,
+                    this.DetailLeft.Txn,
+                    this.DetailLeft.Pos.x,
+                    this.DetailLeft.Pos.y,
+                    this.DetailLeft.Size.x,
+                    this.DetailLeft.Size.y
+                );
             else
-                ScaleformUI.Scaleforms._ui?.callFunction("UPDATE_DETAILS_WINDOW_VALUES", wid, this.DetailBottom, this.DetailMid, this.DetailTop, "statWheel");
+                ScaleformUI.Scaleforms._ui?.callFunction(
+                    "UPDATE_DETAILS_WINDOW_VALUES",
+                    wid,
+                    this.DetailBottom,
+                    this.DetailMid,
+                    this.DetailTop,
+                    "statWheel"
+                );
         }
     }
 
@@ -76,7 +112,12 @@ export class UIMenuDetailsWindow extends UIMenuWindow {
             if (this.ParentMenu != undefined && this.ParentMenu.Visible) {
                 let wid = this.ParentMenu.Windows.indexOf(this);
                 stats.forEach((value: UIDetailStat) => {
-                    ScaleformUI.Scaleforms._ui?.callFunction("ADD_STATS_DETAILS_WINDOW_STATWHEEL", wid, value.Percentage, value.HudColor);
+                    ScaleformUI.Scaleforms._ui?.callFunction(
+                        "ADD_STATS_DETAILS_WINDOW_STATWHEEL",
+                        wid,
+                        value.Percentage,
+                        value.HudColor
+                    );
                 });
             }
         }
@@ -87,7 +128,12 @@ export class UIMenuDetailsWindow extends UIMenuWindow {
             this.DetailStats.push(stat);
             if (this.ParentMenu != undefined && this.ParentMenu.Visible) {
                 let wid = this.ParentMenu.Windows.indexOf(this);
-                ScaleformUI.Scaleforms._ui?.callFunction("ADD_STATS_DETAILS_WINDOW_STATWHEEL", wid, stat.Percentage, stat.HudColor);
+                ScaleformUI.Scaleforms._ui?.callFunction(
+                    "ADD_STATS_DETAILS_WINDOW_STATWHEEL",
+                    wid,
+                    stat.Percentage,
+                    stat.HudColor
+                );
             }
         }
     }
@@ -104,7 +150,13 @@ export class UIMenuDetailsWindow extends UIMenuWindow {
             if (this.ParentMenu != undefined && this.ParentMenu.Visible) {
                 let wid = this.ParentMenu.Windows.indexOf(this);
                 statsToApply.forEach((value: UIDetailStat) => {
-                    ScaleformUI.Scaleforms._ui?.callFunction("UPDATE_STATS_DETAILS_WINDOW_STATWHEEL", wid, this.DetailStats.indexOf(value), value.Percentage, value.HudColor);
+                    ScaleformUI.Scaleforms._ui?.callFunction(
+                        "UPDATE_STATS_DETAILS_WINDOW_STATWHEEL",
+                        wid,
+                        this.DetailStats.indexOf(value),
+                        value.Percentage,
+                        value.HudColor
+                    );
                 });
             }
         }
@@ -113,9 +165,12 @@ export class UIMenuDetailsWindow extends UIMenuWindow {
     public RemoveStatToWheel(stat: UIDetailStat): void;
     public RemoveStatToWheel(idx: number): void;
     public RemoveStatToWheel(statOrIdx: UIDetailStat | number) {
-        const idx = typeof statOrIdx === "number"
-            ? statOrIdx
-            : this.DetailStats.findIndex(s => s.Percentage === statOrIdx.Percentage && s.HudColor === statOrIdx.HudColor);
+        const idx =
+            typeof statOrIdx === "number"
+                ? statOrIdx
+                : this.DetailStats.findIndex(
+                      (s) => s.Percentage === statOrIdx.Percentage && s.HudColor === statOrIdx.HudColor
+                  );
         if (idx < 0 || idx >= this.DetailStats.length) return;
         this.DetailStats.splice(idx, 1);
         if (this.ParentMenu != undefined && this.ParentMenu.Visible) {

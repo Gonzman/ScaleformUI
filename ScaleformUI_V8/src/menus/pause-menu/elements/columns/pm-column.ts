@@ -89,7 +89,7 @@ export class PM_Column {
         );
     }
 
-    public AddItem(item: any) {
+    public AddItem(item: PauseMenuItem) {
         this.Items.push(item);
     }
 

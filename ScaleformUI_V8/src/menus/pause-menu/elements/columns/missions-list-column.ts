@@ -1,13 +1,14 @@
 import PM_Column, { PLT_COLUMNS } from "./pm-column";
 import { ScaleformUI } from "scaleforms/scaleformui/main";
 import { Delay } from "helpers/loaders";
+import { MissionItem, PauseMenuItem } from "../items";
 
-export type MissionItemSelected = (item: any, index: number) => void;
+export type MissionItemSelected = (item: MissionItem, index: number) => void;
 export type IndexChanged = (index: number) => void;
 
 export class MissionsListColumn extends PM_Column {
     public OnIndexChanged?: IndexChanged;
-    private _unfilteredItems: any[] = [];
+    private _unfilteredItems: PauseMenuItem[] = [];
     private _unfilteredSelection: number = 0;
     public OnMissionItemActivated?: MissionItemSelected;
 
@@ -26,10 +27,10 @@ export class MissionsListColumn extends PM_Column {
         }
     }
 
-    public AddItem(item: any): void {
-        this.AddMissionItem(item);
+    public AddItem(item: PauseMenuItem): void {
+        this.AddMissionItem(item as MissionItem);
     }
-    public AddMissionItem(item: any): void {
+    public AddMissionItem(item: MissionItem): void {
         item.ParentColumn = this;
         this.Items.push(item);
         if (this.visible && this.Items.length <= this.VisibleItems) {
@@ -55,7 +56,7 @@ export class MissionsListColumn extends PM_Column {
         if (this.visible) this.SendItemToScaleform(index, false, false, true);
     }
 
-    public AddItemAt(item: any, idx: number): void {
+    public AddItemAt(item: MissionItem, idx: number): void {
         if (idx >= this.Items.length) return;
         this.Items.splice(idx, 0, item);
         if (this.visible) {
@@ -64,7 +65,7 @@ export class MissionsListColumn extends PM_Column {
         }
     }
 
-    public RemoveItem(item: any): void {
+    public RemoveItem(item: MissionItem): void {
         const idx = this.Items.indexOf(item);
         if (idx >= 0) this.RemoveSlot(idx);
     }
@@ -103,7 +104,7 @@ export class MissionsListColumn extends PM_Column {
         isSlot: boolean = false
     ): void {
         if (i >= this.Items.length) return;
-        const item: any = this.Items[i];
+        const item: MissionItem = this.Items[i] as MissionItem;
         let str = "SET_DATA_SLOT";
         if (update) str = "UPDATE_SLOT";
         if (newItem) str = "SET_DATA_SLOT_SPLICE";
@@ -298,7 +299,7 @@ export class MissionsListColumn extends PM_Column {
         }
     }
 
-    public SortMissions(compare: (a: any, b: any) => number): void {
+    public SortMissions(compare: (a: MissionItem, b: MissionItem) => number): void {
         try {
             try {
                 this.CurrentItem.Selected = false;
@@ -306,7 +307,7 @@ export class MissionsListColumn extends PM_Column {
             this._unfilteredItems = [...this.Items];
             this._unfilteredSelection = this.CurrentSelection;
             this.Clear();
-            const list: any[] = this._unfilteredItems as any[];
+            const list: MissionItem[] = this._unfilteredItems as MissionItem[];
             list.sort(compare);
             this.Items = [...list];
             if (this.visible) {
@@ -319,12 +320,12 @@ export class MissionsListColumn extends PM_Column {
         }
     }
 
-    public FilterMissions(predicate: (m: any) => boolean): void {
+    public FilterMissions(predicate: (m: MissionItem) => boolean): void {
         if (!predicate) throw new Error("predicate is null");
         try {
             this._unfilteredItems = [...this.Items];
             this._unfilteredSelection = this.CurrentSelection;
-            const filteredItems = this.Items.filter((it) => predicate(it));
+            const filteredItems = this.Items.filter((it) => predicate(it as MissionItem));
             if (!filteredItems.length) {
                 console.debug("ScaleformUI - No items were found, resetting the filter");
                 this._unfilteredItems = [];
