@@ -159,8 +159,8 @@ export class MissionDetailsPanel extends PM_Column {
         }
     }
 
-    public override AddItem(item: MissionDetailsItem): void {
-        this.Items.push(item as unknown as PauseMenuItem);
+    public override AddItem(item: PauseMenuItem): void {
+        this.Items.push(item);
         if (this.visible && this.Items.length <= this.VisibleItems) {
             this.AddSlot(this.Items.length - 1);
         }
