@@ -30,10 +30,22 @@ export class TextTab extends BaseTab {
             this.SetDataSlot(this.LeftColumn.position, i);
         }
         if (this.BGTextureDict.trim()) {
-            this.Parent?._pause._pause?.callFunction("CALL_CUSTOM_COLUMN_FUNCTION", this.LeftColumn.position as number, "SET_BACKGROUND", this.BGTextureDict, this.BGTextureName);
+            this.Parent?._pause._pause?.callFunction(
+                "CALL_CUSTOM_COLUMN_FUNCTION",
+                this.LeftColumn.position as number,
+                "SET_BACKGROUND",
+                this.BGTextureDict,
+                this.BGTextureName
+            );
         }
         if (this.RightTextureDict.trim()) {
-            this.Parent?._pause._pause?.callFunction("CALL_CUSTOM_COLUMN_FUNCTION", this.LeftColumn.position as number, "SET_RIGHT_PICTURE", this.RightTextureDict, this.RightTextureName);
+            this.Parent?._pause._pause?.callFunction(
+                "CALL_CUSTOM_COLUMN_FUNCTION",
+                this.LeftColumn.position as number,
+                "SET_RIGHT_PICTURE",
+                this.RightTextureDict,
+                this.RightTextureName
+            );
         }
     }
 
@@ -57,7 +69,13 @@ export class TextTab extends BaseTab {
         this.BGTextureDict = txd;
         this.BGTextureName = txn;
         if (this.Parent?.Visible) {
-            this.Parent._pause._pause?.callFunction("CALL_CUSTOM_COLUMN_FUNCTION", this.LeftColumn.position as number, "SET_BACKGROUND", txd, txn);
+            this.Parent._pause._pause?.callFunction(
+                "CALL_CUSTOM_COLUMN_FUNCTION",
+                this.LeftColumn.position as number,
+                "SET_BACKGROUND",
+                txd,
+                txn
+            );
         }
     }
 
@@ -65,7 +83,13 @@ export class TextTab extends BaseTab {
         this.RightTextureDict = txd;
         this.RightTextureName = txn;
         if (this.Parent?.Visible) {
-            this.Parent._pause._pause?.callFunction("CALL_CUSTOM_COLUMN_FUNCTION", this.LeftColumn.position as number, "SET_RIGHT_PICTURE", txd, txn);
+            this.Parent._pause._pause?.callFunction(
+                "CALL_CUSTOM_COLUMN_FUNCTION",
+                this.LeftColumn.position as number,
+                "SET_RIGHT_PICTURE",
+                txd,
+                txn
+            );
         }
     }
 }
