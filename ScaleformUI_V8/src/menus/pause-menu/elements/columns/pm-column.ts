@@ -214,6 +214,7 @@ export class PM_Column {
             );
     }
 
+    //TODO add typings
     public SetColumnScroll_Caption(caption: string, ...args: any[]): void {
         if (this.visible) {
             const pause = ScaleformUI.Scaleforms._pauseMenu._pause;

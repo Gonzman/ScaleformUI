@@ -21,4 +21,8 @@ export {
     SettingsSliderItem,
     type SettingsSliderEvent,
 } from "./settings-slider-item";
+export {
+    SettingsStatsItem,
+    type SettingsStatsEvent,
+} from "./settings-stats-item";
 export { SettingsSeparatorItem } from "./settings-separator-item";

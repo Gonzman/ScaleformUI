@@ -36,6 +36,7 @@ export class SettingsItem extends PauseMenuItem {
     public ItemType: SettingsItemType = SettingsItemType.Basic;
 
     public _itemId: number = 0;
+    public Jumpable: boolean = false;
     public Description: string = "";
     public BlinkDescription: boolean = false;
     public MainColor: SColor = SColor.HUD_Panel_light;

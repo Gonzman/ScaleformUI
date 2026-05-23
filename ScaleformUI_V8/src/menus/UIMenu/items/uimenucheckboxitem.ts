@@ -23,7 +23,7 @@ export class UIMenuCheckboxItem extends UIMenuItem {
         mainColor: SColor,
         highlightColor: SColor
     ) {
-        super(text, description, undefined, mainColor, highlightColor, SColor.HUD_White, SColor.HUD_Black);
+        super(text, description, mainColor, highlightColor, SColor.HUD_White, SColor.HUD_Black);
         this.Style = style;
         this._checked = check;
         this._itemId = 2;

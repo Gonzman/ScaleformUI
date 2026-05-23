@@ -8,9 +8,10 @@ export type IndexChanged = (index: number) => void;
 
 export class MissionsListColumn extends PM_Column {
     public OnIndexChanged?: IndexChanged;
-    private _unfilteredItems: PauseMenuItem[] = [];
+    private _unfilteredItems: MissionItem[] = [];
     private _unfilteredSelection: number = 0;
     public OnMissionItemActivated?: MissionItemSelected;
+    public override Items: MissionItem[] = [];
 
     constructor(label: string, maxItems: number = 16) {
         super(-1);
@@ -263,8 +264,8 @@ export class MissionsListColumn extends PM_Column {
         }
     }
 
-    public get CurrentItem(): any {
-        return this.Items[this.Index];
+    public get CurrentItem(): MissionItem {
+        return this.Items[this.Index] as MissionItem;
     }
 
     public get CurrentSelection(): number {

@@ -1,18 +1,24 @@
 import PM_Column, { PLT_COLUMNS } from "./pm-column";
 import { ScaleformUI } from "scaleforms/scaleformui/main";
-import { ChangeDirection } from "../../../UIMenu/items/uimenudynamiclistitem";
 import { SColor } from "elements/scolor";
 import { Delay } from "helpers/loaders";
+import SettingsCheckboxItem from "../items/settings-items/settings-checkbox-item";
 import SettingsItem from "../items/settings-items/settings-item";
+import SettingsListItem from "../items/settings-items/settings-list-item";
+import SettingsProgressItem from "../items/settings-items/settings-progress-item";
+import SettingsSeparatorItem from "../items/settings-items/settings-separator-item";
+import SettingsSliderItem from "../items/settings-items/settings-slider-item";
+import { SettingsStatsItem } from "../items/settings-items";
 
 export type SettingItemSelected = (item: SettingsItem, index: number) => void;
 export type IndexChanged = (index: number) => void;
 
 export class SettingsListColumn extends PM_Column {
     public OnIndexChanged?: IndexChanged;
-    private _unfilteredItems: any[] = [];
+    private _unfilteredItems: SettingsItem[] = [];
     private _unfilteredSelection: number = 0;
     public OnSettingItemActivated?: SettingItemSelected;
+    public override Items: SettingsItem[] = [];
 
     constructor(label: string, maxItems: number = 16) {
         super(-1);
@@ -137,7 +143,7 @@ export class SettingsListColumn extends PM_Column {
         isSlot: boolean = false
     ): void {
         if (i >= this.Items.length) return;
-        const item: any = this.Items[i];
+        const item = this.Items[i];
         let str = "SET_DATA_SLOT";
         if (update) str = "UPDATE_SLOT";
         if (newItem) str = "SET_DATA_SLOT_SPLICE";
@@ -153,32 +159,20 @@ export class SettingsListColumn extends PM_Column {
         ScaleformMovieMethodAddParamInt(0);
         ScaleformMovieMethodAddParamInt(item._itemId ?? 0);
 
-        switch (item._itemId) {
-            case 1:
-                const dit: any = item;
-                AddTextEntry("SCUI_SETTCOL_RLBL", dit.CurrentListItem == null ? "" : `${dit.CurrentListItem}`);
-                BeginTextCommandScaleformString("SCUI_SETTCOL_RLBL");
-                EndTextCommandScaleformString_2();
-                break;
-            case 2:
-                const check: any = item;
-                ScaleformMovieMethodAddParamBool(check.Checked ?? false);
-                break;
-            case 3:
-                const prItem: any = item;
-                ScaleformMovieMethodAddParamInt(prItem.Value ?? 0);
-                break;
-            case 4:
-                const slItem: any = item;
-                ScaleformMovieMethodAddParamInt(slItem.Value ?? 0);
-                break;
-            case 5:
-                const statsItem: any = item;
-                ScaleformMovieMethodAddParamInt(statsItem.Value ?? 0);
-                break;
-            default:
-                ScaleformMovieMethodAddParamInt(0);
-                break;
+        if (item instanceof SettingsListItem) {
+            AddTextEntry("SCUI_SETTCOL_RLBL", item.CurrentListItem ?? "");
+            BeginTextCommandScaleformString("SCUI_SETTCOL_RLBL");
+            EndTextCommandScaleformString_2();
+        } else if (item instanceof SettingsCheckboxItem) {
+            ScaleformMovieMethodAddParamBool(item.Checked);
+        } else if (item instanceof SettingsSliderItem) {
+            ScaleformMovieMethodAddParamInt(item.Value);
+        } else if (item instanceof SettingsProgressItem) {
+            ScaleformMovieMethodAddParamInt(item.Value);
+        } else if (item instanceof SettingsStatsItem) {
+            ScaleformMovieMethodAddParamInt(item.Value);
+        } else {
+            ScaleformMovieMethodAddParamInt(0);
         }
 
         ScaleformMovieMethodAddParamBool(item.Enabled ?? false);
@@ -188,8 +182,8 @@ export class SettingsListColumn extends PM_Column {
         ScaleformMovieMethodAddParamBool(item.BlinkDescription ?? false);
 
         // The C# implementation encodes many different branches; we simplify by attempting to follow it
-        if (item._itemId === 1) {
-            // dynamic list
+        if (item instanceof SettingsListItem) {
+            // list
             ScaleformMovieMethodAddParamInt(item.MainColor?.getArgbValue() ?? 0);
             ScaleformMovieMethodAddParamInt(item.HighlightColor?.getArgbValue() ?? 0);
             ScaleformMovieMethodAddParamInt(item.LeftBadge ?? 0);
@@ -197,16 +191,16 @@ export class SettingsListColumn extends PM_Column {
             ScaleformMovieMethodAddParamPlayerNameString(item.customLeftBadge?.Value ?? "");
             ScaleformMovieMethodAddParamPlayerNameString(item.labelFont?.fontName ?? "");
             ScaleformMovieMethodAddParamPlayerNameString(item.rightLabelFont?.fontName ?? "");
-        } else if (item._itemId === 2) {
+        } else if (item instanceof SettingsCheckboxItem) {
             // checkbox
-            ScaleformMovieMethodAddParamInt(item.Style ?? 0);
+            ScaleformMovieMethodAddParamInt(item.CheckBoxStyle ?? 0);
             ScaleformMovieMethodAddParamInt(item.MainColor?.getArgbValue() ?? 0);
             ScaleformMovieMethodAddParamInt(item.HighlightColor?.getArgbValue() ?? 0);
             ScaleformMovieMethodAddParamInt(item.LeftBadge ?? 0);
             ScaleformMovieMethodAddParamPlayerNameString(item.customLeftBadge?.Key ?? "");
             ScaleformMovieMethodAddParamPlayerNameString(item.customLeftBadge?.Value ?? "");
             ScaleformMovieMethodAddParamPlayerNameString(item.labelFont?.fontName ?? "");
-        } else if (item._itemId === 3) {
+        } else if (item instanceof SettingsSliderItem) {
             // slider
             ScaleformMovieMethodAddParamInt(item._max ?? 0);
             ScaleformMovieMethodAddParamInt(item._multiplier ?? 0);
@@ -218,7 +212,7 @@ export class SettingsListColumn extends PM_Column {
             ScaleformMovieMethodAddParamPlayerNameString(item.customLeftBadge?.Key ?? "");
             ScaleformMovieMethodAddParamPlayerNameString(item.customLeftBadge?.Value ?? "");
             ScaleformMovieMethodAddParamPlayerNameString(item.labelFont?.fontName ?? "");
-        } else if (item._itemId === 4) {
+        } else if (item instanceof SettingsProgressItem) {
             // progress
             ScaleformMovieMethodAddParamInt(item._max ?? 0);
             ScaleformMovieMethodAddParamInt(item._multiplier ?? 0);
@@ -229,12 +223,13 @@ export class SettingsListColumn extends PM_Column {
             ScaleformMovieMethodAddParamPlayerNameString(item.customLeftBadge?.Key ?? "");
             ScaleformMovieMethodAddParamPlayerNameString(item.customLeftBadge?.Value ?? "");
             ScaleformMovieMethodAddParamPlayerNameString(item.labelFont?.fontName ?? "");
-        } else if (item._itemId === 5) {
+        } else if (item instanceof SettingsStatsItem) {
+            // stats
             ScaleformMovieMethodAddParamInt(item.Type ?? 0);
             ScaleformMovieMethodAddParamInt(item.SliderColor?.getArgbValue() ?? 0);
             ScaleformMovieMethodAddParamInt(item.MainColor?.getArgbValue() ?? 0);
             ScaleformMovieMethodAddParamInt(item.HighlightColor?.getArgbValue() ?? 0);
-        } else if (item instanceof Object && item._itemId === 9999) {
+        } else if (item instanceof SettingsSeparatorItem) {
             // separator adaptation
             ScaleformMovieMethodAddParamBool(item.Jumpable ?? false);
             ScaleformMovieMethodAddParamInt(item.MainColor?.getArgbValue() ?? 0);
@@ -322,93 +317,82 @@ export class SettingsListColumn extends PM_Column {
     }
 
     public async GoLeft(): Promise<void> {
-        if (!this.visible) return;
+        if (!this.visible || this.Items.length === 0) return;
         if (!this.CurrentItem.Enabled) {
             PlaySoundFrontend(-1, "ERROR", "HUD_FRONTEND_DEFAULT_SOUNDSET", true);
             return;
         }
-        const item: any = this.CurrentItem;
-        if (item._itemId === 2) {
+        const item = this.CurrentItem;
+        if (item instanceof SettingsCheckboxItem) {
             item.Checked = !item.Checked;
-            item.checkEmit?.();
-        } else if (item._itemId === 3) {
-            item.Value = (item.Value ?? 0) - 1;
-        } else if (item._itemId === 4) {
-            item.Value = (item.Value ?? 0) - 1;
-        } else if (item._itemId === 5) {
-            item.Value = (item.Value ?? 0) - 1;
-        } else if (typeof item.listChangedEmit === "function") {
-            item.Index = (item.Index ?? 0) - 1;
+            item.checkEmit();
+        } else if (item instanceof SettingsSliderItem) {
+            item.Value = item.Value - 1;
+        } else if (item instanceof SettingsProgressItem) {
+            item.Value = item.Value - 1;
+        } else if (item instanceof SettingsStatsItem) {
+            item.Value = item.Value - 1;
+        } else if (item instanceof SettingsListItem) {
+            item.Index = item.Index - 1;
             item.listChangedEmit();
-        } else if (item.callback?.toDelegate) {
-            try {
-                const newItem = await item.callback.toDelegate()(item, ChangeDirection.Left);
-                if (typeof newItem === "string") item.CurrentListItem = newItem;
-            } catch (e) {
-                console.debug(e);
-            }
         }
         PlaySoundFrontend(-1, "NAV_LEFT_RIGHT", "HUD_FRONTEND_DEFAULT_SOUNDSET", true);
     }
 
     public async GoRight(): Promise<void> {
-        if (!this.visible) return;
+        if (!this.visible || this.Items.length === 0) return;
         if (!this.CurrentItem.Enabled) {
             PlaySoundFrontend(-1, "ERROR", "HUD_FRONTEND_DEFAULT_SOUNDSET", true);
             return;
         }
-        const item: any = this.CurrentItem;
-        if (item._itemId === 2) {
+        const item = this.CurrentItem;
+        if (item instanceof SettingsCheckboxItem) {
             item.Checked = !item.Checked;
-            item.checkEmit?.();
-        } else if (item._itemId === 3) {
-            item.Value = (item.Value ?? 0) + 1;
-        } else if (item._itemId === 4) {
-            item.Value = (item.Value ?? 0) + 1;
-        } else if (item._itemId === 5) {
-            item.Value = (item.Value ?? 0) + 1;
-        } else if (typeof item.listChangedEmit === "function") {
-            item.Index = (item.Index ?? 0) + 1;
+            item.checkEmit();
+        } else if (item instanceof SettingsSliderItem) {
+            item.Value = item.Value + 1;
+        } else if (item instanceof SettingsProgressItem) {
+            item.Value = item.Value + 1;
+        } else if (item instanceof SettingsStatsItem) {
+            item.Value = item.Value + 1;
+        } else if (item instanceof SettingsListItem) {
+            item.Index = item.Index + 1;
             item.listChangedEmit();
-        } else if (item.callback?.toDelegate) {
-            try {
-                const newItem = await item.callback.toDelegate()(item, ChangeDirection.Right);
-                if (typeof newItem === "string") item.CurrentListItem = newItem;
-            } catch (e) {
-                console.debug(e);
-            }
         }
         PlaySoundFrontend(-1, "NAV_LEFT_RIGHT", "HUD_FRONTEND_DEFAULT_SOUNDSET", true);
     }
 
     public Select(): void {
-        if (!this.visible) return;
-        const item: any = this.CurrentItem;
+        if (!this.visible || this.Items.length === 0) return;
+        const item = this.CurrentItem;
         if (!item.Enabled) {
             PlaySoundFrontend(-1, "ERROR", "HUD_FRONTEND_DEFAULT_SOUNDSET", true);
             return;
         }
-        if (item._itemId === 2) {
+
+        if (item instanceof SettingsCheckboxItem) {
             item.Checked = !item.Checked;
-            item.checkEmit?.();
+            item.checkEmit();
             this.SelectItem();
             return;
         }
-        if (typeof item.listSelectedEmit === "function") {
+
+        if (item instanceof SettingsListItem) {
             item.listSelectedEmit();
-            item.activatedEmit?.();
+            item.activatedEmit();
             this.SelectItem();
             return;
         }
-        item.activatedEmit?.();
+
+        item.activatedEmit();
         this.SelectItem();
     }
 
     public async MouseScroll(dir: number): Promise<void> {
-        if (!this.visible) return;
+        if (!this.visible || this.Items.length === 0) return;
         try {
             try {
-                this.CurrentItem._selected = false;
+                this.CurrentItem.Selected = false;
             } catch (e) {}
             do {
                 await Delay(0);
@@ -418,7 +402,7 @@ export class SettingsListColumn extends PM_Column {
             } while (this.CurrentItem && this.CurrentItem.Jumpable);
             AddTextEntry("PAUSEMENU_Current_Description", this.CurrentItem.Description ?? "");
             try {
-                this.CurrentItem._selected = true;
+                this.CurrentItem.Selected = true;
             } catch (e) {}
             this.IndexChangedEvent();
         } catch (e) {
@@ -426,8 +410,8 @@ export class SettingsListColumn extends PM_Column {
         }
     }
 
-    public get CurrentItem(): any {
-        return this.Items[this.Index];
+    public get CurrentItem(): SettingsItem {
+        return this.Items[this.Index] as SettingsItem;
     }
 
     public get CurrentSelection(): number {
@@ -457,67 +441,75 @@ export class SettingsListColumn extends PM_Column {
     public UpdateItemLabels(index: number, leftLabel: string, rightLabel: string): void {
         if (this.visible) {
             if (index >= this.Items.length) return;
-            const item: any = this.Items[index];
+            const item = this.Items[index];
             item.Label = leftLabel;
-            item.SetRightLabel?.(rightLabel);
+            try {
+                item.SetRightLabel(rightLabel);
+            } catch (e) {}
         }
     }
 
     public UpdateItemBlinkDescription(index: number, blink: boolean): void {
         if (this.visible) {
             if (index >= this.Items.length) return;
-            const item: any = this.Items[index];
+            const item = this.Items[index];
             item.BlinkDescription = blink;
         }
     }
     public UpdateItemLabel(index: number, label: string): void {
         if (this.visible) {
             if (index >= this.Items.length) return;
-            const item: any = this.Items[index];
+            const item = this.Items[index];
             item.Label = label;
         }
     }
     public UpdateItemRightLabel(index: number, label: string): void {
         if (this.visible) {
             if (index >= this.Items.length) return;
-            const item: any = this.Items[index];
-            item.SetRightLabel?.(label);
+            const item = this.Items[index];
+            try {
+                item.SetRightLabel(label);
+            } catch (e) {}
         }
     }
     public UpdateItemLeftBadge(index: number, badge: number): void {
         if (this.visible) {
             if (index >= this.Items.length) return;
-            const item: any = this.Items[index];
-            item.SetLeftBadge?.(badge);
+            const item = this.Items[index];
+            try {
+                item.SetLeftBadge(badge);
+            } catch (e) {}
         }
     }
     public UpdateItemRightBadge(index: number, badge: number): void {
         if (this.visible) {
             if (index >= this.Items.length) return;
-            const item: any = this.Items[index];
-            item.SetRightBadge?.(badge);
+            const item = this.Items[index];
+            try {
+                item.SetRightBadge(badge);
+            } catch (e) {}
         }
     }
     public EnableItem(index: number, enable: boolean): void {
         if (this.visible) {
             if (index >= this.Items.length) return;
-            const item: any = this.Items[index];
+            const item = this.Items[index];
             item.Enabled = enable;
         }
     }
 
-    public SortSettings(compare: (a: any, b: any) => number): void {
+    public SortSettings(compare: (a: SettingsItem, b: SettingsItem) => number): void {
         if (!this.visible) return;
         try {
             try {
                 this.CurrentItem.Selected = false;
             } catch (e) {}
-            this._unfilteredItems = [...(this.Items as any)];
+            this._unfilteredItems = [...this.Items];
             this._unfilteredSelection = this.CurrentSelection;
             this.Clear();
-            const list: any[] = this._unfilteredItems;
+            const list = [...this._unfilteredItems];
             list.sort(compare);
-            this.Items = [...list] as any;
+            this.Items = [...list];
             if (this.visible) {
                 this.Populate();
                 this.ShowColumn();
@@ -528,13 +520,13 @@ export class SettingsListColumn extends PM_Column {
         }
     }
 
-    public FilterSettings(predicate: (it: any) => boolean): void {
+    public FilterSettings(predicate: (it: SettingsItem) => boolean): void {
         if (!this.visible) return;
         if (!predicate) throw new Error("predicate is null");
         try {
-            this._unfilteredItems = [...(this.Items as any)];
+            this._unfilteredItems = [...this.Items];
             this._unfilteredSelection = this.CurrentSelection;
-            const filteredItems = (this.Items as any[]).filter((it) => predicate(it));
+            const filteredItems = this.Items.filter((it) => predicate(it));
             if (!filteredItems.length) {
                 console.debug("ScaleformUI - No items were found, resetting the filter");
                 this._unfilteredItems = [];
@@ -545,7 +537,7 @@ export class SettingsListColumn extends PM_Column {
                 this.Items[this.CurrentSelection].Selected = false;
             } catch (e) {}
             this.Clear();
-            this.Items = [...filteredItems] as any;
+            this.Items = [...filteredItems];
             this.CurrentSelection = 0;
             if (this.visible) {
                 this.Populate();
@@ -566,7 +558,7 @@ export class SettingsListColumn extends PM_Column {
                     this.CurrentItem.Selected = false;
                 } catch (e) {}
                 this.Clear();
-                this.Items = [...this._unfilteredItems] as any;
+                this.Items = [...this._unfilteredItems];
                 this.CurrentSelection = this._unfilteredSelection;
                 if (this.visible) {
                     this.Populate();

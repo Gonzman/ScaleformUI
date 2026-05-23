@@ -3,7 +3,7 @@ import { ScaleformUI } from "scaleforms/scaleformui/main";
 import { LobbyItem } from "../items/lobby-item";
 import { FriendItem, PauseMenuItem } from "../items";
 
-export type PlayerItemSelected = (item: any, index: number) => void;
+export type PlayerItemSelected = (item: FriendItem, index: number) => void;
 export type IndexChanged = (index: number) => void;
 
 export class PlayerListColumn extends PM_Column {
@@ -75,7 +75,7 @@ export class PlayerListColumn extends PM_Column {
         isSlot: boolean = false
     ): void {
         if (i >= this.Items.length) return;
-        const fi: any = this.Items[i];
+        const fi = this.Items[i] as FriendItem;
         let str = "SET_DATA_SLOT";
         if (update) str = "UPDATE_SLOT";
         if (newItem) str = "SET_DATA_SLOT_SPLICE";
@@ -100,7 +100,7 @@ export class PlayerListColumn extends PM_Column {
             fi.StatusColor,
             fi.CrewTag?.TAG
         );
-        if ((this.position as number) === 0 && i === this.index) fi.Panel?.UpdatePanel();
+        if ((this.position as number) === 0 && i === this.index) fi.Panel?.UpdatePanel?.();
     }
 
     public Populate(): void {

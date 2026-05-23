@@ -12,13 +12,13 @@ export enum LeftItemType {
     Info,
     Statistics,
     Settings,
-    Keymap,
+    Keymap
 }
 
 export enum LeftItemBGType {
     Full,
     Masked,
-    Resized,
+    Resized
 }
 
 export type ActivatedEvent = (item: TabLeftItem, index: number) => void;
@@ -58,7 +58,15 @@ export class TabLeftItem extends PauseMenuItem {
         this.MainColor = mainColor;
         this.HighlightColor = highlightColor;
         if (labelFont) this.labelFont = labelFont;
-        this.internalItem = new UIMenuItem(label, "", this.labelFont, SColor.HUD_Pause_bg, SColor.HUD_White);
+        this.internalItem = new UIMenuItem(
+            label,
+            "",
+            SColor.HUD_Pause_bg,
+            SColor.HUD_White,
+            undefined,
+            undefined,
+            this.labelFont
+        );
     }
 
     public override get Label(): string {
@@ -77,11 +85,21 @@ export class TabLeftItem extends PauseMenuItem {
         }
     }
 
-    public get MainColor(): SColor { return this.mainColor; }
-    public set MainColor(value: SColor) { this.mainColor = value; }
-    public get HighlightColor(): SColor { return this.highlightColor; }
-    public set HighlightColor(value: SColor) { this.highlightColor = value; }
-    public get Enabled(): boolean { return this.enabled; }
+    public get MainColor(): SColor {
+        return this.mainColor;
+    }
+    public set MainColor(value: SColor) {
+        this.mainColor = value;
+    }
+    public get HighlightColor(): SColor {
+        return this.highlightColor;
+    }
+    public set HighlightColor(value: SColor) {
+        this.highlightColor = value;
+    }
+    public get Enabled(): boolean {
+        return this.enabled;
+    }
 
     public set Enabled(value: boolean) {
         this.enabled = value;
@@ -90,7 +108,9 @@ export class TabLeftItem extends PauseMenuItem {
         this.updateLeftSlot();
     }
 
-    public override get Selected(): boolean { return super.Selected; }
+    public override get Selected(): boolean {
+        return super.Selected;
+    }
 
     public override set Selected(value: boolean) {
         super.Selected = value;
@@ -99,12 +119,27 @@ export class TabLeftItem extends PauseMenuItem {
         this.updateLeftSlot();
     }
 
-    public get RightTitle(): string { return this.textTitle; }
-    public set RightTitle(value: string) { this.textTitle = value; this.updateLeftSlot(); }
-    public get KeymapRightLabel_1(): string { return this.keymapRightLabel1; }
-    public set KeymapRightLabel_1(value: string) { this.keymapRightLabel1 = value; this.updateLeftSlot(); }
-    public get KeymapRightLabel_2(): string { return this.keymapRightLabel2; }
-    public set KeymapRightLabel_2(value: string) { this.keymapRightLabel2 = value; this.updateLeftSlot(); }
+    public get RightTitle(): string {
+        return this.textTitle;
+    }
+    public set RightTitle(value: string) {
+        this.textTitle = value;
+        this.updateLeftSlot();
+    }
+    public get KeymapRightLabel_1(): string {
+        return this.keymapRightLabel1;
+    }
+    public set KeymapRightLabel_1(value: string) {
+        this.keymapRightLabel1 = value;
+        this.updateLeftSlot();
+    }
+    public get KeymapRightLabel_2(): string {
+        return this.keymapRightLabel2;
+    }
+    public set KeymapRightLabel_2(value: string) {
+        this.keymapRightLabel2 = value;
+        this.updateLeftSlot();
+    }
 
     public onActivated(handler: ActivatedEvent): void {
         this.activatedHandlers.push(handler);

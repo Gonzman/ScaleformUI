@@ -31,7 +31,7 @@ describe("Controls test", () => {
     it.each([
         [true, Controls.NecessaryControlsKeyboard],
         [false, Controls.NecessaryControlsGamePad]
-    ])("should toggle all controls based on keyboard or gamepad usage", (usingKeyboard, expectedControls) => {
+    ])("should toggle all controls based on keyboard or gamepad usage", (usingKeyboard: boolean, expectedControls: number[]) => {
         const disableMock = jest.fn();
         const enableMock = jest.fn();
         const isUsingKeyboardMock = jest.fn(() => usingKeyboard);

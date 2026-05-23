@@ -45,11 +45,11 @@ export class UIMenuItem extends PauseMenuItem {
     constructor(
         text: string,
         description?: string,
-        labelFont?: ItemFont,
         mainColor?: SColor,
         highlightColor?: SColor,
         textColor?: SColor,
-        highlightedTextColor?: SColor
+        highlightedTextColor?: SColor,
+        labelFont?: ItemFont
     ) {
         super(text, labelFont);
         this._enabled = true;

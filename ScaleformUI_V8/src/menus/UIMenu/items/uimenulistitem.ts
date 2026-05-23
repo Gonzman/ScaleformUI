@@ -6,7 +6,7 @@ import { ScaleformUI } from "scaleforms/scaleformui/main";
 
 export class UIMenuListItem extends UIMenuItem {
     private _index: number = 0;
-    private _items: any[] = [];
+    private _items: UIMenuItem[] = [];
 
     private _listChangedEmitter = new ListItemChangeCallbackBuilder();
     private _listSelectedEmitter = new ListItemChangeCallbackBuilder();
@@ -31,17 +31,17 @@ export class UIMenuListItem extends UIMenuItem {
         return this._index % this.Items.length;
     }
 
-    public set Items(value: any[]) {
+    public set Items(value: UIMenuItem[]) {
         this.Index = 0;
         this._items = value;
     }
-    public get Items(): any[] {
+    public get Items(): UIMenuItem[] {
         return this._items;
     }
 
     constructor(
         text: string,
-        items: any[],
+        items: UIMenuItem[],
         index: number,
         description: string,
         mainColor: SColor,
@@ -49,13 +49,13 @@ export class UIMenuListItem extends UIMenuItem {
         textColor: SColor,
         highlightTextColor: SColor
     ) {
-        super(text, description, undefined, mainColor, higlightColor, textColor, highlightTextColor);
+        super(text, description, mainColor, higlightColor, textColor, highlightTextColor);
         this._itemId = 1;
         this._items = items;
         this.Index = index;
     }
 
-    public ChangeList(list: any[], index: number) {
+    public ChangeList(list: UIMenuItem[], index: number) {
         this._items.length = 0;
         this._items = list;
         this._index = index;
