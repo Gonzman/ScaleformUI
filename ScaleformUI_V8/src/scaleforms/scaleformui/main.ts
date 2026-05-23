@@ -1,4 +1,5 @@
 import { MenuHandler } from "menus/menu-handler";
+import { BigmessageInstance } from "scaleforms/bigmessage/bigmessage-instance";
 import { InstructionalButtonsHandler } from "scaleforms/instructional-buttons/instructionalbuttonshandler";
 import { MinimapOverlays } from "scaleforms/minimap/minimap";
 import { PauseMenuHandler } from "scaleforms/pausemenu/pausemenu-handler";
@@ -23,7 +24,7 @@ class Scaleforms {
     MidMessageInstance: any; // Replace with actual type
     PlayerListScoreboard: any; // Replace with actual type
     InstructionalButtons: InstructionalButtonsHandler;
-    BigMessageInstance: any; // Replace with actual type
+    BigMessageInstance: BigmessageInstance; // Replace with actual type
     Warning: any; // Replace with actual type
     JobMissionSelector: any; // Replace with actual type
     RankbarHandler: any; // Replace with actual type
@@ -40,6 +41,7 @@ class Scaleforms {
         this._pauseMenu.load();
         this.MinimapOverlays = new MinimapOverlays();
         this.MinimapOverlays.load();
+        this.BigMessageInstance = new BigmessageInstance();
     }
 }
 

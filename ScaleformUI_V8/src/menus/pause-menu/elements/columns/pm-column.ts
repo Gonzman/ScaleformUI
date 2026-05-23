@@ -214,8 +214,7 @@ export class PM_Column {
             );
     }
 
-    //TODO add typings
-    public SetColumnScroll_Caption(caption: string, ...args: any[]): void {
+    public SetColumnScroll_Caption(caption: string, ...args: (string | number)[]): void {
         if (this.visible) {
             const pause = ScaleformUI.Scaleforms._pauseMenu._pause;
             if (!pause) return;
@@ -226,9 +225,15 @@ export class PM_Column {
             ScaleformMovieMethodAddParamInt(0);
             BeginTextCommandScaleformString(caption);
             for (const arg of args) {
-                if (typeof arg === "number" && Number.isInteger(arg)) AddTextComponentInteger(arg as number);
-                else if (typeof arg === "string") AddTextComponentSubstringPlayerName(arg as string);
-                else if (typeof arg === "number") AddTextComponentFloat(arg as number, 2);
+                if (typeof arg === "number") {
+                    if (Number.isInteger(arg)) {
+                        AddTextComponentInteger(arg);
+                    } else {
+                        AddTextComponentFloat(arg, 2);
+                    }
+                } else {
+                    AddTextComponentSubstringPlayerName(arg);
+                }
             }
             EndTextCommandScaleformString_2();
             EndScaleformMovieMethod();

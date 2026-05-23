@@ -423,7 +423,7 @@ export class SubmenuTab extends BaseTab {
             this.CenterColumn.Index = this.clampIndex(this.CenterColumn.Items, this.CenterColumn.Index);
         }
 
-        this.CenterColumn.Items.forEach((item: any, idx: number) => {
+        this.CenterColumn.Items.forEach((item, idx) => {
             item.Selected = idx === this.CenterColumn.Index;
         });
     }
