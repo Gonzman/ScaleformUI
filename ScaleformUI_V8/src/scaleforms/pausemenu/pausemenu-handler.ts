@@ -1,5 +1,6 @@
 import { ItemFont } from "elements/ItemFont";
 import { SColor } from "elements/scolor";
+import { SettingsItem } from "menus/pause-menu/elements/items";
 import { Scaleform } from "scaleforms/scaleform";
 
 export class PauseMenuHandler {
@@ -209,7 +210,7 @@ export class PauseMenuHandler {
         tab: number,
         leftItemIndex: number,
         label: string,
-        items: any[],
+        items: SettingsItem[],
         startIndex: number,
         enabled: number
     ) {

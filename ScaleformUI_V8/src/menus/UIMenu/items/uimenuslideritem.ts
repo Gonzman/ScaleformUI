@@ -97,11 +97,11 @@ export class UIMenuSliderItem extends UIMenuItem {
         this._itemSliderCallback.toDelegate()(this, value);
     }
 
-    public SetRightBadge(badge: BadgeStyle) {
+    public override SetRightBadge(badge: BadgeStyle) {
         throw new Error("UIMenuSliderItem cannot have a right badge.");
     }
 
-    public SetRightLabel(text: string) {
+    public override SetRightLabel(text: string) {
         throw new Error("UIMenuSliderItem cannot have a right label.");
     }
 }

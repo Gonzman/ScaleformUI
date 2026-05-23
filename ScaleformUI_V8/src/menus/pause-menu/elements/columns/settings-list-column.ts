@@ -35,7 +35,7 @@ export class SettingsListColumn extends PM_Column {
         }
     }
 
-    public AddItem(item: SettingsItem): void {
+    public override AddItem(item: SettingsItem): void {
         this.AddSettings(item);
     }
 
@@ -66,12 +66,12 @@ export class SettingsListColumn extends PM_Column {
         this.RemoveSlot(index);
     }
 
-    public RemoveSlot(idx: number): void {
+    public override RemoveSlot(idx: number): void {
         super.RemoveSlot(idx);
         AddTextEntry("PAUSEMENU_Current_Description", "");
     }
 
-    public ShowColumn(show: boolean = true): void {
+    public override ShowColumn(show: boolean = true): void {
         if (!this.visible) return;
         super.ShowColumn(show);
         this.InitColumnScroll(this.Items.length >= this.VisibleItems, 1, 0, 1);
@@ -102,7 +102,7 @@ export class SettingsListColumn extends PM_Column {
         }
     }
 
-    public Populate(): void {
+    public override Populate(): void {
         if (!this.visible) return;
         ScaleformUI.Scaleforms._pauseMenu._pause?.callFunction("SET_DATA_SLOT_EMPTY", this.position as number);
         ScaleformUI.Scaleforms._pauseMenu._pause?.callFunction(
@@ -113,15 +113,15 @@ export class SettingsListColumn extends PM_Column {
         for (let i = 0; i < this.Items.length; i++) this.SetDataSlot(i);
     }
 
-    public SetDataSlot(index: number): void {
+    public override SetDataSlot(index: number): void {
         if (index >= this.Items.length) return;
         if (this.visible) this.SendItemToScaleform(index);
     }
-    public UpdateSlot(index: number): void {
+    public override UpdateSlot(index: number): void {
         if (index >= this.Items.length) return;
         if (this.visible) this.SendItemToScaleform(index, true);
     }
-    public AddSlot(index: number): void {
+    public override AddSlot(index: number): void {
         if (index >= this.Items.length) return;
         if (this.visible) this.SendItemToScaleform(index, false, false, true);
     }
@@ -260,7 +260,7 @@ export class SettingsListColumn extends PM_Column {
         this.SendItemToScaleform(this.Index, true);
     }
 
-    public async GoUp(): Promise<void> {
+    public override async GoUp(): Promise<void> {
         if (!this.visible) return;
         try {
             try {
@@ -288,7 +288,7 @@ export class SettingsListColumn extends PM_Column {
         }
     }
 
-    public async GoDown(): Promise<void> {
+    public override async GoDown(): Promise<void> {
         if (!this.visible) return;
         try {
             try {
@@ -316,7 +316,7 @@ export class SettingsListColumn extends PM_Column {
         }
     }
 
-    public async GoLeft(): Promise<void> {
+    public override async GoLeft(): Promise<void> {
         if (!this.visible || this.Items.length === 0) return;
         if (!this.CurrentItem.Enabled) {
             PlaySoundFrontend(-1, "ERROR", "HUD_FRONTEND_DEFAULT_SOUNDSET", true);
@@ -339,7 +339,7 @@ export class SettingsListColumn extends PM_Column {
         PlaySoundFrontend(-1, "NAV_LEFT_RIGHT", "HUD_FRONTEND_DEFAULT_SOUNDSET", true);
     }
 
-    public async GoRight(): Promise<void> {
+    public override async GoRight(): Promise<void> {
         if (!this.visible || this.Items.length === 0) return;
         if (!this.CurrentItem.Enabled) {
             PlaySoundFrontend(-1, "ERROR", "HUD_FRONTEND_DEFAULT_SOUNDSET", true);
@@ -362,7 +362,7 @@ export class SettingsListColumn extends PM_Column {
         PlaySoundFrontend(-1, "NAV_LEFT_RIGHT", "HUD_FRONTEND_DEFAULT_SOUNDSET", true);
     }
 
-    public Select(): void {
+    public override Select(): void {
         if (!this.visible || this.Items.length === 0) return;
         const item = this.CurrentItem;
         if (!item.Enabled) {
@@ -388,7 +388,7 @@ export class SettingsListColumn extends PM_Column {
         this.SelectItem();
     }
 
-    public async MouseScroll(dir: number): Promise<void> {
+    public override async MouseScroll(dir: number): Promise<void> {
         if (!this.visible || this.Items.length === 0) return;
         try {
             try {
@@ -570,7 +570,7 @@ export class SettingsListColumn extends PM_Column {
         }
     }
 
-    public ClearColumn(): void {
+    public override ClearColumn(): void {
         super.ClearColumn();
         AddTextEntry("PAUSEMENU_Current_Description", "");
     }

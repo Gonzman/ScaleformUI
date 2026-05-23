@@ -26,7 +26,6 @@ export class UIMenuItem extends PauseMenuItem {
     public ItemData: any;
     public Hovered: boolean = false;
     private _rightLabel: string = "";
-    private _enabled: boolean;
     private _leftBadge: BadgeStyle = BadgeStyle.NONE;
     private _rightBadge: BadgeStyle = BadgeStyle.NONE;
     private blinkDescription: boolean;
@@ -78,7 +77,7 @@ export class UIMenuItem extends PauseMenuItem {
     }
 
     //MEMBERS
-    public set Label(_label: string) {
+    public override set Label(_label: string) {
         super.Label = _label;
         this._formatLeftLabel = _label.startsWith("~") ? _label : "~s~" + _label;
         if (this._selected) {
@@ -368,7 +367,7 @@ export class UIMenuItem extends PauseMenuItem {
         return this.blinkDescription;
     }
 
-    set Selected(value: boolean) {
+    override set Selected(value: boolean) {
         this._selected = value;
         if (value) {
             this._formatLeftLabel = this._formatLeftLabel.replace("~w~", "~l~");
@@ -417,7 +416,7 @@ export class UIMenuItem extends PauseMenuItem {
         );
     }
 
-    public get Selected(): boolean {
+    public override get Selected(): boolean {
         return this._selected;
     }
 
@@ -470,7 +469,7 @@ export class UIMenuItem extends PauseMenuItem {
         return this.description;
     }
 
-    public set Enabled(value: boolean) {
+    public override set Enabled(value: boolean) {
         this._enabled = value;
         if (!value) this._formatLeftLabel = replaceRstarColorsWith(this._formatLeftLabel, "~c~");
         else this.Label = super.Label;
@@ -617,14 +616,19 @@ export class UIMenuItem extends PauseMenuItem {
         lobbyHandler: (itemIndex: number) => void,
         pauseHandler: (tabIndex: number, itemIndex: number) => void
     ): void {
-        const parentTab = this.ParentTab ?? (this.ParentColumn as { Parent?: import("menus/pause-menu/tabs").BaseTab | null } | null)?.Parent ?? null;
+        const parentTab =
+            this.ParentTab ??
+            (this.ParentColumn as { Parent?: import("menus/pause-menu/tabs").BaseTab | null } | null)?.Parent ??
+            null;
         if (!parentTab || !parentTab.Visible) return;
         const parentView = parentTab.Parent;
         const itemIndex = this.getParentColumnItemIndex();
         if (!parentView || itemIndex === null) return;
 
-        const { MainView: LazyMainView } = require("menus/lobby-menu/main-view") as typeof import("menus/lobby-menu/main-view");
-        const { TabView: LazyTabView } = require("menus/pause-menu/tab-view") as typeof import("menus/pause-menu/tab-view");
+        const { MainView: LazyMainView } =
+            require("menus/lobby-menu/main-view") as typeof import("menus/lobby-menu/main-view");
+        const { TabView: LazyTabView } =
+            require("menus/pause-menu/tab-view") as typeof import("menus/pause-menu/tab-view");
 
         if (parentView instanceof LazyMainView) {
             lobbyHandler(itemIndex);

@@ -6,6 +6,7 @@ import { SubmenuLeftColumn } from "../elements/columns/submenu-left-column";
 import { SettingsItem } from "../elements/items/settings-items/settings-item";
 import { LeftItemType, TabLeftItem } from "../items/tab-left-item";
 import BaseTab, { ScrollArrowsPosition, ScrollType } from "./base-tab";
+import { PauseMenuItem } from "../elements/items";
 
 export class SubmenuTab extends BaseTab {
     public override LeftColumn: SubmenuLeftColumn;
@@ -39,7 +40,7 @@ export class SubmenuTab extends BaseTab {
         this.CenterColumn.Items = [];
         if (state !== 0)
             this.CenterColumn.Items = [...(this.LeftColumn.Items[this.LeftColumn.Index] as TabLeftItem).ItemList];
-        this.CenterColumn.Items.forEach((item: any) => (item.ParentColumn = this.CenterColumn));
+        this.CenterColumn.Items.forEach((item) => (item.ParentColumn = this.CenterColumn));
         this.syncCenterSelection(true);
         switch (this.currentItemType) {
             case LeftItemType.Statistics:
@@ -176,7 +177,7 @@ export class SubmenuTab extends BaseTab {
                     return;
                 }
                 this.CurrentColumnIndex++;
-                if (!leftItem.ItemList.every((x: any) => !x.Enabled)) {
+                if (!leftItem.ItemList.every((x) => !x.Enabled)) {
                     while (!(this.CenterColumn.Items[this.CenterColumn.Index] as SettingsItem).Enabled) {
                         await Delay(0);
                         this.CenterColumn.Index++;
@@ -274,7 +275,7 @@ export class SubmenuTab extends BaseTab {
                 return;
             }
             this.CurrentColumnIndex++;
-            if (!leftItem.ItemList.every((x: any) => !x.Enabled)) {
+            if (!leftItem.ItemList.every((x) => !x.Enabled)) {
                 while (!(this.CenterColumn.Items[this.CenterColumn.Index] as SettingsItem).Enabled) {
                     await Delay(0);
                     this.CenterColumn.Index++;
@@ -342,7 +343,7 @@ export class SubmenuTab extends BaseTab {
         this.CenterColumn.Items = [];
         if (this.currentItemType !== LeftItemType.Empty) {
             this.CenterColumn.Items = [...item.ItemList];
-            this.CenterColumn.Items.forEach((it: any) => (it.ParentColumn = this.CenterColumn));
+            this.CenterColumn.Items.forEach((it) => (it.ParentColumn = this.CenterColumn));
         }
         this.Parent?._pause._pause?.callFunction("SET_MENU_LEVEL", 1);
         this.Parent?._pause._pause?.callFunction("MENU_STATE", this.currentItemType);
@@ -396,14 +397,14 @@ export class SubmenuTab extends BaseTab {
         }
     }
 
-    private clampIndex(items: any[], index: number): number {
+    private clampIndex(items: PauseMenuItem[], index: number): number {
         if (!items.length) return 0;
         if (index < 0) return 0;
         if (index >= items.length) return items.length - 1;
         return index;
     }
 
-    private setSelectedSafe(items: any[], index: number, selected: boolean): void {
+    private setSelectedSafe(items: PauseMenuItem[], index: number, selected: boolean): void {
         const item = items[index];
         if (item) {
             item.Selected = selected;

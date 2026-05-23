@@ -105,7 +105,7 @@ export class SubmenuCentralColumn extends PM_Column {
 
     private sendItem(index: number, method: "SET_DATA_SLOT" | "UPDATE_SLOT"): void {
         if (index >= this.Items.length) return;
-        const item: any = this.Items[index];
+        const item = this.Items[index];
         const pause = ScaleformUI.Scaleforms._pauseMenu._pause;
         if (!pause) return;
 

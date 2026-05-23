@@ -125,7 +125,7 @@ export class UIMenu extends BaseMenu {
     public AUDIO_SELECT: string = "SELECT";
     public AUDIO_BACK: string = "BACK";
     public AUDIO_ERROR: string = "ERROR";
-    public Items: UIMenuItem[] = [];
+    public override Items: UIMenuItem[] = [];
     public get MenuItems(): UIMenuItem[] {
         return this.Items;
     }
@@ -1077,7 +1077,7 @@ export class UIMenu extends BaseMenu {
         }
     }
 
-    public set Visible(value: boolean) {
+    public override set Visible(value: boolean) {
         this._visible = value;
         this._justOpened = value;
         this._itemsDirty = value;

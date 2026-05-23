@@ -76,7 +76,7 @@ export class UIMenuListItem extends UIMenuItem {
     public onListChanged(delegate: UIMenuListItemChangeCallback) {
         this._listChangedEmitter.add(delegate);
     }
-    public onHighlighted(delegate: UIMenuListItemChangeCallback) {
+    public override onHighlighted(delegate: UIMenuListItemChangeCallback) {
         this._listSelectedEmitter.add(delegate);
     }
 
@@ -87,11 +87,11 @@ export class UIMenuListItem extends UIMenuItem {
         this._listSelectedEmitter.toDelegate()(this, this.Index);
     }
 
-    public SetRightBadge(badge: BadgeStyle) {
+    public override SetRightBadge(badge: BadgeStyle) {
         throw new Error("UIMenuListItem cannot have a right badge.");
     }
 
-    public SetRightLabel(text: string) {
+    public override SetRightLabel(text: string) {
         throw new Error("UIMenuListItem cannot have a right label.");
     }
 }

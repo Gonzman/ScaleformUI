@@ -30,7 +30,6 @@ type SettingsParentColumn = PauseMenuColumnLike;
 
 export class SettingsItem extends PauseMenuItem {
     private rightLabel: string;
-    private enabled: boolean = true;
 
     public Hovered: boolean = false;
     public ItemType: SettingsItemType = SettingsItemType.Basic;
@@ -46,7 +45,7 @@ export class SettingsItem extends PauseMenuItem {
     public customLeftBadge: StringPair = { Key: "", Value: "" };
     public customRightBadge: StringPair = { Key: "", Value: "" };
     public KeepTextColorWhite: boolean = false;
-    public labelFont: ItemFont = ScaleformFonts.CHALET_LONDON_NINETEENSIXTY;
+    public override labelFont: ItemFont = ScaleformFonts.CHALET_LONDON_NINETEENSIXTY;
     public rightLabelFont: ItemFont = ScaleformFonts.CHALET_LONDON_NINETEENSIXTY;
 
     public override ParentColumn: SettingsParentColumn | null = null;
@@ -58,12 +57,8 @@ export class SettingsItem extends PauseMenuItem {
         this.rightLabel = rightLabel;
     }
 
-    public get Enabled(): boolean {
-        return this.enabled;
-    }
-
-    public set Enabled(value: boolean) {
-        this.enabled = value;
+    public override set Enabled(value: boolean) {
+        this._enabled = value;
         this.updateParentSlot();
     }
 

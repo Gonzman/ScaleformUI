@@ -6,7 +6,7 @@ import PauseMenuItem from "./pause-menu-item";
 
 export enum StatItemType {
     Basic,
-    ColoredBar,
+    ColoredBar
 }
 
 type PauseColumnParent = PauseMenuColumnLike;
@@ -17,7 +17,7 @@ export class StatsTabItem extends PauseMenuItem {
     private value: number = 0;
 
     public Type: StatItemType;
-    public labelFont: ItemFont = ScaleformFonts.CHALET_LONDON_NINETEENSIXTY;
+    public override labelFont: ItemFont = ScaleformFonts.CHALET_LONDON_NINETEENSIXTY;
     public rightLabelFont: ItemFont = ScaleformFonts.CHALET_LONDON_NINETEENSIXTY;
 
     public override ParentColumn: PauseColumnParent | null = null;

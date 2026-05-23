@@ -25,7 +25,6 @@ export type ActivatedEvent = (item: TabLeftItem, index: number) => void;
 
 export class TabLeftItem extends PauseMenuItem {
     public internalItem: UIMenuItem;
-    private enabled = true;
     private mainColor: SColor = SColor.HUD_Pause_bg;
     private highlightColor: SColor = SColor.HUD_White;
     private textTitle = "";
@@ -36,13 +35,13 @@ export class TabLeftItem extends PauseMenuItem {
     public TextureDict = "";
     public TextureName = "";
     public LeftItemBGType = LeftItemBGType.Full;
-    public labelFont: ItemFont = ScaleformFonts.CHALET_LONDON_NINETEENSIXTY;
+    public override labelFont: ItemFont = ScaleformFonts.CHALET_LONDON_NINETEENSIXTY;
     public rightLabelFont: ItemFont = ScaleformFonts.CHALET_LONDON_NINETEENSIXTY;
     public ItemType: LeftItemType;
     public Hovered = false;
     public ItemIndex = 0;
     public ItemList: PauseMenuItem[] = [];
-    public ParentTab: SubmenuTab | null = null;
+    public override ParentTab: SubmenuTab | null = null;
     private activatedHandlers: ActivatedEvent[] = [];
 
     constructor(
@@ -97,12 +96,9 @@ export class TabLeftItem extends PauseMenuItem {
     public set HighlightColor(value: SColor) {
         this.highlightColor = value;
     }
-    public get Enabled(): boolean {
-        return this.enabled;
-    }
 
-    public set Enabled(value: boolean) {
-        this.enabled = value;
+    public override set Enabled(value: boolean) {
+        this._enabled = value;
         if (!value) this.formatLeftLabel = replaceRstarColorsWith(this.formatLeftLabel, "~c~");
         else this.Label = this.label;
         this.updateLeftSlot();

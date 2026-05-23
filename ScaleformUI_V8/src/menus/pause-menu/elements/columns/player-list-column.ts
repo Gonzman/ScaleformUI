@@ -28,7 +28,7 @@ export class PlayerListColumn extends PM_Column {
         }
     }
 
-    public AddItem(item: PauseMenuItem): void {
+    public override AddItem(item: PauseMenuItem): void {
         this.AddPlayer(item as FriendItem);
     }
     public AddPlayer(item: FriendItem): void {
@@ -41,13 +41,13 @@ export class PlayerListColumn extends PM_Column {
         }
     }
 
-    public SetDataSlot(index: number): void {
+    public override SetDataSlot(index: number): void {
         this.SendItemToScaleform(index);
     }
-    public UpdateSlot(index: number): void {
+    public override UpdateSlot(index: number): void {
         this.SendItemToScaleform(index, true);
     }
-    public AddSlot(index: number): void {
+    public override AddSlot(index: number): void {
         this.SendItemToScaleform(index, false, false, true);
     }
 
@@ -60,7 +60,7 @@ export class PlayerListColumn extends PM_Column {
         this.RemoveSlot(index);
     }
 
-    public RemoveSlot(index: number): void {
+    public override RemoveSlot(index: number): void {
         if (index >= this.Items.length) return;
         try {
             this.Items[this.Index].Dispose?.();
@@ -103,7 +103,7 @@ export class PlayerListColumn extends PM_Column {
         if ((this.position as number) === 0 && i === this.index) fi.Panel?.UpdatePanel?.();
     }
 
-    public Populate(): void {
+    public override Populate(): void {
         ScaleformUI.Scaleforms._pauseMenu._pause?.callFunction("SET_DATA_SLOT_EMPTY", this.position as number);
         ScaleformUI.Scaleforms._pauseMenu._pause?.callFunction(
             "SET_COLUMN_MAX_ITEMS",
@@ -113,7 +113,7 @@ export class PlayerListColumn extends PM_Column {
         for (let i = 0; i < this.Items.length; i++) this.SetDataSlot(i);
     }
 
-    public ShowColumn(show: boolean = true): void {
+    public override ShowColumn(show: boolean = true): void {
         super.ShowColumn(show);
         this.InitColumnScroll(this.Items.length >= this.VisibleItems, 1, 0, 1);
         this.SetColumnScroll(
@@ -132,13 +132,13 @@ export class PlayerListColumn extends PM_Column {
         );
     }
 
-    public ClearColumn(): void {
+    public override ClearColumn(): void {
         super.ClearColumn();
         ScaleformUI.Scaleforms._pauseMenu._pause?.callFunction("SET_DATA_SLOT_EMPTY", 3);
         ScaleformUI.Scaleforms._pauseMenu._pause?.callFunction("SET_DATA_SLOT_EMPTY", 4);
     }
 
-    public Clear(): void {
+    public override Clear(): void {
         if (this.visible) this.ClearColumn();
         this.Items = [];
     }
@@ -150,7 +150,7 @@ export class PlayerListColumn extends PM_Column {
         }
     }
 
-    public GoUp(): void {
+    public override GoUp(): void {
         try {
             ClearPedInPauseMenu();
             try {
@@ -177,7 +177,7 @@ export class PlayerListColumn extends PM_Column {
         }
     }
 
-    public GoDown(): void {
+    public override GoDown(): void {
         try {
             ClearPedInPauseMenu();
             try {
@@ -207,14 +207,14 @@ export class PlayerListColumn extends PM_Column {
         }
     }
 
-    public Select(): void {
+    public override Select(): void {
         this.SelectItem();
     }
-    public GoBack(): void {
+    public override GoBack(): void {
         this.Focused = false;
     }
 
-    public MouseScroll(dir: number): void {
+    public override MouseScroll(dir: number): void {
         try {
             ClearPedInPauseMenu();
             try {

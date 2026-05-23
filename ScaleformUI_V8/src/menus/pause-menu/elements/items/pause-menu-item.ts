@@ -18,6 +18,7 @@ export class PauseMenuItem {
     public ParentTab: BaseTab | null = null;
     public ParentColumn: PauseMenuColumnLike | null = null;
     protected _selected: boolean = false;
+    protected _enabled: boolean = true;
 
     constructor(label: string, labelFont?: ItemFont) {
         this._label = label;
@@ -40,6 +41,14 @@ export class PauseMenuItem {
 
     public set Selected(value: boolean) {
         this._selected = value;
+    }
+
+    public get Enabled(): boolean {
+        return this._enabled;
+    }
+
+    public set Enabled(value: boolean) {
+        this._enabled = value;
     }
 }
 

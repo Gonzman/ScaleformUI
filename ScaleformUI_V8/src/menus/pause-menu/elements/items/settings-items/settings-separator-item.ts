@@ -3,7 +3,7 @@ import { SettingsItem, SettingsItemType } from "./settings-item";
 
 export class SettingsSeparatorItem extends SettingsItem {
     public readonly IsJumpable: boolean = false;
-    public Jumpable: boolean = this.IsJumpable;
+    public override Jumpable: boolean = this.IsJumpable;
 
     constructor(label: string = "") {
         super(label, "");

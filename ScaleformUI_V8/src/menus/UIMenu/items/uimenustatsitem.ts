@@ -70,15 +70,15 @@ export class UIMenuStatsItem extends UIMenuItem {
         this._statChanged.add(delegate);
     }
 
-    public SetLeftBadge(badge: BadgeStyle) {
+    public override SetLeftBadge(badge: BadgeStyle) {
         throw new Error("UIMenuStatsItem cannot have a left badge.");
     }
 
-    public SetRightBadge(badge: BadgeStyle) {
+    public override SetRightBadge(badge: BadgeStyle) {
         throw new Error("UIMenuStatsItem cannot have a right badge.");
     }
 
-    public SetRightLabel(text: string) {
+    public override SetRightLabel(text: string) {
         throw new Error("UIMenuStatsItem cannot have a right label.");
     }
 }

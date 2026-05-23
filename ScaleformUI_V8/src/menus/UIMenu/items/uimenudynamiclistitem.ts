@@ -43,11 +43,11 @@ export class UIMenuDynamicListItem extends UIMenuItem {
         this.callback.add(changeCallback);
     }
 
-    public SetRightBadge(badge: BadgeStyle) {
+    public override SetRightBadge(badge: BadgeStyle) {
         throw new Error("UIMenuDynamicListItem cannot have a right badge.");
     }
 
-    public SetRightLabel(text: string) {
+    public override SetRightLabel(text: string) {
         throw new Error("UIMenuDynamicListItem cannot have a right label.");
     }
 }

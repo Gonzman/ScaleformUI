@@ -4,7 +4,7 @@ import { MenuHandler } from "./menu-handler";
 export abstract class BaseMenu {
     private visible: boolean = false;
     public instructionalButtons: InstructionalButton[] = []; //TODO! type this
-    public Items: any[] = []; // no need to type this.. as well.. every menu has its own types...
+    public Items: unknown[] = []; // no need to type this.. as well.. every menu has its own types...
     abstract processMouse(): void;
     abstract processControl(): void;
     abstract draw(): void;

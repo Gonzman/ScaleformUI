@@ -17,7 +17,7 @@ export class TextColumn extends PM_Column {
 
     private sendItem(index: number, method: "SET_DATA_SLOT" | "UPDATE_SLOT"): void {
         if (index >= this.Items.length) return;
-        const item: any = this.Items[index];
+        const item = this.Items[index];
         ScaleformUI.Scaleforms._pauseMenu._pause?.callFunction(
             method,
             this.position as number,

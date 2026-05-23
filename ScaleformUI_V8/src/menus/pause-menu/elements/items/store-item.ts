@@ -8,7 +8,6 @@ export class StoreItem extends PauseMenuItem {
     public textureDictionary: string;
     public description: string = "";
     public override ParentColumn: PauseMenuColumnLike | null = null;
-    public Enabled: boolean = true;
     public Hovered: boolean = false;
     private activatedCallbacks: StoreItemActivated[] = [];
 

@@ -10,7 +10,6 @@ interface PlayerStatsPanelLike {
 
 export class LobbyItem extends PauseMenuItem {
     public _type: number = 0;
-    protected _enabled: boolean = true;
     private clonePed: number | null = null;
     private _clonePed: number | null = null;
     private _clonePedForPauseMenu: number | null = null;
@@ -18,18 +17,18 @@ export class LobbyItem extends PauseMenuItem {
     private _clonePedLighting: boolean = false;
     private keepPanelVisible: boolean = false;
     public Hovered: boolean = false;
-    public ParentColumn: PauseMenuColumnLike | null = null;
+    public override ParentColumn: PauseMenuColumnLike | null = null;
     public Panel?: PlayerStatsPanelLike;
 
     constructor(label: string) {
         super(label);
     }
 
-    public get Selected(): boolean {
+    public override get Selected(): boolean {
         return this._selected;
     }
 
-    public set Selected(value: boolean) {
+    public override set Selected(value: boolean) {
         if (this._selected === value) {
             return;
         }
@@ -126,11 +125,11 @@ export class LobbyItem extends PauseMenuItem {
         }
     }
 
-    public get Enabled(): boolean {
+    public override get Enabled(): boolean {
         return this._enabled;
     }
 
-    public set Enabled(value: boolean) {
+    public override set Enabled(value: boolean) {
         this._enabled = value;
     }
 

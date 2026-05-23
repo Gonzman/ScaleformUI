@@ -13,8 +13,7 @@ export class UIMenuProgressItem extends UIMenuItem {
     _multiplier: number = 5;
     sliderColor: SColor = SColor.HUD_Freemode;
     Divider: boolean = false;
-    _itemSliderProgressCallback = new ProgressItemCallbackBuilder()
-
+    _itemSliderProgressCallback = new ProgressItemCallbackBuilder();
 
     constructor(text: string, maxCount: number, startIndex: number, description: string, sliderColor: SColor) {
         super(text, description);
@@ -28,8 +27,20 @@ export class UIMenuProgressItem extends UIMenuItem {
 
     public set SliderColor(value: SColor) {
         this.sliderColor = value;
-        if (this.Parent !== null && this.Parent.Visible && this.Parent.Pagination.IsItemVisible(this.Parent.Items.indexOf(this))) {
-            ScaleformUI.Scaleforms._ui.callFunction("UPDATE_COLORS", this.Parent.Pagination.GetScaleformIndex(this.Parent.Items.indexOf(this)), this.MainColor.toArgb(), this.HighlightColor.toArgb(), this.TextColor, this.HighlightedTextColor, value);
+        if (
+            this.Parent !== null &&
+            this.Parent.Visible &&
+            this.Parent.Pagination.IsItemVisible(this.Parent.Items.indexOf(this))
+        ) {
+            ScaleformUI.Scaleforms._ui.callFunction(
+                "UPDATE_COLORS",
+                this.Parent.Pagination.GetScaleformIndex(this.Parent.Items.indexOf(this)),
+                this.MainColor.toArgb(),
+                this.HighlightColor.toArgb(),
+                this.TextColor,
+                this.HighlightedTextColor,
+                value
+            );
         }
     }
     public get SliderColor(): SColor {
@@ -37,15 +48,20 @@ export class UIMenuProgressItem extends UIMenuItem {
     }
 
     public set Value(value: number) {
-        if (value > this._max)
-            this._value = this._max;
-        else if (value < 0)
-            this._value = 0;
-        else
-            this._value = value;
-        this.progressChanged(this._value)
-        if (this.Parent !== null && this.Parent.Visible && this.Parent.Pagination.IsItemVisible(this.Parent.Items.indexOf(this))) {
-            ScaleformUI.Scaleforms._ui.callFunction("SET_ITEM_VALUE", this.Parent.Pagination.GetScaleformIndex(this.Parent.Items.indexOf(this)), this._value);
+        if (value > this._max) this._value = this._max;
+        else if (value < 0) this._value = 0;
+        else this._value = value;
+        this.progressChanged(this._value);
+        if (
+            this.Parent !== null &&
+            this.Parent.Visible &&
+            this.Parent.Pagination.IsItemVisible(this.Parent.Items.indexOf(this))
+        ) {
+            ScaleformUI.Scaleforms._ui.callFunction(
+                "SET_ITEM_VALUE",
+                this.Parent.Pagination.GetScaleformIndex(this.Parent.Items.indexOf(this)),
+                this._value
+            );
         }
     }
     public get Value(): number {
@@ -60,18 +76,18 @@ export class UIMenuProgressItem extends UIMenuItem {
     }
 
     public onProgressChanged(delegate: ItemSliderProgressCallback) {
-        this._itemSliderProgressCallback.add(delegate)
+        this._itemSliderProgressCallback.add(delegate);
     }
 
     progressChanged(value: number) {
         this._itemSliderProgressCallback.toDelegate()(this, value);
     }
 
-    public SetRightBadge(badge: BadgeStyle) {
+    public override SetRightBadge(badge: BadgeStyle) {
         throw new Error("UIMenuProgressItem cannot have a right badge.");
     }
 
-    public SetRightLabel(text: string) {
+    public override SetRightLabel(text: string) {
         throw new Error("UIMenuProgressItem cannot have a right label.");
     }
 }

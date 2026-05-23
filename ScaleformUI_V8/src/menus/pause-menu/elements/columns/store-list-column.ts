@@ -1,14 +1,18 @@
+import { UIMenuItem } from "menus/UIMenu/items/uimenuitem";
+import { StoreItem } from "../items";
 import PM_Column, { PLT_COLUMNS } from "./pm-column";
 import { ScaleformUI } from "scaleforms/scaleformui/main";
 
-export type StoreItemSelected = (item: any, index: number) => void;
+export type StoreItemSelected = (item: StoreItem, index: number) => void;
 export type IndexChanged = (index: number) => void;
 
 export class StoreListColumn extends PM_Column {
     public OnIndexChanged?: IndexChanged;
-    private _unfilteredItems: any[] = [];
+    private _unfilteredItems: StoreItem[] = [];
     private _unfilteredSelection: number = 0;
     public StoreItemActivated?: StoreItemSelected;
+
+    public override Items: StoreItem[] = [];
 
     constructor(label: string) {
         super(-1);
@@ -17,7 +21,7 @@ export class StoreListColumn extends PM_Column {
         this.type = PLT_COLUMNS.STORE;
     }
 
-    public AddStoreItem(item: any): void {
+    public AddStoreItem(item: StoreItem): void {
         item.ParentColumn = this;
         this.Items.push(item);
         if (this.visible && this.Items.length <= this.VisibleItems) {
@@ -27,19 +31,19 @@ export class StoreListColumn extends PM_Column {
         }
     }
 
-    public SetDataSlot(index: number): void {
+    public override SetDataSlot(index: number): void {
         this.SendItemToScaleform(index);
     }
-    public UpdateSlot(index: number): void {
+    public override UpdateSlot(index: number): void {
         if (index >= this.Items.length) return;
         if (this.visible) this.SendItemToScaleform(index, true);
     }
-    public AddSlot(index: number): void {
+    public override AddSlot(index: number): void {
         if (index >= this.Items.length) return;
         if (this.visible) this.SendItemToScaleform(index, false, false, true);
     }
 
-    public RemoveItem(item: any): void {
+    public RemoveItem(item: StoreItem): void {
         const idx = this.Items.indexOf(item);
         if (idx >= 0) this.RemoveSlot(idx);
     }
@@ -48,7 +52,7 @@ export class StoreListColumn extends PM_Column {
         this.RemoveSlot(index);
     }
 
-    public Populate(): void {
+    public override Populate(): void {
         ScaleformUI.Scaleforms._pauseMenu._pause?.callFunction("SET_DATA_SLOT_EMPTY", this.position as number);
         ScaleformUI.Scaleforms._pauseMenu._pause?.callFunction(
             "SET_COLUMN_MAX_ITEMS",
@@ -65,7 +69,7 @@ export class StoreListColumn extends PM_Column {
         isSlot: boolean = false
     ): void {
         if (i >= this.Items.length) return;
-        const item: any = this.Items[i];
+        const item = this.Items[i];
         let str = "SET_DATA_SLOT";
         if (update) str = "UPDATE_SLOT";
         if (newItem) str = "ADD_SLOT";
@@ -85,7 +89,7 @@ export class StoreListColumn extends PM_Column {
         );
     }
 
-    public ShowColumn(show: boolean = true): void {
+    public override ShowColumn(show: boolean = true): void {
         super.ShowColumn(show);
         this.InitColumnScroll(true, 1, 0, 1);
         this.SetColumnScroll(
@@ -104,12 +108,12 @@ export class StoreListColumn extends PM_Column {
         );
     }
 
-    public Clear(): void {
+    public override Clear(): void {
         if (this.visible) this.ClearColumn();
         this.Items = [];
     }
 
-    public GoUp(): void {
+    public override GoUp(): void {
         try {
             try {
                 this.CurrentItem.Selected = false;
@@ -132,7 +136,7 @@ export class StoreListColumn extends PM_Column {
         }
     }
 
-    public GoDown(): void {
+    public override GoDown(): void {
         try {
             try {
                 this.CurrentItem.Selected = false;
@@ -155,14 +159,14 @@ export class StoreListColumn extends PM_Column {
         }
     }
 
-    public Select(): void {
+    public override Select(): void {
         this.SelectItem();
     }
-    public GoBack(): void {
+    public override GoBack(): void {
         this.Focused = false;
     }
 
-    public MouseScroll(dir: number): void {
+    public override MouseScroll(dir: number): void {
         try {
             try {
                 this.CurrentItem.Selected = false;
@@ -179,7 +183,7 @@ export class StoreListColumn extends PM_Column {
         }
     }
 
-    public get CurrentItem(): any {
+    public get CurrentItem(): StoreItem {
         return this.Items[this.CurrentSelection];
     }
 
@@ -214,7 +218,7 @@ export class StoreListColumn extends PM_Column {
         }
     }
 
-    public SortMissions(compare: (a: any, b: any) => number): void {
+    public SortMissions(compare: (a: StoreItem, b: StoreItem) => number): void {
         try {
             try {
                 this.CurrentItem.Selected = false;
@@ -222,7 +226,7 @@ export class StoreListColumn extends PM_Column {
             this._unfilteredItems = [...this.Items];
             this._unfilteredSelection = this.CurrentSelection;
             this.Clear();
-            const list: any[] = this._unfilteredItems as any[];
+            const list = this._unfilteredItems;
             list.sort(compare);
             this.Items = [...list];
             if (this.visible) {
@@ -235,7 +239,7 @@ export class StoreListColumn extends PM_Column {
         }
     }
 
-    public FilterMissions(predicate: (it: any) => boolean): void {
+    public FilterMissions(predicate: (it: StoreItem) => boolean): void {
         if (!predicate) throw new Error("predicate is null");
         try {
             this._unfilteredItems = [...this.Items];

@@ -13,7 +13,7 @@ export class SubmenuLeftColumn extends PM_Column {
         return item?.ItemType ?? LeftItemType.Empty;
     }
 
-    public AddItem(item: TabLeftItem): void {
+    public override AddItem(item: TabLeftItem): void {
         item.ItemIndex = this.Items.length;
         this.Items.push(item);
     }
@@ -30,25 +30,37 @@ export class SubmenuLeftColumn extends PM_Column {
         if (!this.Items.length) return;
         this.Index = this.Index - 1;
         this.refreshCenterFromSelection();
-        this.SetColumnScroll(this.Index + 1, this.Items.length, this.VisibleItems, "", this.Items.length < this.VisibleItems);
+        this.SetColumnScroll(
+            this.Index + 1,
+            this.Items.length,
+            this.VisibleItems,
+            "",
+            this.Items.length < this.VisibleItems
+        );
     }
 
     public override GoDown(): void {
         if (!this.Items.length) return;
         this.Index = this.Index + 1;
         this.refreshCenterFromSelection();
-        this.SetColumnScroll(this.Index + 1, this.Items.length, this.VisibleItems, "", this.Items.length < this.VisibleItems);
+        this.SetColumnScroll(
+            this.Index + 1,
+            this.Items.length,
+            this.VisibleItems,
+            "",
+            this.Items.length < this.VisibleItems
+        );
     }
 
     private refreshCenterFromSelection(): void {
-        const tab: any = this.Parent;
+        const tab = this.Parent;
         const center = tab?.CenterColumn;
         if (!center) return;
         center.Items.length = 0;
         if (this.currentItemType !== LeftItemType.Empty) {
             const leftItem = this.Items[this.Index] as TabLeftItem;
             center.Items.push(...leftItem.ItemList);
-            center.Items.forEach((item: any) => (item.ParentColumn = center));
+            center.Items.forEach((item) => (item.ParentColumn = center));
         }
         if (tab?.Visible && tab?.Parent?.Visible) {
             ScaleformUI.Scaleforms._pauseMenu._pause?.callFunction("MENU_STATE", this.currentItemType);

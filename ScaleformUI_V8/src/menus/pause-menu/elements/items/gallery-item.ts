@@ -1,14 +1,11 @@
 import { PauseMenuItem } from "./pause-menu-item";
 import { FakeBlip } from "./fake-blip";
+import TabView from "menus/pause-menu/tab-view";
 
 // GalleryItem - Transpiled from C# GalleryItem.cs
-export type GalleryItemSelected = (
-    tab: any,
-    item: GalleryItem,
-    totalIndex: number,
-    gridIndex: number
-) => void;
+export type GalleryItemSelected = (tab: TabView, item: GalleryItem, totalIndex: number, gridIndex: number) => void;
 
+//Tabview is a guess for any
 export class GalleryItem extends PauseMenuItem {
     public TextureDictionary: string;
     public TextureName: string;
@@ -28,12 +25,7 @@ export class GalleryItem extends PauseMenuItem {
         this.TextureName = textureName;
     }
 
-    public SetLabels(
-        label1: string,
-        label2: string,
-        label3: string,
-        label4: string
-    ): void {
+    public SetLabels(label1: string, label2: string, label3: string, label4: string): void {
         this.Label1 = label1;
         this.Label2 = label2;
         this.Label3 = label3;
@@ -77,12 +69,7 @@ export class GalleryItem extends PauseMenuItem {
         this.activatedCallbacks.push(callback);
     }
 
-    public ItemSelected(
-        tab: any,
-        item: GalleryItem,
-        totalIndex: number,
-        gridIndex: number
-    ): void {
+    public ItemSelected(tab: TabView, item: GalleryItem, totalIndex: number, gridIndex: number): void {
         for (const callback of this.activatedCallbacks) {
             callback(tab, item, totalIndex, gridIndex);
         }

@@ -56,11 +56,11 @@ export class UIMenuCheckboxItem extends UIMenuItem {
         return this._checked;
     }
 
-    public SetRightBadge(badge: BadgeStyle) {
+    public override SetRightBadge(badge: BadgeStyle) {
         throw new Error("UIMenuCheckboxItem cannot have a right badge.");
     }
 
-    public SetRightLabel(text: string) {
+    public override SetRightLabel(text: string) {
         throw new Error("UIMenuCheckboxItem cannot have a right label.");
     }
 }

@@ -38,11 +38,11 @@ export class MissionItem extends PauseMenuItem {
         this.customRightBadge = { Key: "", Value: "" };
     }
 
-    public get Enabled(): boolean {
+    public override get Enabled(): boolean {
         return this.enabled;
     }
 
-    public set Enabled(value: boolean) {
+    public override set Enabled(value: boolean) {
         this.enabled = value;
     }
 
