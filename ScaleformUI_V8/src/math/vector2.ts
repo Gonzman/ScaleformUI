@@ -2,15 +2,14 @@ export interface Vec2 {
     x: number;
     y: number;
 }
-export type PrimitiveVector2 = [number, number]
+export type PrimitiveVector2 = [number, number];
 
 /**
  * Immutable Vector class, partially done by me and by other authors.
  */
 export class Vector2 implements Vec2 {
-
-    public static get zero():Vector2 {
-        return new Vector2(0, 0)
+    public static get zero(): Vector2 {
+        return new Vector2(0, 0);
     }
     public static create(v1: number | Vec2): Vector2 {
         if (typeof v1 === "number") {
@@ -54,17 +53,19 @@ export class Vector2 implements Vec2 {
 
     public static crossProduct(v1: Vec2, v2: Vec2): number {
         return v1.x * v2.y - v1.y * v2.x;
-
     }
 
     public static normalize(v: Vector2): Vector2 {
         return Vector2.divide(v, v.length);
     }
 
-    constructor(public x: number, public y: number) { }
+    constructor(
+        public x: number,
+        public y: number
+    ) {}
 
     public static fromInterface(int: Vec2) {
-        return new Vector2(int.x, int.y)
+        return new Vector2(int.x, int.y);
     }
 
     public clone(): Vector2 {
@@ -154,34 +155,37 @@ export class Vector2 implements Vec2 {
     }
 
     public toFixed(frac: number) {
-        return new Vector2(parseFloat(this.x.toFixed(frac)), parseFloat(this.y.toFixed(frac)))
+        return new Vector2(parseFloat(this.x.toFixed(frac)), parseFloat(this.y.toFixed(frac)));
     }
 
     public addX(to: number) {
-        return new Vector2(this.x + to, this.y)
+        return new Vector2(this.x + to, this.y);
     }
     public addY(to: number) {
-        return new Vector2(this.x, this.y + to)
+        return new Vector2(this.x, this.y + to);
     }
+    /**
+     * @deprecated Vector 2 has no Z Axis
+     */
     public addZ(to: number) {
-        return new Vector2(this.x, this.y)
+        return new Vector2(this.x, this.y);
     }
 
     public toObject(): Vec2 {
-        return { x: this.x, y: this.y }
+        return { x: this.x, y: this.y };
     }
 
     public cloneWith(angle: "x" | "y", value: number) {
-        return new Vector2(angle === "x" ? value : this.x, angle === "y" ? value : this.y)
+        return new Vector2(angle === "x" ? value : this.x, angle === "y" ? value : this.y);
     }
 
     public get magnitude() {
-        return Math.sqrt(this.dotProduct(this))
+        return Math.sqrt(this.dotProduct(this));
     }
 
     public isInsideSphere(pos: Vector2, scale: Vector2) {
-        const dist = this.subtract(pos)
-        const rad = scale.magnitude / 2
-        return dist.magnitude <= rad
+        const dist = this.subtract(pos);
+        const rad = scale.magnitude / 2;
+        return dist.magnitude <= rad;
     }
 }
