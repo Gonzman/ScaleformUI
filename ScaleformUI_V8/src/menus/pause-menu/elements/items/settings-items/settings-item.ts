@@ -16,7 +16,7 @@ export enum SettingsItemType {
     SliderBar,
     Empty,
     Basic_tabbed = 10,
-    Progress_tabbed = 20,
+    Progress_tabbed = 20
 }
 
 export interface StringPair {

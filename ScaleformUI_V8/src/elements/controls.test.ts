@@ -1,4 +1,4 @@
-import {Controls} from "./controls";
+import { Controls } from "./controls";
 
 describe("Controls test", () => {
     const setupGlobalMocks = (disableMock: jest.Mock, enableMock: jest.Mock, isUsingKeyboardMock: jest.Mock) => {
@@ -13,9 +13,7 @@ describe("Controls test", () => {
     };
 
     const verifyControlAction = (mock: jest.Mock, controlsArray: number[]) => {
-        controlsArray.forEach(control =>
-            expect(mock).toHaveBeenCalledWith(0, control, true)
-        );
+        controlsArray.forEach((control) => expect(mock).toHaveBeenCalledWith(0, control, true));
         expect(mock).toHaveBeenCalledTimes(controlsArray.length);
     };
 
@@ -31,14 +29,17 @@ describe("Controls test", () => {
     it.each([
         [true, Controls.NecessaryControlsKeyboard],
         [false, Controls.NecessaryControlsGamePad]
-    ])("should toggle all controls based on keyboard or gamepad usage", (usingKeyboard: boolean, expectedControls: number[]) => {
-        const disableMock = jest.fn();
-        const enableMock = jest.fn();
-        const isUsingKeyboardMock = jest.fn(() => usingKeyboard);
-        setupGlobalMocks(disableMock, enableMock, isUsingKeyboardMock);
-        Controls.toggleAll(false);
-        verifyControlToggle(isUsingKeyboardMock, 1, 2);
-        verifyControlToggle(disableMock, 1, 2);
-        verifyControlAction(enableMock, expectedControls);
-    });
+    ])(
+        "should toggle all controls based on keyboard or gamepad usage",
+        (usingKeyboard: boolean, expectedControls: number[]) => {
+            const disableMock = jest.fn();
+            const enableMock = jest.fn();
+            const isUsingKeyboardMock = jest.fn(() => usingKeyboard);
+            setupGlobalMocks(disableMock, enableMock, isUsingKeyboardMock);
+            Controls.toggleAll(false);
+            verifyControlToggle(isUsingKeyboardMock, 1, 2);
+            verifyControlToggle(disableMock, 1, 2);
+            verifyControlAction(enableMock, expectedControls);
+        }
+    );
 });
