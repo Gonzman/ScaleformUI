@@ -169,33 +169,33 @@ function buildPlayerListTab(): PlayerListTab {
     settings.AddSettings(new SettingsListItem("Difficulty", ["Easy", "Normal", "Hard"], 1));
     settings.AddSettings(new SettingsSliderItem("Music volume", 100, 70, SColor.HUD_Freemode));
     settings.AddSettings(new SettingsProgressItem("Brightness", 100, 60, false, SColor.HUD_Freemode));
-    // settings.AddSettings(new UIMenuItem("Base Item", "Basic Description"));
-    // settings.AddSettings(
-    //     new UIMenuListItem(
-    //         "List Item",
-    //         ["~r~item1", "item2", "item3"],
-    //         0,
-    //         "List Description",
-    //         SColor.HUD_Panel_light,
-    //         SColor.HUD_White,
-    //         SColor.HUD_White,
-    //         SColor.HUD_Black
-    //     )
-    // );
-    // settings.AddSettings(
-    //     new UIMenuCheckboxItem(
-    //         "Checkbox Item",
-    //         UIMenuCheckboxStyle.Tick,
-    //         true,
-    //         "Checkbox Description",
-    //         SColor.HUD_Panel_light,
-    //         SColor.HUD_White
-    //     )
-    // );
-    // settings.AddSettings(
-    //     new UIMenuSliderItem("Slider Item", "Slider Description", 100, 10, 50, SColor.HUD_Freemode, false)
-    // );
-    // settings.AddSettings(new UIMenuProgressItem("Progress Item", 100, 50, "Progress Description", SColor.HUD_Freemode));
+    settings.AddSettings(new UIMenuItem("Base Item", "Basic Description"));
+    settings.AddSettings(
+        new UIMenuListItem(
+            "List Item",
+            [new UIMenuItem("~r~item1"), new UIMenuItem("item2"), new UIMenuItem("item3")],
+            0,
+            "List Description",
+            SColor.HUD_Panel_light,
+            SColor.HUD_White,
+            SColor.HUD_White,
+            SColor.HUD_Black
+        )
+    );
+    settings.AddSettings(
+        new UIMenuCheckboxItem(
+            "Checkbox Item",
+            UIMenuCheckboxStyle.Tick,
+            true,
+            "Checkbox Description",
+            SColor.HUD_Panel_light,
+            SColor.HUD_White
+        )
+    );
+    settings.AddSettings(
+        new UIMenuSliderItem("Slider Item", "Slider Description", 100, 10, 50, SColor.HUD_Freemode, false)
+    );
+    settings.AddSettings(new UIMenuProgressItem("Progress Item", 100, 50, "Progress Description", SColor.HUD_Freemode));
 
     settings.OnSettingItemActivated = (item) => {
         if (item instanceof UIMenuCheckboxItem) {

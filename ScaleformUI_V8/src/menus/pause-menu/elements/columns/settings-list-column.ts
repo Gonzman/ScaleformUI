@@ -9,16 +9,24 @@ import SettingsProgressItem from "../items/settings-items/settings-progress-item
 import SettingsSeparatorItem from "../items/settings-items/settings-separator-item";
 import SettingsSliderItem from "../items/settings-items/settings-slider-item";
 import { SettingsStatsItem } from "../items/settings-items";
+import { UIMenuItem } from "menus/UIMenu/items/uimenuitem";
 
-export type SettingItemSelected = (item: SettingsItem, index: number) => void;
+type SettingItemType = SettingsItem | UIMenuItem;
+
+export type SettingItemSelected = (item: SettingItemType, index: number) => void;
 export type IndexChanged = (index: number) => void;
+
+const isSettingsItem = (item: SettingItemType): item is SettingsItem => item instanceof SettingsItem;
+
+const isJumpableItem = (item: SettingItemType | null | undefined): item is SettingsItem =>
+    !!item && isSettingsItem(item) && item.Jumpable;
 
 export class SettingsListColumn extends PM_Column {
     public OnIndexChanged?: IndexChanged;
-    private _unfilteredItems: SettingsItem[] = [];
+    private _unfilteredItems: SettingItemType[] = [];
     private _unfilteredSelection: number = 0;
     public OnSettingItemActivated?: SettingItemSelected;
-    public override Items: SettingsItem[] = [];
+    public override Items: SettingItemType[] = [];
 
     constructor(label: string, maxItems: number = 16) {
         super(-1);
@@ -35,12 +43,12 @@ export class SettingsListColumn extends PM_Column {
         }
     }
 
-    public override AddItem(item: SettingsItem): void {
+    public override AddItem(item: SettingItemType): void {
         this.AddSettings(item);
     }
 
-    public AddSettings(item: SettingsItem): void {
-        const it: SettingsItem = item;
+    public AddSettings(item: SettingItemType): void {
+        const it: SettingItemType = item;
         try {
             if (it.MainColor === SColor.HUD_Panel_light) {
                 it.MainColor = SColor.HUD_Pause_bg;
@@ -57,7 +65,7 @@ export class SettingsListColumn extends PM_Column {
         }
     }
 
-    public RemoveItem(item: SettingsItem): void {
+    public RemoveItem(item: SettingItemType): void {
         const idx = this.Items.indexOf(item);
         if (idx >= 0) this.RemoveSlot(idx);
     }
@@ -90,7 +98,7 @@ export class SettingsListColumn extends PM_Column {
             false
         );
         const it = this.Items.length > 0 ? this.CurrentItem : null;
-        if (it && it.Jumpable) {
+        if (isJumpableItem(it)) {
             try {
                 this.CurrentItem.Selected = false;
             } catch (e) {}
@@ -126,7 +134,7 @@ export class SettingsListColumn extends PM_Column {
         if (this.visible) this.SendItemToScaleform(index, false, false, true);
     }
 
-    public AddItemAt(item: SettingsItem, idx: number): void {
+    public AddItemAt(item: SettingItemType, idx: number): void {
         if (!this.visible) return;
         if (idx >= this.Items.length) return;
         this.Items.splice(idx, 0, item);
@@ -144,6 +152,7 @@ export class SettingsListColumn extends PM_Column {
     ): void {
         if (i >= this.Items.length) return;
         const item = this.Items[i];
+        const settingsItem = isSettingsItem(item) ? item : null;
         let str = "SET_DATA_SLOT";
         if (update) str = "UPDATE_SLOT";
         if (newItem) str = "SET_DATA_SLOT_SPLICE";
@@ -242,16 +251,16 @@ export class SettingsListColumn extends PM_Column {
             AddTextComponentScaleform(item.RightLabel ?? "");
             EndTextCommandScaleformString_2();
             ScaleformMovieMethodAddParamInt(item.LeftBadge ?? 0);
-            ScaleformMovieMethodAddParamPlayerNameString(item.customLeftBadge?.Key ?? "");
-            ScaleformMovieMethodAddParamPlayerNameString(item.customLeftBadge?.Value ?? "");
+            ScaleformMovieMethodAddParamPlayerNameString(settingsItem?.customLeftBadge?.Key ?? "");
+            ScaleformMovieMethodAddParamPlayerNameString(settingsItem?.customLeftBadge?.Value ?? "");
             ScaleformMovieMethodAddParamInt(item.RightBadge ?? 0);
-            ScaleformMovieMethodAddParamPlayerNameString(item.customRightBadge?.Key ?? "");
-            ScaleformMovieMethodAddParamPlayerNameString(item.customRightBadge?.Value ?? "");
+            ScaleformMovieMethodAddParamPlayerNameString(settingsItem?.customRightBadge?.Key ?? "");
+            ScaleformMovieMethodAddParamPlayerNameString(settingsItem?.customRightBadge?.Value ?? "");
             ScaleformMovieMethodAddParamPlayerNameString(item.labelFont?.fontName ?? "");
             ScaleformMovieMethodAddParamPlayerNameString(item.rightLabelFont?.fontName ?? "");
         }
 
-        ScaleformMovieMethodAddParamBool(item.KeepTextColorWhite ?? false);
+        ScaleformMovieMethodAddParamBool(settingsItem?.KeepTextColorWhite ?? false);
         EndScaleformMovieMethod();
     }
 
@@ -270,7 +279,7 @@ export class SettingsListColumn extends PM_Column {
                 this.index--;
                 if (this.index < 0) this.index = this.Items.length - 1;
                 await Delay(0);
-            } while (this.CurrentItem && this.CurrentItem.Jumpable);
+            } while (isJumpableItem(this.CurrentItem));
             ScaleformUI.Scaleforms._pauseMenu._pause?.callFunction(
                 "SET_COLUMN_HIGHLIGHT",
                 this.position as number,
@@ -298,7 +307,7 @@ export class SettingsListColumn extends PM_Column {
                 this.index++;
                 if (this.index >= this.Items.length) this.index = 0;
                 await Delay(0);
-            } while (this.CurrentItem && this.CurrentItem.Jumpable);
+            } while (isJumpableItem(this.CurrentItem));
             ScaleformUI.Scaleforms._pauseMenu._pause?.callFunction(
                 "SET_COLUMN_HIGHLIGHT",
                 this.position as number,
@@ -399,7 +408,7 @@ export class SettingsListColumn extends PM_Column {
                 this.index += dir;
                 if (this.index < 0) this.index = this.Items.length - 1;
                 if (this.index >= this.Items.length) this.index = 0;
-            } while (this.CurrentItem && this.CurrentItem.Jumpable);
+            } while (isJumpableItem(this.CurrentItem));
             AddTextEntry("PAUSEMENU_Current_Description", this.CurrentItem.Description ?? "");
             try {
                 this.CurrentItem.Selected = true;
@@ -410,8 +419,8 @@ export class SettingsListColumn extends PM_Column {
         }
     }
 
-    public get CurrentItem(): SettingsItem {
-        return this.Items[this.Index] as SettingsItem;
+    public get CurrentItem(): SettingItemType {
+        return this.Items[this.Index] as SettingItemType;
     }
 
     public get CurrentSelection(): number {
@@ -498,7 +507,7 @@ export class SettingsListColumn extends PM_Column {
         }
     }
 
-    public SortSettings(compare: (a: SettingsItem, b: SettingsItem) => number): void {
+    public SortSettings(compare: (a: SettingItemType, b: SettingItemType) => number): void {
         if (!this.visible) return;
         try {
             try {
@@ -520,7 +529,7 @@ export class SettingsListColumn extends PM_Column {
         }
     }
 
-    public FilterSettings(predicate: (it: SettingsItem) => boolean): void {
+    public FilterSettings(predicate: (it: SettingItemType) => boolean): void {
         if (!this.visible) return;
         if (!predicate) throw new Error("predicate is null");
         try {
