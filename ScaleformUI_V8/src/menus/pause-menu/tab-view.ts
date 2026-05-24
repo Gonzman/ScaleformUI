@@ -43,7 +43,7 @@ export class TabView extends PauseMenuBase {
     public _pause: PauseMenuHandler;
     public _loaded = false;
 
-    private index = 0;
+    private _index = 0;
     private isBuilding = false;
     private controller = false;
     private changed = false;
@@ -104,19 +104,27 @@ export class TabView extends PauseMenuBase {
     }
 
     public get Index(): number {
-        return this.index;
+        return this._index;
     }
 
     public set Index(value: number) {
-        if (this.Tabs[this.Index]) this.Tabs[this.Index].Visible = false;
-        this.index = value;
-        if (this.index > this.Tabs.length - 1) this.index = 0;
-        if (this.index < 0) this.index = this.Tabs.length - 1;
-        if (this.Tabs[this.Index]) this.Tabs[this.Index].Visible = true;
+        this.Tabs[this._index].Visible = false;
+
+        if (value >= this.Tabs.length) {
+            this._index = 0;
+        } else if (value < 0) {
+            this._index = this.Tabs.length - 1;
+        } else {
+            this._index = value;
+        }
+
+        this.Tabs[this._index].Visible = true;
+
         if (this.Visible) {
             this.BuildPauseMenu();
-            this._pause.selectTab(this.index);
+            this._pause.selectTab(this._index);
         }
+
         this.SendPauseMenuTabChange();
     }
 

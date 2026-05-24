@@ -1,4 +1,5 @@
 import { MenuHandler } from "menus/menu-handler";
+import { BigFeedHandler } from "scaleforms/bigfeed/bigfeedhandler";
 import { BigmessageInstance } from "scaleforms/bigmessage/bigmessage-instance";
 import { InstructionalButtonsHandler } from "scaleforms/instructional-buttons/instructionalbuttonshandler";
 import { MinimapOverlays } from "scaleforms/minimap/minimap";
@@ -29,7 +30,7 @@ class Scaleforms {
     JobMissionSelector: any; // Replace with actual type
     RankbarHandler: any; // Replace with actual type
     SplashText: any; // Replace with actual type
-    BigFeed: any; // Replace with actual type
+    BigFeed: BigFeedHandler; // Replace with actual type
     MinimapOverlays: MinimapOverlays;
 
     constructor() {
@@ -42,6 +43,7 @@ class Scaleforms {
         this.MinimapOverlays = new MinimapOverlays();
         this.MinimapOverlays.load();
         this.BigMessageInstance = new BigmessageInstance();
+        this.BigFeed = new BigFeedHandler();
     }
 }
 
