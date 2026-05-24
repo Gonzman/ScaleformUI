@@ -177,7 +177,7 @@ export class SubmenuCentralColumn extends PM_Column {
         return 0;
     }
 
-    private getSettingsExtra(item: SettingsItem): any {
+    private getSettingsExtra(item: SettingsItem) {
         if (item instanceof SettingsItem && item.ItemType === SettingsItemType.Basic) return item.RightLabel;
         if (item instanceof SettingsListItem) return item.ListItems.join(",");
         if (item instanceof SettingsCheckboxItem) return item.CheckBoxStyle;
@@ -186,7 +186,7 @@ export class SubmenuCentralColumn extends PM_Column {
         return "";
     }
 
-    private getSettingsExtra2(item: SettingsItem): any {
+    private getSettingsExtra2(item: SettingsItem) {
         if (item instanceof SettingsCheckboxItem) return item.IsChecked;
         if (item instanceof SettingsProgressItem) return item.ColoredBarColor.getArgbValue();
         if (item instanceof SettingsSliderItem) return item.ColoredBarColor.getArgbValue();
