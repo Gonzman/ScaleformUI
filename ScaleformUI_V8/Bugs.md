@@ -1,0 +1,4 @@
+- [ ] `Tabs disappear after switching sometimes`
+- [ ] `selection of settings not working properly and going through the list of settings item`
+- [ ] `img showing on some items`
+- [ ]
