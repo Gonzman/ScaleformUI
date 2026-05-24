@@ -77,6 +77,7 @@ import "../menus/pause-menu/elements/items/settings-items/settings-list-item";
 import "../menus/pause-menu/elements/items/settings-items/settings-progress-item";
 import "../menus/pause-menu/elements/items/settings-items/settings-separator-item";
 import "../menus/pause-menu/elements/items/settings-items/settings-slider-item";
+import "../menus/pause-menu/elements/items/settings-items/settings-stats-item";
 import "../menus/pause-menu/elements/items/stats-tab-item";
 import "../menus/pause-menu/elements/items/store-item";
 import "../menus/pause-menu/elements/panels/index";

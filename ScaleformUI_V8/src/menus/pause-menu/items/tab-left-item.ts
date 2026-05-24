@@ -104,6 +104,10 @@ export class TabLeftItem extends PauseMenuItem {
         this.updateLeftSlot();
     }
 
+    public override get Enabled(): boolean {
+        return this._enabled;
+    }
+
     public override get Selected(): boolean {
         return super.Selected;
     }
