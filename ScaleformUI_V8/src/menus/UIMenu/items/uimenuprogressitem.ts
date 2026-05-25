@@ -33,7 +33,7 @@ export class UIMenuProgressItem extends UIMenuItem {
             this.Parent.Pagination.IsItemVisible(this.Parent.Items.indexOf(this))
         ) {
             ScaleformUI.Scaleforms._ui.callFunction(
-                "UPDATE_COLORS",
+                "UPDATE_SLOT",
                 this.Parent.Pagination.GetScaleformIndex(this.Parent.Items.indexOf(this)),
                 this.MainColor.toArgb(),
                 this.HighlightColor.toArgb(),

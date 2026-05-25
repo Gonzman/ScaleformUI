@@ -65,7 +65,7 @@ export class UIMenuListItem extends UIMenuItem {
             this.Parent.Pagination.IsItemVisible(this.Parent.Items.indexOf(this))
         ) {
             ScaleformUI.Scaleforms._ui.callFunction(
-                "UPDATE_LISTITEM_LIST",
+                "UPDATE_SLOT",
                 this.Parent.Pagination.GetScaleformIndex(this.Parent.Items.indexOf(this)),
                 this._items.join(","),
                 index
