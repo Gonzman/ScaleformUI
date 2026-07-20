@@ -30,7 +30,7 @@ class Scaleforms {
     JobMissionSelector: any; // Replace with actual type
     RankbarHandler: any; // Replace with actual type
     SplashText: any; // Replace with actual type
-    BigFeed: BigFeedHandler; // Replace with actual type
+    BigFeed: any; // Replace with actual type
     MinimapOverlays: MinimapOverlays;
 
     constructor() {
@@ -43,7 +43,6 @@ class Scaleforms {
         this.MinimapOverlays = new MinimapOverlays();
         this.MinimapOverlays.load();
         this.BigMessageInstance = new BigmessageInstance();
-        this.BigFeed = new BigFeedHandler();
     }
 }
 
