@@ -7,14 +7,14 @@ import { Singleton } from "../../helpers/singleton.decorator";
 @Singleton
 export class BigFeedHandler implements ScaleformHandler {
     private scaleform?: Scaleform;
-    public accessor title = "";
-    public accessor subtitle = "";
-    public accessor bodyText = "";
+    public title = "";
+    public subtitle = "";
+    public bodyText = "";
     private txn = "";
     private txd = "";
-    public accessor enabled = false;
-    public accessor rightAligned = false;
-    public accessor disabledNotifications = false;
+    public enabled = false;
+    public rightAligned = false;
+    public disabledNotifications = false;
     constructor() {}
 
     /**

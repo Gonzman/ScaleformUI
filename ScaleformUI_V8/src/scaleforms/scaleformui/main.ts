@@ -25,7 +25,7 @@ class Scaleforms {
     MidMessageInstance: any; // Replace with actual type
     PlayerListScoreboard: any; // Replace with actual type
     InstructionalButtons: InstructionalButtonsHandler;
-    BigMessageInstance: BigmessageInstance; // Replace with actual type
+    BigMessageInstance: any; // Replace with actual type
     Warning: any; // Replace with actual type
     JobMissionSelector: any; // Replace with actual type
     RankbarHandler: any; // Replace with actual type
@@ -42,7 +42,6 @@ class Scaleforms {
         this._pauseMenu.load();
         this.MinimapOverlays = new MinimapOverlays();
         this.MinimapOverlays.load();
-        this.BigMessageInstance = new BigmessageInstance();
     }
 }
 

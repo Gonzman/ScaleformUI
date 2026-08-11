@@ -10,7 +10,7 @@ export type LobbyMenuOpenEvent = (menu: MainView) => void;
 export type LobbyMenuCloseEvent = (menu: MainView) => void;
 
 export class MainView extends TabView {
-    public declare coronaTab: PlayerListTab;
+    declare public coronaTab: PlayerListTab;
     private lobbyOpenHandlers: LobbyMenuOpenEvent[] = [];
     private lobbyCloseHandlers: LobbyMenuCloseEvent[] = [];
 
@@ -21,7 +21,7 @@ export class MainView extends TabView {
         this.AddTab(this.coronaTab);
         this.InstructionalButtons = [
             new InstructionalButton(UIMenu._selectTextLocalized, -1, 176, 176, InputGroup.UNUSED),
-            new InstructionalButton(UIMenu._backTextLocalized, -1, 177, 177, InputGroup.UNUSED),
+            new InstructionalButton(UIMenu._backTextLocalized, -1, 177, 177, InputGroup.UNUSED)
         ];
     }
 
@@ -33,12 +33,22 @@ export class MainView extends TabView {
         this.coronaTab.SwitchColumn(column);
     }
 
-    public SetupLeftColumn(column: PM_Column): void { this.coronaTab.SetupLeftColumn(column); }
-    public SetupCenterColumn(column: PM_Column): void { this.coronaTab.SetupCenterColumn(column); }
-    public SetupRightColumn(column: PM_Column): void { this.coronaTab.SetupRightColumn(column); }
+    public SetupLeftColumn(column: PM_Column): void {
+        this.coronaTab.SetupLeftColumn(column);
+    }
+    public SetupCenterColumn(column: PM_Column): void {
+        this.coronaTab.SetupCenterColumn(column);
+    }
+    public SetupRightColumn(column: PM_Column): void {
+        this.coronaTab.SetupRightColumn(column);
+    }
 
-    public onLobbyMenuOpen(handler: LobbyMenuOpenEvent): void { this.lobbyOpenHandlers.push(handler); }
-    public onLobbyMenuClose(handler: LobbyMenuCloseEvent): void { this.lobbyCloseHandlers.push(handler); }
+    public onLobbyMenuOpen(handler: LobbyMenuOpenEvent): void {
+        this.lobbyOpenHandlers.push(handler);
+    }
+    public onLobbyMenuClose(handler: LobbyMenuCloseEvent): void {
+        this.lobbyCloseHandlers.push(handler);
+    }
 
     public override SendPauseMenuOpen(): void {
         super.SendPauseMenuOpen();
